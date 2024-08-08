@@ -1,4 +1,4 @@
 import { Module } from '@nestjs/common';
 
 @Module({})
-export class PostsModuleModule {}
+export class AuthModule {}
