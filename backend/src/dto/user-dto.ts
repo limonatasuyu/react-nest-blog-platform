@@ -6,3 +6,8 @@ export interface CreateUserDTO {
   password: string;
   dateOfBirth: Date;
 }
+
+export interface ActivateUserDTO {
+  username: string;
+  activationCode: number;
+}

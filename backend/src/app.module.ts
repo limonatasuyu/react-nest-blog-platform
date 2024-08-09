@@ -5,9 +5,11 @@ import { UserModule } from './user/user.module';
 import { PostsModule } from './posts/posts.module';
 import { AuthModule } from './auth/auth.module';
 import { MongooseModule } from '@nestjs/mongoose';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot(),
     UserModule,
     PostsModule,
     AuthModule,
