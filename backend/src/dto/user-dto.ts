@@ -1,3 +1,5 @@
+import { ObjectId } from 'mongoose';
+
 export interface CreateUserDTO {
   name: string;
   lastname: string;
@@ -8,6 +10,10 @@ export interface CreateUserDTO {
 }
 
 export interface ActivateUserDTO {
-  username: string;
+  user_id: ObjectId;
   activationCode: number;
+}
+
+export interface CreateActivationCodeDTO {
+  user_id: ObjectId;
 }

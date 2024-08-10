@@ -1,8 +1,14 @@
 import { User } from '../schemes/user.schema';
+import { ActivationCode } from '../schemes/activationCode.schema';
 import { Model } from 'mongoose';
-import { CreateUserDTO } from '../dto/create-user-dto';
+import { ActivateUserDTO, CreateUserDTO, CreateActivationCodeDTO } from '../dto/user-dto';
 export declare class UsersService {
     private userModel;
-    constructor(userModel: Model<User>);
-    create(dto: CreateUserDTO): Promise<User>;
+    private activationCodeModel;
+    constructor(userModel: Model<User>, activationCodeModel: Model<ActivationCode>);
+    activate(dto: ActivateUserDTO): Promise<{
+        message: string;
+    }>;
+    create(dto: CreateUserDTO): Promise<any>;
+    createActivationCode(dto: CreateActivationCodeDTO): Promise<void>;
 }

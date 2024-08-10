@@ -22,6 +22,12 @@ let UserModuleController = class UserModuleController {
     async create(dto) {
         return await this.usersService.create(dto);
     }
+    async activate(dto) {
+        return await this.usersService.activate(dto);
+    }
+    async recreate(dto) {
+        return await this.usersService.createActivationCode(dto);
+    }
 };
 exports.UserModuleController = UserModuleController;
 __decorate([
@@ -31,6 +37,20 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], UserModuleController.prototype, "create", null);
+__decorate([
+    (0, common_1.Post)('activate'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], UserModuleController.prototype, "activate", null);
+__decorate([
+    (0, common_1.Post)('recreate-activation'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], UserModuleController.prototype, "recreate", null);
 exports.UserModuleController = UserModuleController = __decorate([
     (0, common_1.Controller)('user'),
     __metadata("design:paramtypes", [user_service_1.UsersService])

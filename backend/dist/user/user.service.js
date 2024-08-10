@@ -15,8 +15,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersService = void 0;
 const common_1 = require("@nestjs/common");
 const user_schema_1 = require("../schemes/user.schema");
+const activationCode_schema_1 = require("../schemes/activationCode.schema");
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
+const bson_1 = require("bson");
 const promises_1 = require("node:fs/promises");
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
@@ -60,8 +62,56 @@ async function sendActivationEmail(toEmail, activationCode) {
     });
 }
 let UsersService = class UsersService {
-    constructor(userModel) {
+    constructor(userModel, activationCodeModel) {
         this.userModel = userModel;
+        this.activationCodeModel = activationCodeModel;
+    }
+    async activate(dto) {
+        const user = await this.userModel.findOne({
+            _id: dto.user_id,
+        });
+        if (!user) {
+            throw new common_1.HttpException({
+                status: common_1.HttpStatus.INTERNAL_SERVER_ERROR,
+                error: 'There has been an error, please try again later1.',
+            }, common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        const activationCodes = await this.activationCodeModel.find({
+            user_id: dto.user_id,
+        });
+        if (!activationCodes || !activationCodes.length) {
+            throw new common_1.HttpException({
+                status: common_1.HttpStatus.INTERNAL_SERVER_ERROR,
+                error: 'There has been an error, please try again later2.',
+            }, common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        const codeToCheck = activationCodes.reduce((latest, obj) => {
+            return new Date(obj.createdAt) > new Date(latest.createdAt)
+                ? obj
+                : latest;
+        });
+        if (codeToCheck.tryCount >= 3) {
+            throw new common_1.HttpException({
+                status: common_1.HttpStatus.BAD_REQUEST,
+                error: 'Code tried out or somthin',
+            }, common_1.HttpStatus.BAD_REQUEST);
+        }
+        const fiveMinutesInMs = 5 * 60 * 1000;
+        if (Math.abs(new Date().getTime() - new Date(codeToCheck.createdAt).getTime()) >= fiveMinutesInMs) {
+            throw new common_1.HttpException({
+                status: common_1.HttpStatus.BAD_REQUEST,
+                error: 'Activation code is timed out or smt, idk',
+            }, common_1.HttpStatus.BAD_REQUEST);
+        }
+        if (Number(dto.activationCode) !== Number(codeToCheck.code)) {
+            await this.activationCodeModel.updateOne({ user_id: dto.user_id }, { tryCount: codeToCheck.tryCount + 1 });
+            throw new common_1.HttpException({
+                status: common_1.HttpStatus.BAD_REQUEST,
+                error: 'Code is incorrect',
+            }, common_1.HttpStatus.BAD_REQUEST);
+        }
+        await this.userModel.updateOne({ _id: dto.user_id }, { isActivated: true });
+        return { message: 'User activated successfully' };
     }
     async create(dto) {
         const { username, email, password } = dto;
@@ -100,15 +150,71 @@ let UsersService = class UsersService {
             ...dto,
             password: encryptedPassword,
             isActivated: false,
-            activationCode,
+            _id: new bson_1.ObjectId(),
         });
-        return await createdUser.save();
+        const createdActivationCode = new this.activationCodeModel({
+            user_id: createdUser._id,
+            code: activationCode,
+            tryCount: 0,
+            createdAt: new Date(),
+        });
+        await createdUser.save();
+        await createdActivationCode.save();
+        return { message: 'User created sucessfully.', user_id: createdUser._id };
+    }
+    async createActivationCode(dto) {
+        const user = await this.userModel.findOne({ _id: dto.user_id });
+        if (!user) {
+            throw new common_1.HttpException({
+                status: common_1.HttpStatus.INTERNAL_SERVER_ERROR,
+                error: 'There has been an error, please try again later1.',
+            }, common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        const activationCodes = await this.activationCodeModel.find({
+            user_id: dto.user_id,
+        });
+        if (!activationCodes) {
+            throw new common_1.HttpException({
+                status: common_1.HttpStatus.INTERNAL_SERVER_ERROR,
+                error: 'There has been an error, please try again later2.',
+            }, common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        const codeToCheck = activationCodes.reduce((latest, obj) => {
+            return new Date(obj.createdAt) > new Date(latest.createdAt)
+                ? obj
+                : latest;
+        });
+        const fiveMinutesInMs = 5 * 60 * 1000;
+        if (Math.abs(new Date().getTime() - new Date(codeToCheck.createdAt).getTime()) < fiveMinutesInMs) {
+            throw new common_1.HttpException({
+                status: common_1.HttpStatus.REQUEST_TIMEOUT,
+                error: 'Please wait for 5 minutes before try to create a new code',
+            }, common_1.HttpStatus.REQUEST_TIMEOUT);
+        }
+        const activationCode = Math.floor(Math.random() * 1000000);
+        const isActivationSent = await sendActivationEmail(user.email, activationCode);
+        if (!isActivationSent) {
+            throw new common_1.HttpException({
+                status: common_1.HttpStatus.INTERNAL_SERVER_ERROR,
+                error: 'There has been an error, please try again later.',
+            }, common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        const createdActivationCode = new this.activationCodeModel({
+            user_id: dto.user_id,
+            code: activationCode,
+            tryCount: 0,
+            createdAt: new Date(),
+        });
+        await createdActivationCode.save();
+        return;
     }
 };
 exports.UsersService = UsersService;
 exports.UsersService = UsersService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(user_schema_1.User.name)),
-    __metadata("design:paramtypes", [mongoose_2.Model])
+    __param(1, (0, mongoose_1.InjectModel)(activationCode_schema_1.ActivationCode.name)),
+    __metadata("design:paramtypes", [mongoose_2.Model,
+        mongoose_2.Model])
 ], UsersService);
 //# sourceMappingURL=user.service.js.map
