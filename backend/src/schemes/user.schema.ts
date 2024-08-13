@@ -28,6 +28,10 @@ export class User {
 
   @Prop({ required: true })
   isActivated: boolean;
+
+  @Prop()
+  interests: string[]
+
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

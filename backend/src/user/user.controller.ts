@@ -10,7 +10,7 @@ import {
 export class UserModuleController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Post()
+  @Post('sign')
   async create(@Body() dto: CreateUserDTO): Promise<any> {
     return await this.usersService.create(dto);
   }

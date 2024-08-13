@@ -9,6 +9,7 @@ export declare class User {
     password: string;
     dateOfBirth: Date;
     isActivated: boolean;
+    interests: string[];
 }
 export declare const UserSchema: import("mongoose").Schema<User, import("mongoose").Model<User, any, any, any, import("mongoose").Document<unknown, any, User> & User & Required<{
     _id: string;

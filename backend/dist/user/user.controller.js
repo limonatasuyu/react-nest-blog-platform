@@ -31,7 +31,7 @@ let UserModuleController = class UserModuleController {
 };
 exports.UserModuleController = UserModuleController;
 __decorate([
-    (0, common_1.Post)(),
+    (0, common_1.Post)('sign'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),

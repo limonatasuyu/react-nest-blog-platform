@@ -19,10 +19,14 @@ exports.UserModule = UserModule;
 exports.UserModule = UserModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            mongoose_1.MongooseModule.forFeature([{ name: user_schema_1.User.name, schema: user_schema_1.UserSchema }, { name: activationCode_schema_1.ActivationCode.name, schema: activationCode_schema_1.ActivationCodeSchema }]),
+            mongoose_1.MongooseModule.forFeature([
+                { name: user_schema_1.User.name, schema: user_schema_1.UserSchema },
+                { name: activationCode_schema_1.ActivationCode.name, schema: activationCode_schema_1.ActivationCodeSchema },
+            ]),
         ],
         controllers: [user_controller_1.UserModuleController],
         providers: [user_service_1.UsersService],
+        exports: [user_service_1.UsersService],
     })
 ], UserModule);
 //# sourceMappingURL=user.module.js.map

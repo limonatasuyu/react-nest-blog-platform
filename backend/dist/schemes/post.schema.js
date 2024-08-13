@@ -19,19 +19,31 @@ exports.Post = Post;
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
     __metadata("design:type", String)
+], Post.prototype, "title", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", String)
 ], Post.prototype, "content", void 0);
 __decorate([
     (0, mongoose_1.Prop)([String]),
     __metadata("design:type", Array)
 ], Post.prototype, "imageIds", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ type: mongoose.Schema.Types.ObjectId, ref: 'User' }),
+    (0, mongoose_1.Prop)({ required: true, type: mongoose.Schema.Types.ObjectId, ref: 'User' }),
     __metadata("design:type", user_schema_1.User)
 ], Post.prototype, "user", void 0);
 __decorate([
     (0, mongoose_1.Prop)([Number]),
     __metadata("design:type", Number)
 ], Post.prototype, "commentIds", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", Date)
+], Post.prototype, "createdAt", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", Date)
+], Post.prototype, "updatedAt", void 0);
 exports.Post = Post = __decorate([
     (0, mongoose_1.Schema)()
 ], Post);

@@ -3,10 +3,13 @@ import * as mongoose from 'mongoose';
 import { User } from './user.schema';
 export type PostDocument = HydratedDocument<Post>;
 export declare class Post {
+    title: string;
     content: string;
     imageIds: string[];
     user: User;
     commentIds: number;
+    createdAt: Date;
+    updatedAt: Date;
 }
 export declare const PostSchema: mongoose.Schema<Post, mongoose.Model<Post, any, any, any, mongoose.Document<unknown, any, Post> & Post & {
     _id: mongoose.Types.ObjectId;

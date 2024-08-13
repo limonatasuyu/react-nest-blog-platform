@@ -73,7 +73,7 @@ let UsersService = class UsersService {
         if (!user) {
             throw new common_1.HttpException({
                 status: common_1.HttpStatus.INTERNAL_SERVER_ERROR,
-                error: 'There has been an error, please try again later1.',
+                error: 'There has been an error, please try again later.',
             }, common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
         const activationCodes = await this.activationCodeModel.find({
@@ -82,7 +82,7 @@ let UsersService = class UsersService {
         if (!activationCodes || !activationCodes.length) {
             throw new common_1.HttpException({
                 status: common_1.HttpStatus.INTERNAL_SERVER_ERROR,
-                error: 'There has been an error, please try again later2.',
+                error: 'There has been an error, please try again later.',
             }, common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
         const codeToCheck = activationCodes.reduce((latest, obj) => {
@@ -167,7 +167,7 @@ let UsersService = class UsersService {
         if (!user) {
             throw new common_1.HttpException({
                 status: common_1.HttpStatus.INTERNAL_SERVER_ERROR,
-                error: 'There has been an error, please try again later1.',
+                error: 'There has been an error, please try again later.',
             }, common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
         const activationCodes = await this.activationCodeModel.find({
@@ -176,7 +176,7 @@ let UsersService = class UsersService {
         if (!activationCodes) {
             throw new common_1.HttpException({
                 status: common_1.HttpStatus.INTERNAL_SERVER_ERROR,
-                error: 'There has been an error, please try again later2.',
+                error: 'There has been an error, please try again later.',
             }, common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
         const codeToCheck = activationCodes.reduce((latest, obj) => {
@@ -207,6 +207,11 @@ let UsersService = class UsersService {
         });
         await createdActivationCode.save();
         return;
+    }
+    async findOne(usernameOrEmail) {
+        return await this.userModel.findOne({
+            $or: [{ username: usernameOrEmail }, { email: usernameOrEmail }],
+        });
     }
 };
 exports.UsersService = UsersService;

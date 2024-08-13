@@ -73,7 +73,7 @@ export class UsersService {
       throw new HttpException(
         {
           status: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: 'There has been an error, please try again later1.',
+          error: 'There has been an error, please try again later.',
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
@@ -86,7 +86,7 @@ export class UsersService {
       throw new HttpException(
         {
           status: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: 'There has been an error, please try again later2.',
+          error: 'There has been an error, please try again later.',
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
@@ -221,7 +221,7 @@ export class UsersService {
       throw new HttpException(
         {
           status: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: 'There has been an error, please try again later1.',
+          error: 'There has been an error, please try again later.',
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
@@ -234,7 +234,7 @@ export class UsersService {
       throw new HttpException(
         {
           status: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: 'There has been an error, please try again later2.',
+          error: 'There has been an error, please try again later.',
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
@@ -286,5 +286,11 @@ export class UsersService {
 
     await createdActivationCode.save();
     return;
+  }
+
+  async findOne(usernameOrEmail: string): Promise<User | undefined> {
+    return await this.userModel.findOne({
+      $or: [{ username: usernameOrEmail }, { email: usernameOrEmail }],
+    });
   }
 }

@@ -11,4 +11,5 @@ export declare class UsersService {
     }>;
     create(dto: CreateUserDTO): Promise<any>;
     createActivationCode(dto: CreateActivationCodeDTO): Promise<void>;
+    findOne(usernameOrEmail: string): Promise<User | undefined>;
 }
