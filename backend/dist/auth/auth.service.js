@@ -22,10 +22,7 @@ let AuthService = class AuthService {
     async login(dto) {
         const user = await this.usersService.findOne('username' in dto ? dto.username : dto.email);
         if (!user) {
-            throw new common_1.HttpException({
-                status: common_1.HttpStatus.BAD_REQUEST,
-                error: 'User not found.',
-            }, common_1.HttpStatus.BAD_REQUEST);
+            throw new common_1.BadRequestException();
         }
         const { password, _id, username } = user;
         const isPasswordsMatch = (0, bcrypt_1.compare)(dto.password, password);

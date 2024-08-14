@@ -10,3 +10,12 @@ export interface CreatePostDTO {
     content: string;
     imageDataUrls: string[];
 }
+export interface DeletePostDTO {
+    postId: string;
+}
+export interface UpdatePostDTO {
+    postId: string;
+    title: string;
+    content: string;
+    imageDataUrls: string[];
+}

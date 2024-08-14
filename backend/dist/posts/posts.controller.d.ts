@@ -1,15 +1,23 @@
 import { PostsService } from './posts.service';
-import { GetPostsByTagDTO, GetRecentPostsDTO, CreatePostDTO } from '../dto/post-dto';
+import { GetPostsByTagDTO, GetRecentPostsDTO, CreatePostDTO, UpdatePostDTO } from '../dto/post-dto';
 export declare class PostsController {
     private readonly postsService;
     constructor(postsService: PostsService);
-    getPostsByTags({ tags, page }: GetPostsByTagDTO): Promise<(import("mongoose").Document<unknown, {}, import("../schemes/post.schema").Post> & import("../schemes/post.schema").Post & {
-        _id: import("mongoose").Types.ObjectId;
-    })[]>;
-    getRecentPosts({ page }: GetRecentPostsDTO): Promise<(import("mongoose").Document<unknown, {}, import("../schemes/post.schema").Post> & import("../schemes/post.schema").Post & {
-        _id: import("mongoose").Types.ObjectId;
-    })[]>;
-    createPost(req: any, dto: CreatePostDTO): Promise<import("mongoose").Document<unknown, {}, import("../schemes/post.schema").Post> & import("../schemes/post.schema").Post & {
-        _id: import("mongoose").Types.ObjectId;
+    getPostsByTags({ tags, page }: GetPostsByTagDTO): Promise<(import("mongoose").Document<unknown, {}, import("../schemes/post.schema").Post> & import("../schemes/post.schema").Post & Required<{
+        _id: string;
+    }>)[]>;
+    getRecentPosts({ page }: GetRecentPostsDTO): Promise<(import("mongoose").Document<unknown, {}, import("../schemes/post.schema").Post> & import("../schemes/post.schema").Post & Required<{
+        _id: string;
+    }>)[]>;
+    createPost(req: any, dto: CreatePostDTO): Promise<{
+        message: string;
+    }>;
+    deletePost(req: any, postId: any): Promise<{
+        message: string;
+    }>;
+    updatePost(req: any, postId: any, body: UpdatePostDTO & {
+        postId: undefined;
+    }): Promise<{
+        message: string;
     }>;
 }

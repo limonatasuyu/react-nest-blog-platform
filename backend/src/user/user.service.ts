@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, RequestTimeoutException } from '@nestjs/common';
 import { User } from '../schemes/user.schema';
 import { ActivationCode } from '../schemes/activationCode.schema';
 import { InjectModel } from '@nestjs/mongoose';
@@ -70,26 +70,14 @@ export class UsersService {
       _id: dto.user_id,
     });
     if (!user) {
-      throw new HttpException(
-        {
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: 'There has been an error, please try again later.',
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      throw new InternalServerErrorException();
     }
 
     const activationCodes = await this.activationCodeModel.find({
       user_id: dto.user_id,
     });
     if (!activationCodes || !activationCodes.length) {
-      throw new HttpException(
-        {
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: 'There has been an error, please try again later.',
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      throw new InternalServerErrorException();
     }
 
     const codeToCheck = activationCodes.reduce((latest, obj) => {
@@ -99,13 +87,7 @@ export class UsersService {
     });
 
     if (codeToCheck.tryCount >= 3) {
-      throw new HttpException(
-        {
-          status: HttpStatus.BAD_REQUEST,
-          error: 'Code tried out or somthin',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new BadRequestException("Code tried out or somthin")
     }
 
     const fiveMinutesInMs = 5 * 60 * 1000;
@@ -114,13 +96,7 @@ export class UsersService {
         new Date().getTime() - new Date(codeToCheck.createdAt).getTime(),
       ) >= fiveMinutesInMs
     ) {
-      throw new HttpException(
-        {
-          status: HttpStatus.BAD_REQUEST,
-          error: 'Activation code is timed out or smt, idk',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new BadRequestException("Activation code is timed out or smt, idk")
     }
 
     if (Number(dto.activationCode) !== Number(codeToCheck.code)) {
@@ -129,13 +105,7 @@ export class UsersService {
         { tryCount: codeToCheck.tryCount + 1 },
       );
 
-      throw new HttpException(
-        {
-          status: HttpStatus.BAD_REQUEST,
-          error: 'Code is incorrect',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new BadRequestException("Code is incorrect.")
     }
 
     await this.userModel.updateOne({ _id: dto.user_id }, { isActivated: true });
@@ -147,37 +117,19 @@ export class UsersService {
     const { username, email, password } = dto;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email) || (await isDisposable(email))) {
-      throw new HttpException(
-        {
-          status: HttpStatus.BAD_REQUEST,
-          error: 'Email address is not valid',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new BadRequestException("Email address is not valid.")
     }
 
     const existingEmail = await this.userModel.findOne({ email }).exec();
 
     if (existingEmail) {
-      throw new HttpException(
-        {
-          status: HttpStatus.BAD_REQUEST,
-          error: 'Email address already in use',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new BadRequestException("Email address already in use")
     }
 
     const existingUsername = await this.userModel.findOne({ username }).exec();
 
     if (existingUsername) {
-      throw new HttpException(
-        {
-          status: HttpStatus.BAD_REQUEST,
-          error: 'Username is already in use',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new BadRequestException("Username is already in use")
     }
 
     const saltRounds = 10;
@@ -187,13 +139,7 @@ export class UsersService {
 
     const isActivationSent = await sendActivationEmail(email, activationCode);
     if (!isActivationSent) {
-      throw new HttpException(
-        {
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: 'There has been an error, please try again later.',
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      throw new InternalServerErrorException();
     }
 
     const createdUser = new this.userModel({
@@ -218,26 +164,14 @@ export class UsersService {
   async createActivationCode(dto: CreateActivationCodeDTO) {
     const user = await this.userModel.findOne({ _id: dto.user_id });
     if (!user) {
-      throw new HttpException(
-        {
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: 'There has been an error, please try again later.',
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      throw new InternalServerErrorException();
     }
 
     const activationCodes = await this.activationCodeModel.find({
       user_id: dto.user_id,
     });
     if (!activationCodes) {
-      throw new HttpException(
-        {
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: 'There has been an error, please try again later.',
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      throw new InternalServerErrorException();
     }
 
     const codeToCheck = activationCodes.reduce((latest, obj) => {
@@ -252,13 +186,7 @@ export class UsersService {
         new Date().getTime() - new Date(codeToCheck.createdAt).getTime(),
       ) < fiveMinutesInMs
     ) {
-      throw new HttpException(
-        {
-          status: HttpStatus.REQUEST_TIMEOUT,
-          error: 'Please wait for 5 minutes before try to create a new code',
-        },
-        HttpStatus.REQUEST_TIMEOUT,
-      );
+      throw new RequestTimeoutException("Please wait for 5 minutes before try to create a new code.")
     }
 
     const activationCode = Math.floor(Math.random() * 1000000);
@@ -268,13 +196,7 @@ export class UsersService {
       activationCode,
     );
     if (!isActivationSent) {
-      throw new HttpException(
-        {
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: 'There has been an error, please try again later.',
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      throw new InternalServerErrorException();
     }
 
     const createdActivationCode = new this.activationCodeModel({

@@ -9,47 +9,31 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PostSchema = exports.Post = void 0;
+exports.CommentSchema = exports.Comment = void 0;
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose = require("mongoose");
 const user_schema_1 = require("./user.schema");
-let Post = class Post {
+let Comment = class Comment {
 };
-exports.Post = Post;
+exports.Comment = Comment;
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
     __metadata("design:type", String)
-], Post.prototype, "_id", void 0);
+], Comment.prototype, "_id", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
     __metadata("design:type", String)
-], Post.prototype, "title", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ required: true }),
-    __metadata("design:type", String)
-], Post.prototype, "content", void 0);
-__decorate([
-    (0, mongoose_1.Prop)([String]),
-    __metadata("design:type", Array)
-], Post.prototype, "imageIds", void 0);
+], Comment.prototype, "content", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true, type: mongoose.Schema.Types.ObjectId, ref: 'User' }),
     __metadata("design:type", user_schema_1.User)
-], Post.prototype, "user", void 0);
+], Comment.prototype, "user", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ type: [mongoose.Schema.Types.ObjectId], ref: 'Comment' }),
-    __metadata("design:type", Array)
-], Post.prototype, "commentIds", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ required: true }),
-    __metadata("design:type", Date)
-], Post.prototype, "createdAt", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ required: true }),
-    __metadata("design:type", Date)
-], Post.prototype, "updatedAt", void 0);
-exports.Post = Post = __decorate([
+    (0, mongoose_1.Prop)({ type: mongoose.Schema.Types.ObjectId, ref: 'Comment' }),
+    __metadata("design:type", Comment)
+], Comment.prototype, "answerTo", void 0);
+exports.Comment = Comment = __decorate([
     (0, mongoose_1.Schema)()
-], Post);
-exports.PostSchema = mongoose_1.SchemaFactory.createForClass(Post);
-//# sourceMappingURL=post.schema.js.map
+], Comment);
+exports.CommentSchema = mongoose_1.SchemaFactory.createForClass(Comment);
+//# sourceMappingURL=comment.schema.js.map

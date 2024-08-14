@@ -18,10 +18,14 @@ const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const post_schema_1 = require("../schemes/post.schema");
 const user_service_1 = require("../user/user.service");
+const bson_1 = require("bson");
 let PostsService = class PostsService {
     constructor(postsModel, usersService) {
         this.postsModel = postsModel;
         this.usersService = usersService;
+    }
+    async getPostByIdAndUser(postId, user_id) {
+        return await this.postsModel.findOne({ _id: postId, user: user_id });
     }
     async getPostsByTag(dto) {
         const posts = await this.postsModel
@@ -29,6 +33,9 @@ let PostsService = class PostsService {
             .limit(10)
             .skip((dto.page - 1) * 10)
             .exec();
+        if (!posts) {
+            throw new common_1.InternalServerErrorException();
+        }
         return posts;
     }
     async getRecentPosts(dto) {
@@ -38,17 +45,18 @@ let PostsService = class PostsService {
             .skip((dto.page - 1) * 10)
             .sort({ createdAt: -1 })
             .exec();
+        if (!posts) {
+            throw new common_1.InternalServerErrorException();
+        }
         return posts;
     }
     async createPost(dto, username) {
         const user = await this.usersService.findOne(username);
         if (!user) {
-            throw new common_1.HttpException({
-                status: common_1.HttpStatus.INTERNAL_SERVER_ERROR,
-                error: 'There has been an error, please try again later1.',
-            }, common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new common_1.InternalServerErrorException();
         }
         const createdPost = await this.postsModel.create({
+            _id: new bson_1.ObjectId(),
             title: dto.title,
             content: dto.content,
             imageIds: dto.imageDataUrls,
@@ -57,12 +65,36 @@ let PostsService = class PostsService {
             updatedAt: new Date(),
         });
         if (!createdPost) {
-            throw new common_1.HttpException({
-                status: common_1.HttpStatus.INTERNAL_SERVER_ERROR,
-                error: 'There has been an error, please try again later2.',
-            }, common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new common_1.InternalServerErrorException();
         }
-        return await createdPost.save();
+        return { message: 'Post created successfully' };
+    }
+    async deletePost(dto, username) {
+        const user = await this.usersService.findOne(username);
+        if (!user) {
+            throw new common_1.InternalServerErrorException();
+        }
+        const result = await this.postsModel.deleteOne({ _id: dto.postId });
+        if (!result) {
+            throw new common_1.InternalServerErrorException();
+        }
+        return { message: 'Post deleted successfully' };
+    }
+    async updatePost(dto, username) {
+        const user = await this.usersService.findOne(username);
+        if (!user) {
+            throw new common_1.InternalServerErrorException();
+        }
+        const updatedPost = await this.postsModel.updateOne({ _id: dto.postId }, {
+            title: dto.title,
+            content: dto.content,
+            imageIds: dto.imageDataUrls,
+            updatedAt: new Date(),
+        });
+        if (!updatedPost) {
+            throw new common_1.InternalServerErrorException();
+        }
+        return { message: 'Post updated successfully' };
     }
 };
 exports.PostsService = PostsService;

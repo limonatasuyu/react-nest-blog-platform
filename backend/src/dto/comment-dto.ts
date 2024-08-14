@@ -4,3 +4,8 @@ export interface AddCommentDTO {
   userId: string;
   answeredCommentId?: string;
 }
+
+export interface DeleteCommentDTO {
+  postId: string;
+  commentId: string;
+}

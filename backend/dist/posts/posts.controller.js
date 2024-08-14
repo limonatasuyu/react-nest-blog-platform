@@ -15,7 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PostsController = void 0;
 const common_1 = require("@nestjs/common");
 const posts_service_1 = require("./posts.service");
-const auth_guard_1 = require("../auth/auth.guard");
+const posts_guard_1 = require("./posts.guard");
 let PostsController = class PostsController {
     constructor(postsService) {
         this.postsService = postsService;
@@ -27,8 +27,13 @@ let PostsController = class PostsController {
         return this.postsService.getRecentPosts({ page });
     }
     createPost(req, dto) {
-        console.log('body: ', dto);
         return this.postsService.createPost(dto, req.user.username);
+    }
+    deletePost(req, postId) {
+        return this.postsService.deletePost({ postId }, req.user.username);
+    }
+    updatePost(req, postId, body) {
+        return this.postsService.updatePost({ ...body, postId }, req.user.username);
     }
 };
 exports.PostsController = PostsController;
@@ -47,7 +52,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], PostsController.prototype, "getRecentPosts", null);
 __decorate([
-    (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
+    (0, common_1.UseGuards)(posts_guard_1.PostsGuard),
     (0, common_1.Post)(),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Body)()),
@@ -55,6 +60,25 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", void 0)
 ], PostsController.prototype, "createPost", null);
+__decorate([
+    (0, common_1.UseGuards)(posts_guard_1.PostsGuard),
+    (0, common_1.Delete)(),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Query)('post_id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], PostsController.prototype, "deletePost", null);
+__decorate([
+    (0, common_1.UseGuards)(posts_guard_1.PostsGuard),
+    (0, common_1.Put)(),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Query)('post_id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object, Object]),
+    __metadata("design:returntype", void 0)
+], PostsController.prototype, "updatePost", null);
 exports.PostsController = PostsController = __decorate([
     (0, common_1.Controller)('posts'),
     __metadata("design:paramtypes", [posts_service_1.PostsService])

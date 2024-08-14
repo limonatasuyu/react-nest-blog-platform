@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   HttpException,
   HttpStatus,
   Injectable,
@@ -22,13 +23,7 @@ export class AuthService {
     );
 
     if (!user) {
-      throw new HttpException(
-        {
-          status: HttpStatus.BAD_REQUEST,
-          error: 'User not found.',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new BadRequestException();
     }
 
     const { password, _id, username } = user;
