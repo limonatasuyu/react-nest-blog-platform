@@ -1,7 +1,5 @@
 import {
   BadRequestException,
-  HttpException,
-  HttpStatus,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -23,18 +21,21 @@ export class AuthService {
     );
 
     if (!user) {
-      throw new BadRequestException();
+      throw new BadRequestException('User not found');
     }
 
     const { password, _id, username } = user;
 
-    const isPasswordsMatch = compare(dto.password, password);
+    const isPasswordsMatch = await compare(dto.password, password);
 
     if (!isPasswordsMatch) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('Password is incorrect.');
     }
     const payload = { sub: _id, username };
 
-    return { access_token: await this.jwtService.signAsync(payload) };
+    return {
+      access_token: await this.jwtService.signAsync(payload),
+      message: 'Login successfull.',
+    };
   }
 }

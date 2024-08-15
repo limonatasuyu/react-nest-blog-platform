@@ -5,6 +5,7 @@ export declare class AuthController {
     constructor(authService: AuthService);
     login(dto: loginDTO): Promise<{
         access_token: string;
+        message: string;
     }>;
     getProfile(req: any): any;
 }

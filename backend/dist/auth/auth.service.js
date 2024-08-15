@@ -22,15 +22,18 @@ let AuthService = class AuthService {
     async login(dto) {
         const user = await this.usersService.findOne('username' in dto ? dto.username : dto.email);
         if (!user) {
-            throw new common_1.BadRequestException();
+            throw new common_1.BadRequestException('User not found');
         }
         const { password, _id, username } = user;
-        const isPasswordsMatch = (0, bcrypt_1.compare)(dto.password, password);
+        const isPasswordsMatch = await (0, bcrypt_1.compare)(dto.password, password);
         if (!isPasswordsMatch) {
-            throw new common_1.UnauthorizedException();
+            throw new common_1.UnauthorizedException('Password is incorrect.');
         }
         const payload = { sub: _id, username };
-        return { access_token: await this.jwtService.signAsync(payload) };
+        return {
+            access_token: await this.jwtService.signAsync(payload),
+            message: 'Login successfull.',
+        };
     }
 };
 exports.AuthService = AuthService;

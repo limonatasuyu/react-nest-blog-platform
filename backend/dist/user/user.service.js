@@ -85,15 +85,15 @@ let UsersService = class UsersService {
                 : latest;
         });
         if (codeToCheck.tryCount >= 3) {
-            throw new common_1.BadRequestException("Code tried out or somthin");
+            throw new common_1.BadRequestException('Code tried out or somthin');
         }
         const fiveMinutesInMs = 5 * 60 * 1000;
         if (Math.abs(new Date().getTime() - new Date(codeToCheck.createdAt).getTime()) >= fiveMinutesInMs) {
-            throw new common_1.BadRequestException("Activation code is timed out or smt, idk");
+            throw new common_1.BadRequestException('Activation code is timed out or smt, idk');
         }
         if (Number(dto.activationCode) !== Number(codeToCheck.code)) {
             await this.activationCodeModel.updateOne({ user_id: dto.user_id }, { tryCount: codeToCheck.tryCount + 1 });
-            throw new common_1.BadRequestException("Code is incorrect.");
+            throw new common_1.BadRequestException('Code is incorrect.');
         }
         await this.userModel.updateOne({ _id: dto.user_id }, { isActivated: true });
         return { message: 'User activated successfully' };
@@ -102,15 +102,15 @@ let UsersService = class UsersService {
         const { username, email, password } = dto;
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email) || (await isDisposable(email))) {
-            throw new common_1.BadRequestException("Email address is not valid.");
+            throw new common_1.BadRequestException('Email address is not valid.');
         }
         const existingEmail = await this.userModel.findOne({ email }).exec();
         if (existingEmail) {
-            throw new common_1.BadRequestException("Email address already in use");
+            throw new common_1.BadRequestException('Email address already in use');
         }
         const existingUsername = await this.userModel.findOne({ username }).exec();
         if (existingUsername) {
-            throw new common_1.BadRequestException("Username is already in use");
+            throw new common_1.BadRequestException('Username is already in use');
         }
         const saltRounds = 10;
         const encryptedPassword = await bcrypt.hash(password, saltRounds);
@@ -153,7 +153,7 @@ let UsersService = class UsersService {
         });
         const fiveMinutesInMs = 5 * 60 * 1000;
         if (Math.abs(new Date().getTime() - new Date(codeToCheck.createdAt).getTime()) < fiveMinutesInMs) {
-            throw new common_1.RequestTimeoutException("Please wait for 5 minutes before try to create a new code.");
+            throw new common_1.RequestTimeoutException('Please wait for 5 minutes before try to create a new code.');
         }
         const activationCode = Math.floor(Math.random() * 1000000);
         const isActivationSent = await sendActivationEmail(user.email, activationCode);

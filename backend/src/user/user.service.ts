@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, InternalServerErrorException, RequestTimeoutException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  RequestTimeoutException,
+} from '@nestjs/common';
 import { User } from '../schemes/user.schema';
 import { ActivationCode } from '../schemes/activationCode.schema';
 import { InjectModel } from '@nestjs/mongoose';
@@ -87,7 +92,7 @@ export class UsersService {
     });
 
     if (codeToCheck.tryCount >= 3) {
-      throw new BadRequestException("Code tried out or somthin")
+      throw new BadRequestException('Code tried out or somthin');
     }
 
     const fiveMinutesInMs = 5 * 60 * 1000;
@@ -96,7 +101,7 @@ export class UsersService {
         new Date().getTime() - new Date(codeToCheck.createdAt).getTime(),
       ) >= fiveMinutesInMs
     ) {
-      throw new BadRequestException("Activation code is timed out or smt, idk")
+      throw new BadRequestException('Activation code is timed out or smt, idk');
     }
 
     if (Number(dto.activationCode) !== Number(codeToCheck.code)) {
@@ -105,7 +110,7 @@ export class UsersService {
         { tryCount: codeToCheck.tryCount + 1 },
       );
 
-      throw new BadRequestException("Code is incorrect.")
+      throw new BadRequestException('Code is incorrect.');
     }
 
     await this.userModel.updateOne({ _id: dto.user_id }, { isActivated: true });
@@ -117,19 +122,19 @@ export class UsersService {
     const { username, email, password } = dto;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email) || (await isDisposable(email))) {
-      throw new BadRequestException("Email address is not valid.")
+      throw new BadRequestException('Email address is not valid.');
     }
 
     const existingEmail = await this.userModel.findOne({ email }).exec();
 
     if (existingEmail) {
-      throw new BadRequestException("Email address already in use")
+      throw new BadRequestException('Email address already in use');
     }
 
     const existingUsername = await this.userModel.findOne({ username }).exec();
 
     if (existingUsername) {
-      throw new BadRequestException("Username is already in use")
+      throw new BadRequestException('Username is already in use');
     }
 
     const saltRounds = 10;
@@ -186,7 +191,9 @@ export class UsersService {
         new Date().getTime() - new Date(codeToCheck.createdAt).getTime(),
       ) < fiveMinutesInMs
     ) {
-      throw new RequestTimeoutException("Please wait for 5 minutes before try to create a new code.")
+      throw new RequestTimeoutException(
+        'Please wait for 5 minutes before try to create a new code.',
+      );
     }
 
     const activationCode = Math.floor(Math.random() * 1000000);
