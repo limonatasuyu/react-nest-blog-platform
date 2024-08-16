@@ -8,6 +8,7 @@ import {
   OutlinedInput,
   IconButton,
   FormHelperText,
+  Link
 } from "@mui/material";
 import login_background from "/login_background.jpg";
 import logo_white from "/logo_white.png";
@@ -149,12 +150,11 @@ export default function LoginPage() {
             validate={handleValidation}
             onSubmit={handleSubmit}
           >
-            {({ values, errors, handleChange, isSubmitting, handleSubmit }) => (
+            {({ values, errors, handleChange, isSubmitting, handleSubmit, touched }) => (
               <form
                 style={{
                   display: "flex",
                   flexDirection: "column",
-                  gap: "2rem",
                 }}
                 onSubmit={handleSubmit}
               >
@@ -163,22 +163,23 @@ export default function LoginPage() {
                   label="email"
                   onChange={handleChange}
                   value={values.email}
-                  error={Boolean(errors.email)}
-                  helperText={errors.email}
+                  error={Boolean(errors.email) && touched.email}
+                  helperText={touched.email && errors.email}
+                  sx={{mb: 2}}
                 />
                 <FormControl variant="outlined">
                   <InputLabel
                     htmlFor="password"
-                    error={Boolean(errors.password)}
+                    error={Boolean(errors.password) && touched.password}
                   >
                     Password
                   </InputLabel>
                   <OutlinedInput
-                    error={Boolean(errors.password)}
+                    error={Boolean(errors.password) && touched.password}
                     inputProps={{
                       id: "password",
                       value: values.password,
-                      error: Boolean(errors.password),
+                      error: Boolean(errors.password) && touched.password,
                       onChange: handleChange,
                     }}
                     type={showPassword ? "text" : "password"}
@@ -196,9 +197,10 @@ export default function LoginPage() {
                     }
                     label="Password"
                   />
-                  <FormHelperText error>{errors.password}</FormHelperText>
-                </FormControl>
-                <Box display="flex" sx={{ gap: 2 }}>
+                  <FormHelperText error>{touched.password && errors.password}</FormHelperText>
+                </FormControl> 
+                <Link href="/lost_password">Did you lost your password ?</Link>
+                <Box display="flex" sx={{ gap: 2, justifyContent: "center", mt: 2 }}>
                   <Button
                     type="submit"
                     disabled={isSubmitting}
@@ -207,7 +209,7 @@ export default function LoginPage() {
                   >
                     Login
                   </Button>
-                  <Button variant="contained">I Lost My Password</Button>
+                  <Button href="/signup" variant="contained">Signup</Button>
                 </Box>
               </form>
             )}

@@ -24,7 +24,7 @@ exports.AuthModule = AuthModule = __decorate([
                 global: true,
                 useFactory: async () => ({
                     secret: process.env.JWT_SECRET,
-                    signOptions: { expiresIn: '60s' },
+                    signOptions: { expiresIn: '60m' },
                 }),
             }),
             user_module_1.UserModule

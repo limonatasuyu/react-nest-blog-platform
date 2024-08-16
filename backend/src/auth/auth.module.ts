@@ -12,7 +12,7 @@ import { UserModule } from 'src/user/user.module';
       global: true,
       useFactory: async () => ({
         secret: process.env.JWT_SECRET,
-        signOptions: { expiresIn: '60s' },
+        signOptions: { expiresIn: '60m' },
       }),
     }),
     UserModule
