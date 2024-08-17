@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongoose';
 export interface CreateUserDTO {
-    name: string;
+    firstname: string;
     lastname: string;
     username: string;
     email: string;

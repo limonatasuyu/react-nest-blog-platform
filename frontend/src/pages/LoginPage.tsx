@@ -8,9 +8,8 @@ import {
   OutlinedInput,
   IconButton,
   FormHelperText,
-  Link
+  Link,
 } from "@mui/material";
-import login_background from "/login_background.jpg";
 import logo_white from "/logo_white.png";
 import { Formik } from "formik";
 import Visibility from "@mui/icons-material/Visibility";
@@ -19,6 +18,7 @@ import { useState } from "react";
 import Snackbar from "@mui/material/Snackbar";
 import Alert, { AlertColor } from "@mui/material/Alert";
 import Slide, { SlideProps } from "@mui/material/Slide";
+import Layout2 from "../Layout2";
 
 function SlideTransition(props: SlideProps) {
   return <Slide {...props} direction="up" />;
@@ -32,8 +32,7 @@ export default function LoginPage() {
     status: AlertColor;
   }>({ message: "", status: "success" });
 
-  function handleCloseSnackbar(
-  ) {
+  function handleCloseSnackbar() {
     setIsSnackbarOpen(false);
   }
 
@@ -79,10 +78,13 @@ export default function LoginPage() {
           message: jsonResponse?.message,
           status: jsonResponse.error ? "error" : "success",
         });
-      
+
         if (jsonResponse.access_token) {
-          window.sessionStorage.setItem("access_token", jsonResponse.access_token)
-          window.location.pathname = "/"
+          window.sessionStorage.setItem(
+            "access_token",
+            jsonResponse.access_token
+          );
+          window.location.pathname = "/";
         }
       })
       .catch((err) => {
@@ -96,126 +98,97 @@ export default function LoginPage() {
       })
       .finally(() => {
         setIsSnackbarOpen(true);
-        setSubmitting(false)
+        setSubmitting(false);
       });
   }
 
   return (
-    <Box
-      sx={{
-        position: "relative",
-        height: "100vh",
-        overflow: "hidden",
-      }}
-    >
-      <Box
-        sx={{
-          backgroundImage: `url(${login_background})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          height: "100%",
-          filter: "blur(5px)",
-          position: "absolute",
-          top: 0,
-          left: 0,
-          width: "100%",
-          zIndex: -1, // Send the background behind the content
-        }}
-      />
-      <Box
-        sx={{
-          position: "relative",
-          zIndex: 1, // Bring the content to the front
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          height: "100%",
-          color: "white",
-        }}
+<Layout2>
+      <img src={logo_white} style={{ marginBottom: "2rem" }} />
+      <Formik
+        initialValues={{ email: "", password: "" }}
+        validate={handleValidation}
+        onSubmit={handleSubmit}
       >
-        <Box
-          sx={{
-            bgcolor: "white",
-            borderRadius: "5px",
-            p: 8,
-            minWidth: "21rem",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-          }}
-        >
-          <img src={logo_white} style={{ marginBottom: "2rem" }} />
-          <Formik
-            initialValues={{ email: "", password: "" }}
-            validate={handleValidation}
+        {({
+          values,
+          errors,
+          handleChange,
+          isSubmitting,
+          handleSubmit,
+          touched,
+        }) => (
+          <form
+            style={{
+              display: "flex",
+              flexDirection: "column",
+            }}
             onSubmit={handleSubmit}
           >
-            {({ values, errors, handleChange, isSubmitting, handleSubmit, touched }) => (
-              <form
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                }}
-                onSubmit={handleSubmit}
+            <TextField
+              id="email"
+              label="email"
+              onChange={handleChange}
+              value={values.email}
+              error={Boolean(errors.email) && touched.email}
+              helperText={touched.email && errors.email}
+              sx={{ mb: 2 }}
+            />
+            <FormControl variant="outlined">
+              <InputLabel
+                htmlFor="password"
+                error={Boolean(errors.password) && touched.password}
               >
-                <TextField
-                  id="email"
-                  label="email"
-                  onChange={handleChange}
-                  value={values.email}
-                  error={Boolean(errors.email) && touched.email}
-                  helperText={touched.email && errors.email}
-                  sx={{mb: 2}}
-                />
-                <FormControl variant="outlined">
-                  <InputLabel
-                    htmlFor="password"
-                    error={Boolean(errors.password) && touched.password}
-                  >
-                    Password
-                  </InputLabel>
-                  <OutlinedInput
-                    error={Boolean(errors.password) && touched.password}
-                    inputProps={{
-                      id: "password",
-                      value: values.password,
-                      error: Boolean(errors.password) && touched.password,
-                      onChange: handleChange,
-                    }}
-                    type={showPassword ? "text" : "password"}
-                    endAdornment={
-                      <InputAdornment position="end">
-                        <IconButton
-                          aria-label="toggle password visibility"
-                          onClick={handleClickShowPassword}
-                          onMouseDown={handleMouseDownPassword}
-                          edge="end"
-                        >
-                          {showPassword ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      </InputAdornment>
-                    }
-                    label="Password"
-                  />
-                  <FormHelperText error>{touched.password && errors.password}</FormHelperText>
-                </FormControl> 
-                <Link href="/lost_password">Did you lost your password ?</Link>
-                <Box display="flex" sx={{ gap: 2, justifyContent: "center", mt: 2 }}>
-                  <Button
-                    type="submit"
-                    disabled={isSubmitting}
-                    variant="contained"
-                    color="success"
-                  >
-                    Login
-                  </Button>
-                  <Button href="/signup" variant="contained">Signup</Button>
-                </Box>
-              </form>
-            )}
-          </Formik>
-        </Box>
-      </Box>
+                Password
+              </InputLabel>
+              <OutlinedInput
+                error={Boolean(errors.password) && touched.password}
+                inputProps={{
+                  id: "password",
+                  value: values.password,
+                  //error: Boolean(errors.password) && touched.password,
+                  onChange: handleChange,
+                }}
+                type={showPassword ? "text" : "password"}
+                endAdornment={
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label="toggle password visibility"
+                      onClick={handleClickShowPassword}
+                      onMouseDown={handleMouseDownPassword}
+                      edge="end"
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                }
+                label="Password"
+              />
+              <FormHelperText error>
+                {touched.password && errors.password}
+              </FormHelperText>
+            </FormControl>
+            <Link href="/forget_password">Did you forget your password ?</Link>
+            <Box
+              display="flex"
+              sx={{ gap: 2, justifyContent: "center", mt: 2 }}
+            >
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                variant="contained"
+                color="success"
+              >
+                Login
+              </Button>
+              <Button href="/signup" variant="contained">
+                Signup
+              </Button>
+            </Box>
+          </form>
+        )}
+      </Formik>
+
       <Snackbar
         open={isSnackbarOpen}
         autoHideDuration={6000}
@@ -231,6 +204,6 @@ export default function LoginPage() {
           {JSON.stringify(snackbarMessage.message)}
         </Alert>
       </Snackbar>
-    </Box>
+  </Layout2>
   );
 }

@@ -25,11 +25,11 @@ __decorate([
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
     __metadata("design:type", String)
-], User.prototype, "name", void 0);
+], User.prototype, "firstname", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
     __metadata("design:type", String)
-], User.prototype, "surname", void 0);
+], User.prototype, "lastname", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true, unique: true }),
     __metadata("design:type", String)

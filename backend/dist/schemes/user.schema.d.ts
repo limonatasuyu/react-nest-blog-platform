@@ -3,8 +3,8 @@ export type UserDocument = HydratedDocument<User>;
 export declare class User {
     _id: string;
     username: string;
-    name: string;
-    surname: string;
+    firstname: string;
+    lastname: string;
     email: string;
     password: string;
     dateOfBirth: Date;
