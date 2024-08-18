@@ -167,7 +167,9 @@ let UsersService = class UsersService {
             createdAt: new Date(),
         });
         await createdActivationCode.save();
-        return;
+        return {
+            message: 'Activation code created and sent to your email successfully.',
+        };
     }
     async findOne(usernameOrEmail) {
         return await this.userModel.findOne({

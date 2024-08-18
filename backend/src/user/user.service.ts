@@ -74,6 +74,7 @@ export class UsersService {
     const user = await this.userModel.findOne({
       _id: dto.user_id,
     });
+
     if (!user) {
       throw new InternalServerErrorException();
     }
@@ -92,7 +93,9 @@ export class UsersService {
     });
 
     if (codeToCheck.tryCount >= 3) {
-      throw new BadRequestException('Code tried out or somthin');
+      throw new BadRequestException(
+        'Too many wrong queries made, please request a new code',
+      );
     }
 
     const fiveMinutesInMs = 5 * 60 * 1000;
@@ -101,7 +104,9 @@ export class UsersService {
         new Date().getTime() - new Date(codeToCheck.createdAt).getTime(),
       ) >= fiveMinutesInMs
     ) {
-      throw new BadRequestException('Activation code is timed out or smt, idk');
+      throw new BadRequestException(
+        'Too much time passed till code generated, please request a new code',
+      );
     }
 
     if (Number(dto.activationCode) !== Number(codeToCheck.code)) {
@@ -214,7 +219,9 @@ export class UsersService {
     });
 
     await createdActivationCode.save();
-    return;
+    return {
+      message: 'Activation code created and sent to your email successfully.',
+    };
   }
 
   async findOne(usernameOrEmail: string): Promise<User | undefined> {

@@ -10,6 +10,8 @@ export declare class UsersService {
         message: string;
     }>;
     create(dto: CreateUserDTO): Promise<any>;
-    createActivationCode(dto: CreateActivationCodeDTO): Promise<void>;
+    createActivationCode(dto: CreateActivationCodeDTO): Promise<{
+        message: string;
+    }>;
     findOne(usernameOrEmail: string): Promise<User | undefined>;
 }

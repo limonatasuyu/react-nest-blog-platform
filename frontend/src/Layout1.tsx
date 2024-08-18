@@ -51,7 +51,7 @@ export default function Layout1({ children }: { children: ReactNode }) {
         </Box>
         <Box display="flex">
           <Tooltip title="Write" arrow>
-            <IconButton>
+            <IconButton href="/create_post">
               <HistoryEduIcon />
             </IconButton>
           </Tooltip>
