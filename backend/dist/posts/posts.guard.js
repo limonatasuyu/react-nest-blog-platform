@@ -33,7 +33,7 @@ let PostsGuard = class PostsGuard {
         catch {
             throw new common_1.UnauthorizedException();
         }
-        if (request.method === 'POST')
+        if (request.method === "POST" || request.method === "GET")
             return true;
         const postId = this.getPostIdFromQuery(request);
         if (!postId) {

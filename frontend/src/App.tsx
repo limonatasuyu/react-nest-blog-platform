@@ -16,6 +16,7 @@ import HomeIcon from "@mui/icons-material/Home";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import CreatePostPage from "./pages/CreatePostPage";
+import MyPostsPage from "./pages/MyPostsPage";
 
 function App() {
   const [route, setRoute] = useState(window.location.pathname);
@@ -102,6 +103,7 @@ function App() {
     "/activate": ActivateUserPage,
     "/signup": SignUpPage,
     "/create_post": CreatePostPage,
+    "/my_posts": MyPostsPage,
   };
 
   const renderComponent = () => {

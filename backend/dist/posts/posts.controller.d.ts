@@ -20,4 +20,7 @@ export declare class PostsController {
     }): Promise<{
         message: string;
     }>;
+    getMyPosts(req: any): Promise<(import("mongoose").Document<unknown, {}, import("../schemes/post.schema").Post> & import("../schemes/post.schema").Post & Required<{
+        _id: string;
+    }>)[]>;
 }

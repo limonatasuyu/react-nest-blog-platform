@@ -15,36 +15,23 @@ import { Formik } from "formik";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { useState } from "react";
-import Snackbar from "@mui/material/Snackbar";
-import Alert, { AlertColor } from "@mui/material/Alert";
-import Slide, { SlideProps } from "@mui/material/Slide";
 import Layout2 from "../Layout2";
 import { DatePicker } from "@mui/x-date-pickers";
-import dayjs from 'dayjs'
-
-function SlideTransition(props: SlideProps) {
-  return <Slide {...props} direction="up" />;
-}
+import dayjs from "dayjs";
+import useSnackbar from "../hooks/useSnackbar";
 
 export default function SignUpPage() {
-  const [isSnackbarOpen, setIsSnackbarOpen] = useState(false);
+  const { setSnackBar } = useSnackbar();
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordAgain, setShowPasswordAgain] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState<{
-    message: string;
-    status: AlertColor;
-  }>({ message: "", status: "success" });
-
-  function handleCloseSnackbar() {
-    setIsSnackbarOpen(false);
-  }
-
 
   function handleClickShowPasswordAgain() {
     setShowPasswordAgain((show) => !show);
   }
 
-  function handleMouseDownPasswordAgain(event: React.MouseEvent<HTMLButtonElement>) {
+  function handleMouseDownPasswordAgain(
+    event: React.MouseEvent<HTMLButtonElement>
+  ) {
     event.preventDefault();
   }
 
@@ -56,20 +43,20 @@ export default function SignUpPage() {
     event.preventDefault();
   }
 
-  const ThirteenYearsAgo = dayjs().subtract(13, 'year')
+  const ThirteenYearsAgo = dayjs().subtract(13, "year");
   function handleValidation(values: any) {
-    const errors: any  = {};
+    const errors: any = {};
     if (!values.firstname) {
-      errors.firstname = "First name is required"
+      errors.firstname = "First name is required";
     }
     if (!values.lastname) {
-      errors.lastname = "Last name is required"
+      errors.lastname = "Last name is required";
     }
     if (!values.username) {
-      errors.username = "Username is required"
+      errors.username = "Username is required";
     }
     if (!values.dateOfBirth) {
-      errors.dateOfBirth = "Invalid date"
+      errors.dateOfBirth = "Invalid date";
     }
 
     if (!values.email) {
@@ -79,10 +66,10 @@ export default function SignUpPage() {
     }
 
     if (values.email !== values.emailAgain) {
-      errors.emailAgain = "Emails do not match"
+      errors.emailAgain = "Emails do not match";
     }
     if (values.password !== values.passwordAgain) {
-      errors.passwordAgain = "Passwords do not match"
+      errors.passwordAgain = "Passwords do not match";
     }
 
     if (!values.password) {
@@ -104,37 +91,34 @@ export default function SignUpPage() {
         firstname: values.firstname,
         lastname: values.lastname,
         username: values.username,
-        password: values.password, 
-        dateOfBirth: values.dateOfBirth.toDate()
+        password: values.password,
+        dateOfBirth: values.dateOfBirth.toDate(),
       }),
       headers: { "Content-Type": "application/json" },
     })
       .then(async (res) => {
         const jsonResponse = await res.json();
-        setSnackbarMessage({
-          message: jsonResponse?.message,
-          status: jsonResponse.error ? "error" : "success",
-        });
+        setSnackBar(
+          jsonResponse?.message,
+          jsonResponse.error ? "error" : "success"
+        );
 
         if (res.ok && jsonResponse.user_id) {
-          window.location.href = `/activate?user_id=${jsonResponse.user_id}`
+          window.location.href = `/activate?user_id=${jsonResponse.user_id}`;
         }
       })
       .catch((err) => {
-        setSnackbarMessage({
-          message:
-            JSON.stringify(err) === "{}"
-              ? "An unexpected error occured, please try again later."
-              : err,
-          status: "error",
-        });
+        setSnackBar(
+          JSON.stringify(err) === "{}"
+            ? "An unexpected error occured, please try again later."
+            : err,
+          "error"
+        );
       })
       .finally(() => {
-        setIsSnackbarOpen(true);
         setSubmitting(false);
       });
   }
-
 
   return (
     <Layout2>
@@ -196,11 +180,11 @@ export default function SignUpPage() {
                 value={values.username}
                 error={Boolean(errors.username) && touched.username}
                 helperText={touched.username && errors.username}
-              /> 
+              />
               <DatePicker
                 label="Date Of Birth"
                 value={values.dateOfBirth}
-                onChange={(val) => setFieldValue('dateOfBirth', val)}
+                onChange={(val) => setFieldValue("dateOfBirth", val)}
                 maxDate={ThirteenYearsAgo}
                 slotProps={{
                   textField: {
@@ -208,7 +192,6 @@ export default function SignUpPage() {
                     error: Boolean(errors.dateOfBirth) && touched.dateOfBirth,
                   },
                 }}
-
               />
               <TextField
                 id="email"
@@ -308,21 +291,6 @@ export default function SignUpPage() {
           </form>
         )}
       </Formik>
-      <Snackbar
-        open={isSnackbarOpen}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        TransitionComponent={SlideTransition}
-      >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity={snackbarMessage.status}
-          variant="filled"
-          sx={{ width: "100%" }}
-        >
-          {JSON.stringify(snackbarMessage.message)}
-        </Alert>
-      </Snackbar>
     </Layout2>
   );
 }

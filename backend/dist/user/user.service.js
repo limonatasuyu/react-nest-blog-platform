@@ -85,11 +85,11 @@ let UsersService = class UsersService {
                 : latest;
         });
         if (codeToCheck.tryCount >= 3) {
-            throw new common_1.BadRequestException('Code tried out or somthin');
+            throw new common_1.BadRequestException('Too many wrong queries made, please request a new code');
         }
         const fiveMinutesInMs = 5 * 60 * 1000;
         if (Math.abs(new Date().getTime() - new Date(codeToCheck.createdAt).getTime()) >= fiveMinutesInMs) {
-            throw new common_1.BadRequestException('Activation code is timed out or smt, idk');
+            throw new common_1.BadRequestException('Too much time passed till code generated, please request a new code');
         }
         if (Number(dto.activationCode) !== Number(codeToCheck.code)) {
             await this.activationCodeModel.updateOne({ user_id: dto.user_id }, { tryCount: codeToCheck.tryCount + 1 });

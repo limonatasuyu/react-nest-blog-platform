@@ -33,7 +33,7 @@ __decorate([
     __metadata("design:type", Array)
 ], Post.prototype, "imageIds", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ required: true, type: mongoose.Schema.Types.ObjectId, ref: 'User' }),
+    (0, mongoose_1.Prop)({ required: true, type: String, ref: 'User' }),
     __metadata("design:type", user_schema_1.User)
 ], Post.prototype, "user", void 0);
 __decorate([

@@ -96,6 +96,17 @@ let PostsService = class PostsService {
         }
         return { message: 'Post updated successfully' };
     }
+    async getUsersPosts(username) {
+        const user = await this.usersService.findOne(username);
+        if (!user) {
+            throw new common_1.InternalServerErrorException();
+        }
+        const posts = await this.postsModel.find({ user: user._id });
+        if (!posts) {
+            throw new common_1.InternalServerErrorException();
+        }
+        return posts;
+    }
 };
 exports.PostsService = PostsService;
 exports.PostsService = PostsService = __decorate([

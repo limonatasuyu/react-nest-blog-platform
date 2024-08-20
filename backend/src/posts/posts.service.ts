@@ -1,6 +1,6 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import { Post } from 'src/schemes/post.schema';
 import { UsersService } from 'src/user/user.service';
 import {
@@ -110,5 +110,26 @@ export class PostsService {
     }
 
     return { message: 'Post updated successfully' };
+  }
+
+  async getUsersPosts(username: string) {
+    const user = await this.usersService.findOne(username);
+    if (!user) {
+      throw new InternalServerErrorException();
+    }
+
+    const posts = await this.postsModel.find({ user: user._id });
+
+    if (!posts) {
+      throw new InternalServerErrorException();
+    }
+
+    return posts.map((i) => ({
+      commentIds: i.commentIds,
+      content: i.content,
+      thumbnail: i.thumbnail,
+      title: i.title,
+      likedCount: i.likedBy.length,
+    }));
   }
 }

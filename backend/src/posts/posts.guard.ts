@@ -22,7 +22,6 @@ export class PostsGuard implements CanActivate {
     if (!token) {
       throw new UnauthorizedException();
     }
-
     try {
       const payload = await this.jwtService.verifyAsync(token, {
         secret: process.env.JWT_SECRET,
@@ -32,7 +31,7 @@ export class PostsGuard implements CanActivate {
       throw new UnauthorizedException();
     }
 
-    if (request.method === 'POST') return true;
+    if (request.method === "POST" || request.method === "GET") return true;
 
     const postId = this.getPostIdFromQuery(request);
     if (!postId) {
@@ -47,7 +46,6 @@ export class PostsGuard implements CanActivate {
     if (!post) {
       throw new InternalServerErrorException('Could not find the post');
     }
-
     return true;
   }
 

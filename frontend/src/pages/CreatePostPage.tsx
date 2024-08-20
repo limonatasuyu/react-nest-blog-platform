@@ -1,11 +1,4 @@
-import {
-  Box,
-  TextField,
-  Button,
-  Typography,
-  Tabs,
-  Tab,
-} from "@mui/material";
+import { Box, TextField, Button, Typography, Tabs, Tab, AlertColor } from "@mui/material";
 import Layout1 from "../Layout1";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { styled } from "@mui/material/styles";
@@ -13,6 +6,8 @@ import { useState } from "react";
 import { Formik } from "formik";
 import { marked } from "marked";
 import TagsInput from "../components/TagsInput";
+import placeholderThumbnail from "/placeholderThumbnail.jpg";
+import useSnackbar from "../hooks/useSnackbar";
 
 const VisuallyHiddenInput = styled("input")({
   clip: "rect(0 0 0 0)",
@@ -26,26 +21,105 @@ const VisuallyHiddenInput = styled("input")({
   width: 1,
 });
 
+function fileToDataUri(file: File) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    // Load event triggers when the reading is complete
+    reader.onload = () => resolve(reader.result);
+
+    // Error event triggers if something goes wrong
+    reader.onerror = (error) => reject(error);
+
+    // Read the file as a Data URL (base64 string)
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function CreatePostPage() {
+
+  const { setSnackBar } = useSnackbar()
   const [tabValue, setTabValue] = useState(0);
+  const [imageDataUri, setImageDataUri] = useState<string | null>(null)
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
   };
 
-  function handleValidation(values) {}
+  function handleValidation(values: {
+    title: string;
+    content: string;
+    tags: string[];
+  }) {
+    const errors: { title?: string; content?: string; tags?: string } = {};
+    if (!values.title) {
+      errors.title = "Title is required";
+    }
+    if (!values.content) {
+      errors.content = "Content is required";
+    }
 
-  function handleSubmit(values, { setSubmitting }) {}
+    if (!values.tags.length) {
+      errors.tags = "Please provide at least one tag";
+    }
+    return errors;
+  }
+
+  function handleSubmit(
+    values: { title: string; content: string; tags: string[] },
+    { setSubmitting }: { setSubmitting: (is: boolean) => void }
+  ) {
+    const token = window.sessionStorage.getItem("access_token");
+    fetch("http://localhost:5000/posts", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(values),
+    })
+      .then(async (res) => {
+        const jsonResponse = await res.json()        
+        const message = jsonResponse.message;
+        let status: AlertColor;
+        if (res.ok) {
+          status = "success";
+          setTimeout(() => {
+            window.location.pathname = "/";
+          }, 3000);
+        } else {
+          status = "error";
+        }
+
+        setSnackBar(message, status);
+
+      })
+      .catch((err) => {
+        setSnackBar(err.message ?? "Something went wrong, please try again later.", "error")
+      })
+      .finally(() => setSubmitting(false));
+  }
 
   return (
     <Layout1>
-      <Typography variant="h4" component="h1" gutterBottom>
+      <Typography
+        variant="h4"
+        component="h1"
+        gutterBottom
+        sx={{ textAlign: "center", mt: 2 }}
+      >
         Create a New Post
       </Typography>
-      <Tabs value={tabValue} onChange={handleTabChange} sx={{ mb: 3 }}>
-        <Tab label="Create" />
-        <Tab label="Overview" />
-      </Tabs>
+      <Box display="flex" sx={{ justifyContent: "center", width: "100%" }}>
+        <Tabs
+          value={tabValue}
+          onChange={handleTabChange}
+          sx={{ mb: 3, display: "flex", justifyContent: "center" }}
+        >
+          <Tab label="Create" />
+          <Tab label="Overview" />
+        </Tabs>
+      </Box>
       <Formik
         initialValues={{ title: "", content: "", tags: [], image: null }}
         validate={handleValidation}
@@ -58,7 +132,7 @@ export default function CreatePostPage() {
           isSubmitting,
           handleSubmit,
           touched,
-          setFieldValue
+          setFieldValue,
         }) => (
           <form
             style={{
@@ -77,7 +151,7 @@ export default function CreatePostPage() {
                       borderRadius: "8px",
                       objectFit: "cover",
                     }}
-                    src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fstatic.vecteezy.com%2Fsystem%2Fresources%2Fpreviews%2F002%2F206%2F011%2Foriginal%2Farticle-icon-free-vector.jpg&f=1&nofb=1  &ipt=fa94e0c45693f154e6c62e053caa929bcffacf0fc5adb30fd73052091a585691&ipo=images"
+                    src={imageDataUri ?? placeholderThumbnail}
                     alt="Post Thumbnail"
                   />
                   <Button
@@ -97,8 +171,20 @@ export default function CreatePostPage() {
                       },
                     }}
                   >
-                    Upload image
-                    <VisuallyHiddenInput type="file" />
+                    {imageDataUri ? "Change the" : "Upload"} image
+                    <VisuallyHiddenInput
+                      type="file"
+                      accept=".png,.jpg"
+                      onChange={(e) => {
+                        console.log("val: ", values);
+                        if (!e.target.files || !e.target.files.length) return;
+                        setFieldValue(
+                          "image", e.target.files[0]
+                        );
+                        fileToDataUri(e.target.files[0]).then(res => setImageDataUri(res as string))
+                        e.target.files = null;
+                      }}
+                    />
                   </Button>
                 </Box>
 
@@ -122,31 +208,71 @@ export default function CreatePostPage() {
                   value={values.content}
                   onChange={handleChange}
                 />
-                <TagsInput 
+                <TagsInput
                   name="tags"
                   values={values.tags}
                   error={String(errors.tags)}
                   touched={Boolean(touched.tags)}
                   setFieldValue={setFieldValue}
                 />
-                <Button disabled={isSubmitting} variant="contained" color="primary" fullWidth>
+                <Button
+                  disabled={isSubmitting}
+                  variant="contained"
+                  color="primary"
+                  fullWidth
+                  type="submit"
+                  sx={{ mt: 1, mb: 2 }}
+                >
                   Publish Post
                 </Button>
               </Box>
             )}
 
             {tabValue === 1 && (
-              <Box>
-                <Typography variant="h6">Overview</Typography>
-                <Typography variant="body1">
-                  Here you can review your post before publishing. Make sure to
-                  fill out all the fields with relevant information.
-                </Typography>
-                <div
-                  dangerouslySetInnerHTML={{
-                    __html: marked.parse(values.content, { async: false }),
-                  }}
-                />
+              <Box
+                sx={{
+                  width: "100",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                }}
+              >
+                <Box sx={{ width: "50%" }}>
+                  <Box sx={{ mt: 2, mb: 4 }}>
+                    <h1 style={{ textAlign: "center" }}>
+                      {values.title.length
+                        ? values.title
+                        : "Title would be in here"}
+                    </h1>
+
+                    <img
+                      style={{
+                        width: "100%",
+                        height: "auto",
+                        borderRadius: "8px",
+                        objectFit: "cover",
+                        marginTop: "2rem",
+                      }}
+                      src={imageDataUri ?? placeholderThumbnail}
+                      alt="Post Thumbnail"
+                    />
+
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "1rem",
+                        marginTop: "2rem",
+                      }}
+                      dangerouslySetInnerHTML={{
+                        __html: marked.parse(values.content, {
+                          async: false,
+                          breaks: true,
+                        }),
+                      }}
+                    />
+                  </Box>
+                </Box>
               </Box>
             )}
           </form>

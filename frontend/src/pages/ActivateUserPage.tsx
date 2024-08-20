@@ -1,30 +1,12 @@
 import { useState } from "react";
 import Layout2 from "../Layout2";
-import {
-  TextField,
-  Typography,
-  Button,
-  Snackbar,
-  Alert,
-  Slide,
-  SlideProps,
-  AlertColor,
-  Box,
-} from "@mui/material";
+import { TextField, Typography, Button, Box, AlertColor } from "@mui/material";
 import useTimer from "../hooks/timer";
-
-function SlideTransition(props: SlideProps) {
-  return <Slide {...props} direction="up" />;
-}
+import useSnackbar from "../hooks/useSnackbar";
 
 export default function ActivateUserPage() {
   const { timeLeft, formatTime, reInitalize } = useTimer(5 * 60);
-
-  const [isSnackbarOpen, setIsSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState<{
-    message: string;
-    status: AlertColor;
-  }>({ message: "", status: "success" });
+  const { setSnackBar } = useSnackbar();
 
   const [textValue, setTextValue] = useState("");
   const [error, setError] = useState("");
@@ -33,10 +15,6 @@ export default function ActivateUserPage() {
 
   const params = new URL(document.location.toString()).searchParams;
   const userId = params.get("user_id");
-
-  function handleCloseSnackbar() {
-    setIsSnackbarOpen(false);
-  }
 
   if (!userId) {
     setTimeout(() => {
@@ -66,22 +44,20 @@ export default function ActivateUserPage() {
         let status: AlertColor;
         if (res.ok) {
           status = "success";
-          setTimeout(() => {window.location.pathname = "/"}, 3000);
+          setTimeout(() => {
+            window.location.pathname = "/";
+          }, 3000);
         } else {
           status = "error";
         }
 
-        setSnackbarMessage({ message: message, status: status });
+        setSnackBar(message, status);
       })
       .catch((err) => {
-        setSnackbarMessage({
-          message: err.message ?? "Please try again later",
-          status: "error",
-        });
+        setSnackBar(err.message ?? "Please try again later", "error");
       })
       .finally(() => {
         setIsSubmitting(false);
-        setIsSnackbarOpen(true);
       });
   }
 
@@ -105,17 +81,13 @@ export default function ActivateUserPage() {
           status = "error";
         }
 
-        setSnackbarMessage({ message: message, status: status });
+        setSnackBar(message, status);
       })
       .catch((err) => {
-        setSnackbarMessage({
-          message: err.message ?? "Please try again later",
-          status: "error",
-        });
+        setSnackBar(err.message ?? "Please try again later", "error");
       })
       .finally(() => {
         setIsSubmittingNewRequest(false);
-        setIsSnackbarOpen(true);
       });
   }
 
@@ -173,21 +145,6 @@ export default function ActivateUserPage() {
           </Box>
         </Box>
       </Box>
-      <Snackbar
-        open={isSnackbarOpen}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        TransitionComponent={SlideTransition}
-      >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity={snackbarMessage.status}
-          variant="filled"
-          sx={{ width: "100%" }}
-        >
-          {JSON.stringify(snackbarMessage.message)}
-        </Alert>
-      </Snackbar>
     </Layout2>
   );
 }

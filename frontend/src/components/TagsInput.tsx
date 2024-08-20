@@ -5,7 +5,6 @@ import {
   OutlinedInput,
   FormHelperText,
   Chip,
-  Box,
 } from "@mui/material";
 
 const TagsInput = ({
@@ -45,27 +44,31 @@ const TagsInput = ({
 
   return (
     <FormControl sx={{ width: "100%" }}>
-      <InputLabel htmlFor="tags" error={Boolean(error)}>
+      <InputLabel htmlFor="tags" 
+        //error={Boolean(error)}
+      >
         Tags
       </InputLabel>
       <OutlinedInput
+        sx={{ height: "fit-content", display: "flex", gap: 1, flexWrap: "wrap", p: 2 }}
         id="tags"
         value={tagValue}
         onChange={(e) => setTagValue(e.target.value)}
         onKeyDown={handleKeyDown}
-        error={Boolean(error)}
+        //error={Boolean(error)}
         type="text"
         label="Tags"
+        inputProps={{ style: { width: "min-content", flexGrow: 1, padding: 0 } }}
         startAdornment={
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, pr: 1 }}>
-            {values.map((tag, index) => (
-              <Chip
+          <>
+            {values.map((tag, index) => ( <Chip
                 key={index}
                 label={tag}
+                sx={{ height: "2rem" }}
                 onDelete={() => handleDelete(tag)}
               />
             ))}
-          </Box>
+          </>
         }
       />
       <FormHelperText error>{touched && error}</FormHelperText>

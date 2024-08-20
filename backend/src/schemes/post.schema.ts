@@ -20,7 +20,7 @@ export class Post {
   @Prop([String])
   imageIds: string[];
 
-  @Prop({ required: true, type: mongoose.Schema.Types.ObjectId, ref: 'User' })
+  @Prop({ required: true, type: String, ref: 'User' })
   user: User;
 
   @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'Comment' })

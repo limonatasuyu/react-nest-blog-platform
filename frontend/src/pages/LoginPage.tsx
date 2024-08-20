@@ -15,26 +15,12 @@ import { Formik } from "formik";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { useState } from "react";
-import Snackbar from "@mui/material/Snackbar";
-import Alert, { AlertColor } from "@mui/material/Alert";
-import Slide, { SlideProps } from "@mui/material/Slide";
 import Layout2 from "../Layout2";
-
-function SlideTransition(props: SlideProps) {
-  return <Slide {...props} direction="up" />;
-}
+import useSnackbar from "../hooks/useSnackbar";
 
 export default function LoginPage() {
-  const [isSnackbarOpen, setIsSnackbarOpen] = useState(false);
+  const { setSnackBar } = useSnackbar();
   const [showPassword, setShowPassword] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState<{
-    message: string;
-    status: AlertColor;
-  }>({ message: "", status: "success" });
-
-  function handleCloseSnackbar() {
-    setIsSnackbarOpen(false);
-  }
 
   function handleClickShowPassword() {
     setShowPassword((show) => !show);
@@ -74,10 +60,10 @@ export default function LoginPage() {
     })
       .then(async (res) => {
         const jsonResponse = await res.json();
-        setSnackbarMessage({
-          message: jsonResponse?.message,
-          status: jsonResponse.error ? "error" : "success",
-        });
+        setSnackBar(
+          jsonResponse?.message,
+          jsonResponse.error ? "error" : "success"
+        );
 
         if (jsonResponse.access_token) {
           window.sessionStorage.setItem(
@@ -88,22 +74,20 @@ export default function LoginPage() {
         }
       })
       .catch((err) => {
-        setSnackbarMessage({
-          message:
-            JSON.stringify(err) === "{}"
-              ? "An unexpected error occured, please try again later."
-              : err,
-          status: "error",
-        });
+        setSnackBar(
+          JSON.stringify(err) === "{}"
+            ? "An unexpected error occured, please try again later."
+            : err,
+          "error"
+        );
       })
       .finally(() => {
-        setIsSnackbarOpen(true);
         setSubmitting(false);
       });
   }
 
   return (
-<Layout2>
+    <Layout2>
       <img src={logo_white} style={{ marginBottom: "2rem" }} />
       <Formik
         initialValues={{ email: "", password: "" }}
@@ -188,22 +172,6 @@ export default function LoginPage() {
           </form>
         )}
       </Formik>
-
-      <Snackbar
-        open={isSnackbarOpen}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        TransitionComponent={SlideTransition}
-      >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity={snackbarMessage.status}
-          variant="filled"
-          sx={{ width: "100%" }}
-        >
-          {JSON.stringify(snackbarMessage.message)}
-        </Alert>
-      </Snackbar>
-  </Layout2>
+    </Layout2>
   );
 }
