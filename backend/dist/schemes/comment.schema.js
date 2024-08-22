@@ -18,7 +18,7 @@ let Comment = class Comment {
 exports.Comment = Comment;
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
-    __metadata("design:type", String)
+    __metadata("design:type", mongoose.Schema.Types.ObjectId)
 ], Comment.prototype, "_id", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),

@@ -6,18 +6,27 @@ import {
   Typography,
   Tooltip,
   IconButton,
-  Divider,
+  Chip,
 } from "@mui/material";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import ChatIcon from "@mui/icons-material/Chat";
 import useSnackbar from "../hooks/useSnackbar";
+import placeholderThumbnail from "/placeholderThumbnail.jpg";
+import { SentimentDissatisfied } from "@mui/icons-material";
+import Loading from "../components/Loading";
 
 export default function MyPostsPage() {
-  const [posts, setPosts] = useState([]);
+  const [posts, setPosts] = useState<{
+      title: string;
+      content: string;
+      commentCount: number;
+      likedCount: number;
+      thumbnailId?: string;
+      tags: string[];
+    }[]
+  >([]);
   const [loaded, setLoaded] = useState(false);
   const { setSnackBar } = useSnackbar();
-
-  console.log(posts)
 
   useEffect(() => {
     const token = window.sessionStorage.getItem("access_token");
@@ -47,85 +56,178 @@ export default function MyPostsPage() {
       .finally(() => setLoaded(true));
   }, []);
 
+  if (!loaded) return <Loading />;
+
   return (
     <Layout1>
-      <Box>
-        {/*posts.map((i, x) => (
-              <Box key={x} sx={{ maxWidth: "45rem", mt: 2 }}>
-                <Link
-                  display="flex"
-                  color="inherit"
-                  href="/user"
-                  sx={{
-                    textDecoration: "none",
-                    cursor: "pointer",
-                    ml: 1,
-                    gap: 1,
-                    "&:hover": { textDecoration: "underline" },
-                  }}
-                >
-                </Link>
-                <Link
-                  display="flex"
-                  href="/post"
-                  color="inherit"
-                  sx={{ textDecoration: "none" }}
-                >
-                  <img
-                    src={i.imageDataUrl}
-                    style={{ width: "auto", height: "10rem" }}
+      <Box
+        sx={{
+          width: "100%",
+          maxWidth: "800px",
+          mx: "auto",
+          mt: 8,
+          px: 2,
+        }}
+      >
+        <Typography variant="h4" align="center" gutterBottom>
+          Your Posts
+        </Typography>
+        {posts.length ? (
+          posts.map((post, index) => (
+            <Box
+              key={index}
+              sx={{
+                mb: 4,
+                p: 2,
+                backgroundColor: "background.paper",
+                borderRadius: 2,
+                boxShadow: 1,
+              }}
+            >
+              <Link
+                href={`/post/${post.id}`}
+                sx={{ textDecoration: "none", color: "inherit" }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center" }}>
+                  <Box
+                    component="img"
+                    src={
+                      post.thumbnailId
+                        ? `http://localhost:5000/image/${post.thumbnailId}`
+                        : placeholderThumbnail
+                    }
+                    sx={{
+                      width: "100px",
+                      height: "100px",
+                      borderRadius: 1,
+                      mr: 2,
+                      objectFit: "cover",
+                    }}
+                    alt="Post thumbnail"
                   />
                   <Box>
-                    <Typography variant="h2">{i.title}</Typography>
-                    <Typography variant="caption">{i.description}</Typography>
-                  </Box>
-                </Link>
-                <Box
-                  display="flex"
-                  sx={{ justifyContent: "space-between", alignItems: "center" }}
-                >
-                  <Box display="flex" sx={{ gap: 2 }}>
-                    <Tooltip title="123 likes" arrow>
-                      <IconButton
-                        disableRipple
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                      >
-                        <FavoriteIcon /> 123
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="123 comments" arrow>
-                      <IconButton
-                        disableRipple
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                      >
-                        <ChatIcon /> 123
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
-                  <Box display="flex" sx={{ gap: 1 }}>
-                    {i.tags.map((i_, x_) => (
-                      <Link
-                        color="inherit"
-                        variant="body2"
-                        sx={{
-                          backgroundColor: "gray",
-                          color: "white",
-                          p: "7px",
-                          borderRadius: "20px",
-                          textDecoration: "none",
-                          "&:hover": { background: "#b2b2b2" },
-                        }}
-                        href={`/tags/${i_}`}
-                        key={x_}
-                      >
-                        {i_}
-                      </Link>
-                    ))}
+                    <Typography variant="h6">{post.title}</Typography>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{
+                        mt: 1,
+                        display: "-webkit-box",
+                        overflow: "hidden",
+                        WebkitBoxOrient: "vertical",
+                        WebkitLineClamp: 2, // Limit to 2 lines of text
+                      }}
+                    >
+                      {post.content}
+                    </Typography>
                   </Box>
                 </Box>
-                <Divider sx={{ mt: 1 }} />
+              </Link>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mt: 2,
+                }}
+              >
+                <Box sx={{ display: "flex", gap: 2 }}>
+                  <Tooltip title={`${post.likedCount} likes`} arrow>
+                    <IconButton disableRipple>
+                      <FavoriteIcon color="primary" sx={{ mr: 1 }} />
+                      {post.likedCount}
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title={`${post.commentCount} comments`} arrow>
+                    <IconButton disableRipple>
+                      <ChatIcon color="primary" sx={{ mr: 1 }} />
+                      {post.commentCount}
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+                <Box sx={{ display: "flex", gap: 1 }}>
+                  {post.tags.map((tag, tagIndex) => (
+                    <Chip
+                      key={tagIndex}
+                      label={tag}
+                      component="a"
+                      href={`/tags/${tag}`}
+                      clickable
+                      variant="outlined"
+                      color="primary"
+                      size="small"
+                    />
+                  ))}
+                </Box>
               </Box>
-            ))*/}
+            </Box>
+          ))
+        ) : (
+          <Box
+            display="flex"
+            sx={{
+              fontSize: "50px",
+              width: "100%",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 2,
+              borderRadius: 2,
+              color: "gray",
+              backgroundColor: "#c9c9c9",
+              py: 2
+            }}
+          >
+            <SentimentDissatisfied sx={{ fontSize: "inherit" }} />
+            <Typography sx={{ fontSize: "inheriinheritt" }}>
+              No articles found.
+            </Typography>
+          </Box>
+        )}
+        <Box
+          sx={{
+            mb: 4,
+            p: 2,
+            backgroundColor: "background.paper",
+            borderRadius: 2,
+            boxShadow: 1,
+          }}
+        >
+          <Link
+            href="/create_post"
+            sx={{ textDecoration: "none", color: "inherit" }}
+          >
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              <Box
+                component="img"
+                src={placeholderThumbnail}
+                sx={{
+                  width: "100px",
+                  height: "100px",
+                  borderRadius: 1,
+                  mr: 2,
+                  objectFit: "cover",
+                }}
+                alt="Post thumbnail"
+              />
+              <Box>
+                <Typography variant="h6">{"Write a new article"}</Typography>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{
+                    mt: 1,
+                    display: "-webkit-box",
+                    overflow: "hidden",
+                    WebkitBoxOrient: "vertical",
+                    WebkitLineClamp: 2, // Limit to 2 lines of text
+                  }}
+                >
+                  Write what you think
+                </Typography>
+              </Box>
+            </Box>
+          </Link>
+        </Box>
       </Box>
     </Layout1>
   );

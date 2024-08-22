@@ -13,6 +13,7 @@ const user_controller_1 = require("./user.controller");
 const user_service_1 = require("./user.service");
 const user_schema_1 = require("../schemes/user.schema");
 const activationCode_schema_1 = require("../schemes/activationCode.schema");
+const image_module_1 = require("../image/image.module");
 let UserModule = class UserModule {
 };
 exports.UserModule = UserModule;
@@ -23,6 +24,7 @@ exports.UserModule = UserModule = __decorate([
                 { name: user_schema_1.User.name, schema: user_schema_1.UserSchema },
                 { name: activationCode_schema_1.ActivationCode.name, schema: activationCode_schema_1.ActivationCodeSchema },
             ]),
+            image_module_1.ImageModule
         ],
         controllers: [user_controller_1.UserModuleController],
         providers: [user_service_1.UsersService],

@@ -18,10 +18,11 @@ const user_schema_1 = require("../schemes/user.schema");
 const activationCode_schema_1 = require("../schemes/activationCode.schema");
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
-const bson_1 = require("bson");
+const mongoose = require("mongoose");
 const promises_1 = require("node:fs/promises");
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
+const image_service_1 = require("../image/image.service");
 let blocklist;
 async function isDisposable(email) {
     if (!blocklist) {
@@ -62,9 +63,10 @@ async function sendActivationEmail(toEmail, activationCode) {
     });
 }
 let UsersService = class UsersService {
-    constructor(userModel, activationCodeModel) {
+    constructor(userModel, activationCodeModel, imageService) {
         this.userModel = userModel;
         this.activationCodeModel = activationCodeModel;
+        this.imageService = imageService;
     }
     async activate(dto) {
         const user = await this.userModel.findOne({
@@ -74,7 +76,7 @@ let UsersService = class UsersService {
             throw new common_1.InternalServerErrorException();
         }
         const activationCodes = await this.activationCodeModel.find({
-            user_id: dto.user_id,
+            user_id: new mongoose.Types.ObjectId(dto.user_id),
         });
         if (!activationCodes || !activationCodes.length) {
             throw new common_1.InternalServerErrorException();
@@ -123,7 +125,7 @@ let UsersService = class UsersService {
             ...dto,
             password: encryptedPassword,
             isActivated: false,
-            _id: new bson_1.ObjectId(),
+            _id: new mongoose.Types.ObjectId(),
         });
         const createdActivationCode = new this.activationCodeModel({
             user_id: createdUser._id,
@@ -155,7 +157,10 @@ let UsersService = class UsersService {
         if (Math.abs(new Date().getTime() - new Date(codeToCheck.createdAt).getTime()) < fiveMinutesInMs) {
             throw new common_1.RequestTimeoutException('Please wait for 5 minutes before try to create a new code.');
         }
-        const activationCode = Math.floor(Math.random() * 1000000);
+        let activationCode;
+        do {
+            activationCode = Math.floor(Math.random() * 1000000);
+        } while (String(activationCode).length !== 6);
         const isActivationSent = await sendActivationEmail(user.email, activationCode);
         if (!isActivationSent) {
             throw new common_1.InternalServerErrorException();
@@ -176,6 +181,29 @@ let UsersService = class UsersService {
             $or: [{ username: usernameOrEmail }, { email: usernameOrEmail }],
         });
     }
+    async getById(user_id) {
+        const user = await this.userModel.findById(new mongoose.Types.ObjectId(user_id));
+        if (!user) {
+            throw new common_1.InternalServerErrorException();
+        }
+        return {
+            firstname: user.firstname,
+            lastname: user.lastname,
+            username: user.username,
+            email: user.email,
+            profilePictureId: user.profilePictureId,
+        };
+    }
+    async changeProfilePicture(pictureId, userId) {
+        const image = await this.imageService.getImageWithId(pictureId);
+        if (!image)
+            throw new common_1.InternalServerErrorException();
+        const updatedUser = await this.userModel.updateOne({ _id: new mongoose.Types.ObjectId(userId) }, { profilePictureId: pictureId });
+        if (!updatedUser)
+            throw new common_1.InternalServerErrorException();
+        await this.imageService.relateImage(pictureId);
+        return { message: 'Profile picture changed successfully.' };
+    }
 };
 exports.UsersService = UsersService;
 exports.UsersService = UsersService = __decorate([
@@ -183,6 +211,7 @@ exports.UsersService = UsersService = __decorate([
     __param(0, (0, mongoose_1.InjectModel)(user_schema_1.User.name)),
     __param(1, (0, mongoose_1.InjectModel)(activationCode_schema_1.ActivationCode.name)),
     __metadata("design:paramtypes", [mongoose_2.Model,
-        mongoose_2.Model])
+        mongoose_2.Model,
+        image_service_1.ImageService])
 ], UsersService);
 //# sourceMappingURL=user.service.js.map

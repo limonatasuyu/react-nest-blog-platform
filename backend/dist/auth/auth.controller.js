@@ -16,15 +16,17 @@ exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
 const auth_service_1 = require("./auth.service");
 const auth_guard_1 = require("./auth.guard");
+const user_service_1 = require("../user/user.service");
 let AuthController = class AuthController {
-    constructor(authService) {
+    constructor(authService, usersService) {
         this.authService = authService;
+        this.usersService = usersService;
     }
     login(dto) {
         return this.authService.login(dto);
     }
     getProfile(req) {
-        return req.user;
+        return this.usersService.getById(req.user.sub);
     }
 };
 exports.AuthController = AuthController;
@@ -46,6 +48,7 @@ __decorate([
 ], AuthController.prototype, "getProfile", null);
 exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)('auth'),
-    __metadata("design:paramtypes", [auth_service_1.AuthService])
+    __metadata("design:paramtypes", [auth_service_1.AuthService,
+        user_service_1.UsersService])
 ], AuthController);
 //# sourceMappingURL=auth.controller.js.map

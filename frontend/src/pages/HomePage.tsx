@@ -1,246 +1,349 @@
+import { useState, useEffect } from "react";
 import {
   Box,
-  Button,
-  Divider,
   Typography,
+  Divider,
+  Button,
   Link,
-  Tooltip,
   IconButton,
+  Tooltip,
+  Chip,
+  Avatar,
+  Paper,
 } from "@mui/material";
-import Layout from "../Layout1";
-import { useState } from "react";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import FavoriteIcon from "@mui/icons-material/Favorite";
-import ChatIcon from "@mui/icons-material/Chat";
-
-const mockTags = ["Food", "Sports", "Tech", "Business"];
-const mockPosts = [
-  {
-    title: "Test Title",
-    description:
-      "Voluptates sed non sint. Voluptas sunt maxime ad fugiat soluta sunt earum. Nesciunt enim atque quo accusamus et optio aspernatur asperiores. Ex odit dicta ipsum et illo. Rerum magnam et est ut qui ut in. Et voluptates rerum minima ad consequatur.…",
-    imageDataUrl:
-      "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fstatic.vecteezy.com%2Fsystem%2Fresources%2Fpreviews%2F002%2F206%2F011%2Foriginal%2Farticle-icon-free-vector.jpg&f=1&nofb=1&ipt=fa94e0c45693f154e6c62e053caa929bcffacf0fc5adb30fd73052091a585691&ipo=images",
-    tags: ["tag1", "tag2", "tag3"],
-    user: "some user",
-  },
-  {
-    title: "Test Title",
-    description:
-      "Voluptates sed non sint. Voluptas sunt maxime ad fugiat soluta sunt earum. Nesciunt enim atque quo accusamus et optio aspernatur asperiores. Ex odit dicta ipsum et illo. Rerum magnam et est ut qui ut in. Et voluptates rerum minima ad consequatur.…",
-    imageDataUrl:
-      "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fstatic.vecteezy.com%2Fsystem%2Fresources%2Fpreviews%2F002%2F206%2F011%2Foriginal%2Farticle-icon-free-vector.jpg&f=1&nofb=1&ipt=fa94e0c45693f154e6c62e053caa929bcffacf0fc5adb30fd73052091a585691&ipo=images",
-    tags: ["tag1", "tag2", "tag3"],
-    user: "some user",
-  },
-];
-
-const mockTagsToFollow = [
-  "tag1",
-  "tag2",
-  "tag3",
-  "tag4",
-  "long tag",
-  "tag5",
-  "long tag 2",
-];
-
-const mockWhoToFollow = [
-  {
-    name: "someOne somene",
-    desciption: "this and that",
-  },
-  {
-    name: "someOne somene",
-    desciption: "this and that",
-  },
-  {
-    name: "someOne somene",
-    desciption: "this and that",
-  },
-];
+import {
+  AccountCircle as AccountCircleIcon,
+  Favorite as FavoriteIcon,
+  Chat as ChatIcon,
+} from "@mui/icons-material";
+import Layout1 from "../Layout1";
+import useSnackbar from "../hooks/useSnackbar";
+import placeHolderThumbnail from "/placeholderThumbnail.jpg";
 
 export default function HomePage() {
-  const [activaTagTab, setActiveTagTab] = useState(mockTags[0]);
+  const [activeTagTab, setActiveTagTab] = useState("All");
+  const [page, setPage] = useState(1);
+
+  const mockTags = ["All", "Technology", "Health", "Finance"];
+  const mockPosts = [
+    {
+      user: "John Doe",
+      imageDataUrl: "https://via.placeholder.com/150",
+      title: "Understanding React Hooks",
+      description:
+        "An in-depth look into React Hooks and how they can simplify your code.",
+      tags: ["React", "JavaScript", "Web Development"],
+    },
+    // Add more mock posts here
+  ];
+  const mockTagsToFollow = ["Science", "Art", "Travel"];
+  const mockWhoToFollow = [
+    {
+      name: "Jane Smith",
+      description: "Frontend Developer",
+      avatarUrl: "https://via.placeholder.com/40",
+    },
+    // Add more mock users here
+  ];
+
+  const [posts, setPosts] = useState<
+    {
+      id: string;
+      title: string;
+      content: string;
+      commentCount: number;
+      likedCount: number;
+      thumbnailId?: string;
+      tags: string[];
+      user: {
+        name: string;
+        username: string;
+      }
+    }[]
+  >([]);
+  const [loaded, setLoaded] = useState(false);
+  const { setSnackBar } = useSnackbar();
+
+  useEffect(() => {
+    const token = window.sessionStorage.getItem("access_token");
+    fetch(`http://localhost:5000/posts?page=${page}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then(async (res) => {
+        const jsonResponse = await res.json();
+        if (!res.ok) {
+          setSnackBar(
+            jsonResponse.message ??
+              "Something went wrong, please try again later",
+            "error"
+          );
+          return;
+        }
+        setPosts(jsonResponse);
+      })
+      .catch((err) => {
+        setSnackBar(
+          err.message ?? "Something went wrong, please try again later",
+          "error"
+        );
+      })
+      .finally(() => setLoaded(true));
+  }, [page]);
+
+  if (!loaded) {
+    return (
+      <Layout1>
+        <Box
+          display="flex"
+          sx={{
+            width: "100%",
+            height: "80vh",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Typography variant="h3">Loading..</Typography>
+        </Box>
+      </Layout1>
+    );
+  }
 
   return (
-    <Layout>
-      <Box display="flex" sx={{ justifyContent: "center", mt: 10, gap: 2 }}>
-        <Box>
-          <Box display="flex" sx={{ gap: 2 }}>
-            {mockTags.map((i, x) => (
+    <Layout1>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          mt: 8,
+          gap: 4,
+          flexWrap: { xs: "wrap", md: "nowrap" },
+        }}
+      >
+        {/* Main Content */}
+        <Box sx={{ flex: 1, maxWidth: "800px" }}>
+          {/* Tag Tabs */}
+          <Box sx={{ display: "flex", gap: 2, mb: 2, overflowX: "auto" }}>
+            {mockTags.map((tag, index) => (
               <Button
-                variant="text"
-                sx={{ color: activaTagTab === i ? "" : "gray" }}
-                onClick={() => setActiveTagTab(i)}
-                key={x}
+                key={index}
+                variant={activeTagTab === tag ? "contained" : "outlined"}
+                color="primary"
+                onClick={() => setActiveTagTab(tag)}
               >
-                {i}
+                {tag}
               </Button>
             ))}
           </Box>
-          <Divider />
-          <Box>
-            {mockPosts.map((i, x) => (
-              <Box key={x} sx={{ maxWidth: "45rem", mt: 2 }}>
-                <Link
-                  display="flex"
-                  color="inherit"
-                  href="/user"
+
+          <Divider sx={{ mb: 4 }} />
+
+          {/* Posts */}
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            {posts.map((post, index) => (
+              <Paper
+                key={index}
+                elevation={3}
+                sx={{
+                  padding: 3,
+                  borderRadius: 2,
+                  backgroundColor: "#fff",
+                }}
+              >
+                {/* Post Header */}
+                <Box
                   sx={{
-                    textDecoration: "none",
-                    cursor: "pointer",
-                    ml: 1,
-                    gap: 1,
-                    "&:hover": { textDecoration: "underline" },
+                    display: "flex",
+                    alignItems: "center",
+                    mb: 2,
                   }}
                 >
-                  <AccountCircleIcon />
-                  <Typography>{i.user}</Typography>
-                </Link>
+                  <Avatar sx={{ mr: 2 }}>
+                    <AccountCircleIcon />
+                  </Avatar>
+                  <Link
+                    href={`/user/${post.user.username}`}
+                    underline="hover"
+                    color="text.primary"
+                    variant="subtitle1"
+                    fontWeight="bold"
+                  >
+                    {post.user.name}
+                  </Link>
+                </Box>
+
+                {/* Post Content */}
                 <Link
-                  display="flex"
-                  href="/post"
+                  href={`/post?id=${post.id}`}
+                  underline="none"
                   color="inherit"
-                  sx={{ textDecoration: "none" }}
+                  sx={{
+                    display: "flex",
+                    flexDirection: { xs: "column", sm: "row" },
+                    gap: 2,
+                    mb: 2,
+                  }}
                 >
-                  <img
-                    src={i.imageDataUrl}
-                    style={{ width: "auto", height: "10rem" }}
+                  <Box
+                    component="img"
+                    src={
+                      post.thumbnailId
+                        ? `http://localhost:5000/image/${post.thumbnailId}`
+                        : placeHolderThumbnail
+                    }
+                    alt={post.title}
+                    sx={{
+                      width: { xs: "100%", sm: "200px" },
+                      height: "auto",
+                      borderRadius: 2,
+                      objectFit: "cover",
+                    }}
                   />
                   <Box>
-                    <Typography variant="h2">{i.title}</Typography>
-                    <Typography variant="caption">{i.description}</Typography>
+                    <Typography variant="h6" gutterBottom>
+                      {post.title}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{
+                        mt: 1,
+                        display: "-webkit-box",
+                        overflow: "hidden",
+                        WebkitBoxOrient: "vertical",
+                        WebkitLineClamp: 2, // Limit to 2 lines of text
+                      }}
+                    >
+                      {post.content}
+                    </Typography>
                   </Box>
                 </Link>
+
+                {/* Post Footer */}
                 <Box
-                  display="flex"
-                  sx={{ justifyContent: "space-between", alignItems: "center" }}
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
                 >
-                  <Box display="flex" sx={{ gap: 2 }}>
+                  <Box sx={{ display: "flex", gap: 1 }}>
                     <Tooltip title="123 likes" arrow>
-                      <IconButton
-                        disableRipple
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                      >
-                        <FavoriteIcon /> 123
+                      <IconButton>
+                        <FavoriteIcon color="error" />
                       </IconButton>
                     </Tooltip>
                     <Tooltip title="123 comments" arrow>
-                      <IconButton
-                        disableRipple
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                      >
-                        <ChatIcon /> 123
+                      <IconButton>
+                        <ChatIcon color="primary" />
                       </IconButton>
                     </Tooltip>
                   </Box>
-                  <Box display="flex" sx={{ gap: 1 }}>
-                    {i.tags.map((i_, x_) => (
-                      <Link
-                        color="inherit"
-                        variant="body2"
-                        sx={{
-                          backgroundColor: "gray",
-                          color: "white",
-                          p: "7px",
-                          borderRadius: "20px",
-                          textDecoration: "none",
-                          "&:hover": { background: "#b2b2b2" },
-                        }}
-                        href={`/tags/${i_}`}
-                        key={x_}
-                      >
-                        {i_}
-                      </Link>
+                  <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                    {post.tags.map((tag, idx) => (
+                      <Chip
+                        key={idx}
+                        label={tag}
+                        component="a"
+                        href={`/tags/${tag}`}
+                        clickable
+                        variant="outlined"
+                        color="primary"
+                        size="small"
+                      />
                     ))}
                   </Box>
                 </Box>
-                <Divider sx={{ mt: 1 }} />
-              </Box>
+              </Paper>
             ))}
           </Box>
         </Box>
-        <Divider orientation="vertical" variant="fullWidth" flexItem />
-        <Box>
-          <Typography variant="h5">Recommended Topics</Typography>
-          <Box
-            display="flex"
-            sx={{ gap: 1, maxWidth: "15rem", flexWrap: "wrap", mt: 2 }}
+
+        {/* Sidebar */}
+        <Box
+          sx={{
+            width: { xs: "100%", md: "300px" },
+            flexShrink: 0,
+            display: "flex",
+            flexDirection: "column",
+            gap: 4,
+            mt: { xs: 4, md: 0 },
+          }}
+        >
+          {/* Recommended Topics */}
+          <Paper
+            elevation={3}
+            sx={{ padding: 3, borderRadius: 2, backgroundColor: "#fff" }}
           >
-            {mockTagsToFollow.map((i, x) => (
-              <Link
-                color="inherit"
-                variant="body2"
-                sx={{
-                  backgroundColor: "gray",
-                  color: "white",
-                  p: "7px",
-                  borderRadius: "20px",
-                  textDecoration: "none",
-                  "&:hover": { background: "#b2b2b2" },
-                }}
-                href={`/tags/${i}`}
-                key={x}
-              >
-                {i}
-              </Link>
-            ))}
+            <Typography variant="h6" gutterBottom>
+              Recommended Topics
+            </Typography>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+              {mockTagsToFollow.map((tag, index) => (
+                <Chip
+                  key={index}
+                  label={tag}
+                  component="a"
+                  href={`/tags/${tag}`}
+                  clickable
+                  variant="outlined"
+                  color="primary"
+                  size="small"
+                />
+              ))}
+            </Box>
             <Link
               href="/tags"
-              color="inherit"
-              sx={{
-                mt: 2,
-                textDecoration: "none",
-                "&:hover": { textDecoration: "underline" },
-              }}
+              underline="hover"
+              sx={{ display: "block", mt: 2 }}
             >
               See more
             </Link>
-          </Box>
-          <Typography variant="h5" sx={{ mt: 4 }}>
-            Who To Follow
-          </Typography>
-          <Box
-            display="flex"
-            sx={{ gap: 1, maxWidth: "15rem", flexWrap: "wrap", mt: 2 }}
+          </Paper>
+
+          {/* Who to Follow */}
+          <Paper
+            elevation={3}
+            sx={{ padding: 3, borderRadius: 2, backgroundColor: "#fff" }}
           >
-            {mockWhoToFollow.map((i, x) => (
-              <Link
-                key={x}
-                display="flex"
-                color="inherit"
-                href="/user"
-                sx={{
-                  textDecoration: "none",
-                  cursor: "pointer",
-                  ml: 1,
-                  gap: 2,
-                  alignItems: "center",
-                  "&:hover": { textDecoration: "underline" },
-                }}
-              >
-                <AccountCircleIcon />
-                <Box>
-                  <Typography>{i.name}</Typography>
-                  <Typography variant="body2">{i.desciption}</Typography>
+            <Typography variant="h6" gutterBottom>
+              Who to Follow
+            </Typography>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              {mockWhoToFollow.map((user, index) => (
+                <Box
+                  key={index}
+                  sx={{ display: "flex", alignItems: "center", gap: 2 }}
+                >
+                  <Avatar src={user.avatarUrl}>{user.name.charAt(0)}</Avatar>
+                  <Box>
+                    <Link
+                      href="/user"
+                      underline="hover"
+                      color="text.primary"
+                      variant="subtitle1"
+                      fontWeight="bold"
+                    >
+                      {user.name}
+                    </Link>
+                    <Typography variant="body2" color="text.secondary">
+                      {user.description}
+                    </Typography>
+                  </Box>
                 </Box>
-              </Link>
-            ))}
+              ))}
+            </Box>
             <Link
-              href="/tags"
-              color="inherit"
-              sx={{
-                mt: 2,
-                textDecoration: "none",
-                "&:hover": { textDecoration: "underline" },
-              }}
+              href="/users"
+              underline="hover"
+              sx={{ display: "block", mt: 2 }}
             >
               See more
             </Link>
-          </Box>
+          </Paper>
         </Box>
       </Box>
-    </Layout>
+    </Layout1>
   );
 }

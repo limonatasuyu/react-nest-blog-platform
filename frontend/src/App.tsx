@@ -17,6 +17,9 @@ import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import CreatePostPage from "./pages/CreatePostPage";
 import MyPostsPage from "./pages/MyPostsPage";
+import { SnackbarProvider } from "./hooks/useSnackbar";
+import ProfilePage from "./pages/ProfilePage";
+import PostPage from "./pages/PostPage";
 
 function App() {
   const [route, setRoute] = useState(window.location.pathname);
@@ -104,6 +107,8 @@ function App() {
     "/signup": SignUpPage,
     "/create_post": CreatePostPage,
     "/my_posts": MyPostsPage,
+    "/profile": ProfilePage,
+    "/post": PostPage,
   };
 
   const renderComponent = () => {
@@ -122,6 +127,7 @@ function App() {
   return (
     <div>
       <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <SnackbarProvider>
         <Drawer open={isDrawerOpen} onClose={() => setIsDrawerOpen(false)}>
           <Box>
             {pages.map((page, index) => (
@@ -139,6 +145,7 @@ function App() {
           </Box>
         </Drawer>
         <div>{renderComponent()}</div>
+        </SnackbarProvider>
       </LocalizationProvider>
     </div>
   );

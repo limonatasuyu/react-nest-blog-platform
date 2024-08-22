@@ -8,6 +8,7 @@ import {
   Req,
   UseGuards,
   Put,
+  Param
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import {
@@ -21,6 +22,12 @@ import { PostsGuard } from './posts.guard';
 @Controller('posts')
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
+
+  @UseGuards(PostsGuard)
+  @Get()
+  getPosts(@Query() { page }) {
+    return this.postsService.getRecentPosts({ page });
+  }
 
   @UseGuards(PostsGuard)
   @Get('tag')
@@ -63,5 +70,11 @@ export class PostsController {
   @Get('my_posts')
   getMyPosts(@Req() req) {
     return this.postsService.getUsersPosts(req.user.username);
+  }
+
+  @UseGuards(PostsGuard)
+  @Get(':id')
+  async getPost(@Param('id') postId: string) {
+    return this.postsService.getPostById(postId);
   }
 }

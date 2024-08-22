@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserModuleController = void 0;
 const common_1 = require("@nestjs/common");
 const user_service_1 = require("./user.service");
+const user_guard_1 = require("./user.guard");
 let UserModuleController = class UserModuleController {
     constructor(usersService) {
         this.usersService = usersService;
@@ -25,8 +26,11 @@ let UserModuleController = class UserModuleController {
     async activate(dto) {
         return await this.usersService.activate(dto);
     }
-    async recreate(dto) {
+    async recreateActivation(dto) {
         return await this.usersService.createActivationCode(dto);
+    }
+    async changePicture(req, { imageId }) {
+        return await this.usersService.changeProfilePicture(imageId, req.user.sub);
     }
 };
 exports.UserModuleController = UserModuleController;
@@ -50,7 +54,16 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
-], UserModuleController.prototype, "recreate", null);
+], UserModuleController.prototype, "recreateActivation", null);
+__decorate([
+    (0, common_1.UseGuards)(user_guard_1.UserGuard),
+    (0, common_1.Put)('change_picture'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], UserModuleController.prototype, "changePicture", null);
 exports.UserModuleController = UserModuleController = __decorate([
     (0, common_1.Controller)('user'),
     __metadata("design:paramtypes", [user_service_1.UsersService])

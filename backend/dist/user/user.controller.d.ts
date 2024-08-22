@@ -5,5 +5,10 @@ export declare class UserModuleController {
     constructor(usersService: UsersService);
     create(dto: CreateUserDTO): Promise<any>;
     activate(dto: ActivateUserDTO): Promise<any>;
-    recreate(dto: CreateActivationCodeDTO): Promise<any>;
+    recreateActivation(dto: CreateActivationCodeDTO): Promise<any>;
+    changePicture(req: any, { imageId }: {
+        imageId: any;
+    }): Promise<{
+        message: string;
+    }>;
 }

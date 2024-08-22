@@ -31,7 +31,7 @@ export class PostsGuard implements CanActivate {
       throw new UnauthorizedException();
     }
 
-    if (request.method === "POST" || request.method === "GET") return true;
+    if (request.method === 'POST' || request.method === 'GET') return true;
 
     const postId = this.getPostIdFromQuery(request);
     if (!postId) {

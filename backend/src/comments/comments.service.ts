@@ -29,7 +29,7 @@ export class CommentsService {
     const updatePostResult = await this.postsModel.updateOne(
       { _id: dto.postId },
       {
-        $push: { commentIds: commentId },
+        $push: { comments: createdComment },
       },
     );
 
@@ -63,5 +63,56 @@ export class CommentsService {
 
   async findCommentByCommentIdAndUserId(commentId: string, userId: string) {
     return await this.commentsModel.findOne({ _id: commentId, user: userId });
+  }
+
+  async getByPage(page: number, commentIds: string[]) {
+    const comments = await this.commentsModel
+      .find({ _id: { $in: commentIds } }, 'content')
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .skip((page - 1) * 10)
+      .populate({
+        path: 'user',
+        select: 'username firstname lastname',
+      })
+      .exec();
+
+    const answers = await this.commentsModel.aggregate([
+      {
+        $match: { answerTo: { $in: commentIds } },
+      },
+      {
+        $sort: { createdAt: 1 }, // Sort by createdAt in ascending order (oldest first)
+      },
+      {
+        $group: {
+          _id: '$answerTo',
+          answer: { $first: '$$ROOT' }, // Get the first document in each group (oldest due to sorting)
+        },
+      },
+      {
+        $lookup: {
+          from: 'users', // The collection to join with
+          localField: 'answer.user', // The field from the comments collection
+          foreignField: '_id', // The field from the users collection
+          as: 'userDetails', // The name of the field to add the joined data to
+        },
+      },
+      {
+        $unwind: '$userDetails', // Unwind the array to de-nest the user details
+      },
+      {
+        $project: {
+          'answer._id': 1,
+          'answer.content': 1,
+          'answer.createdAt': 1,
+          'userDetails.firstname': 1, // Select specific fields to include in the result
+          'userDetails.lastname': 1,
+          'userDetails.username': 1,
+        },
+      },
+    ]);
+
+    return [...answers, ...comments];
   }
 }

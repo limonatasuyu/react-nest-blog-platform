@@ -1,10 +1,11 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Req, Put } from '@nestjs/common';
 import { UsersService } from './user.service';
 import {
   CreateUserDTO,
   ActivateUserDTO,
   CreateActivationCodeDTO,
 } from 'src/dto/user-dto';
+import { UserGuard } from './user.guard';
 
 @Controller('user')
 export class UserModuleController {
@@ -21,7 +22,13 @@ export class UserModuleController {
   }
 
   @Post('recreate-activation')
-  async recreate(@Body() dto: CreateActivationCodeDTO): Promise<any> {
+  async recreateActivation(@Body() dto: CreateActivationCodeDTO): Promise<any> {
     return await this.usersService.createActivationCode(dto);
+  }
+
+  @UseGuards(UserGuard)
+  @Put('change_picture')
+  async changePicture(@Req() req, @Body() { imageId }) {
+    return await this.usersService.changeProfilePicture(imageId, req.user.sub);
   }
 }

@@ -1,7 +1,8 @@
 import { HydratedDocument } from 'mongoose';
+import * as mongoose from 'mongoose';
 export type UserDocument = HydratedDocument<User>;
 export declare class User {
-    _id: string;
+    _id: mongoose.Schema.Types.ObjectId;
     username: string;
     firstname: string;
     lastname: string;
@@ -10,9 +11,10 @@ export declare class User {
     dateOfBirth: Date;
     isActivated: boolean;
     interests: string[];
+    profilePictureId: string;
 }
-export declare const UserSchema: import("mongoose").Schema<User, import("mongoose").Model<User, any, any, any, import("mongoose").Document<unknown, any, User> & User & Required<{
-    _id: string;
-}>, any>, {}, {}, {}, {}, import("mongoose").DefaultSchemaOptions, User, import("mongoose").Document<unknown, {}, import("mongoose").FlatRecord<User>> & import("mongoose").FlatRecord<User> & Required<{
-    _id: string;
+export declare const UserSchema: mongoose.Schema<User, mongoose.Model<User, any, any, any, mongoose.Document<unknown, any, User> & User & Required<{
+    _id: mongoose.Schema.Types.ObjectId;
+}>, any>, {}, {}, {}, {}, mongoose.DefaultSchemaOptions, User, mongoose.Document<unknown, {}, mongoose.FlatRecord<User>> & mongoose.FlatRecord<User> & Required<{
+    _id: mongoose.Schema.Types.ObjectId;
 }>>;

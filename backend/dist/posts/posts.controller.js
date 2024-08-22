@@ -20,6 +20,9 @@ let PostsController = class PostsController {
     constructor(postsService) {
         this.postsService = postsService;
     }
+    getPosts({ page }) {
+        return this.postsService.getRecentPosts({ page });
+    }
     getPostsByTags({ tags, page }) {
         return this.postsService.getPostsByTag({ tags, page });
     }
@@ -38,8 +41,19 @@ let PostsController = class PostsController {
     getMyPosts(req) {
         return this.postsService.getUsersPosts(req.user.username);
     }
+    async getPost(postId) {
+        return this.postsService.getPostById(postId);
+    }
 };
 exports.PostsController = PostsController;
+__decorate([
+    (0, common_1.UseGuards)(posts_guard_1.PostsGuard),
+    (0, common_1.Get)(),
+    __param(0, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], PostsController.prototype, "getPosts", null);
 __decorate([
     (0, common_1.UseGuards)(posts_guard_1.PostsGuard),
     (0, common_1.Get)('tag'),
@@ -92,6 +106,14 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], PostsController.prototype, "getMyPosts", null);
+__decorate([
+    (0, common_1.UseGuards)(posts_guard_1.PostsGuard),
+    (0, common_1.Get)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], PostsController.prototype, "getPost", null);
 exports.PostsController = PostsController = __decorate([
     (0, common_1.Controller)('posts'),
     __metadata("design:paramtypes", [posts_service_1.PostsService])

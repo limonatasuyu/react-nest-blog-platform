@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
 import { CommentsModule } from './comments/comments.module';
+import { ImageModule } from './image/image.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { CommentsModule } from './comments/comments.module';
     AuthModule,
     MongooseModule.forRoot('mongodb://127.0.0.1:27017/blog'),
     CommentsModule,
+    ImageModule,
   ],
   controllers: [AppController],
   providers: [AppService],

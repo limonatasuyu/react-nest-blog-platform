@@ -10,7 +10,8 @@ export interface GetRecentPostsDTO {
 export interface CreatePostDTO {
   title: string;
   content: string;
-  imageDataUrls: string[];
+  thumbnailId?: string;
+  tags: string[];
 }
 
 export interface DeletePostDTO {
@@ -21,5 +22,6 @@ export interface UpdatePostDTO {
   postId: string;
   title: string;
   content: string;
-  imageDataUrls: string[];
+  thumbnailId?: string;
+  tags: string[];
 }

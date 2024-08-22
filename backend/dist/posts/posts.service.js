@@ -19,10 +19,12 @@ const mongoose_2 = require("mongoose");
 const post_schema_1 = require("../schemes/post.schema");
 const user_service_1 = require("../user/user.service");
 const bson_1 = require("bson");
+const image_service_1 = require("../image/image.service");
 let PostsService = class PostsService {
-    constructor(postsModel, usersService) {
+    constructor(postsModel, usersService, imageService) {
         this.postsModel = postsModel;
         this.usersService = usersService;
+        this.imageService = imageService;
     }
     async getPostByIdAndUser(postId, user_id) {
         return await this.postsModel.findOne({ _id: postId, user: user_id });
@@ -32,11 +34,26 @@ let PostsService = class PostsService {
             .find({ tags: { $in: dto.tags } })
             .limit(10)
             .skip((dto.page - 1) * 10)
+            .populate({
+            path: 'user',
+            select: 'username firstname lastname',
+        })
             .exec();
         if (!posts) {
             throw new common_1.InternalServerErrorException();
         }
-        return posts;
+        return posts.map((i) => ({
+            title: i.title,
+            content: i.content,
+            commentCount: i.comments.length,
+            likedCount: i.likedBy.length,
+            thumbnailId: i.thumbnailId,
+            tags: i.tags,
+            user: {
+                username: i.user.username,
+                name: i.user.firstname + ' ' + i.user.lastname,
+            },
+        }));
     }
     async getRecentPosts(dto) {
         const posts = await this.postsModel
@@ -44,11 +61,27 @@ let PostsService = class PostsService {
             .limit(10)
             .skip((dto.page - 1) * 10)
             .sort({ createdAt: -1 })
+            .populate({
+            path: 'user',
+            select: 'username firstname lastname',
+        })
             .exec();
         if (!posts) {
             throw new common_1.InternalServerErrorException();
         }
-        return posts;
+        return posts.map((i) => ({
+            id: i._id,
+            title: i.title,
+            content: i.content,
+            commentCount: i.comments.length,
+            likedCount: i.likedBy.length,
+            thumbnailId: i.thumbnailId,
+            tags: i.tags,
+            user: {
+                username: i.user.username,
+                name: i.user.firstname + ' ' + i.user.lastname,
+            },
+        }));
     }
     async createPost(dto, username) {
         const user = await this.usersService.findOne(username);
@@ -59,13 +92,17 @@ let PostsService = class PostsService {
             _id: new bson_1.ObjectId(),
             title: dto.title,
             content: dto.content,
-            imageIds: dto.imageDataUrls,
+            thumbnailId: dto.thumbnailId,
             user: user,
+            tags: dto.tags,
             createdAt: new Date(),
             updatedAt: new Date(),
         });
         if (!createdPost) {
             throw new common_1.InternalServerErrorException();
+        }
+        if (dto.thumbnailId) {
+            await this.imageService.relateImage(dto.thumbnailId);
         }
         return { message: 'Post created successfully' };
     }
@@ -88,8 +125,9 @@ let PostsService = class PostsService {
         const updatedPost = await this.postsModel.updateOne({ _id: dto.postId }, {
             title: dto.title,
             content: dto.content,
-            imageIds: dto.imageDataUrls,
+            thumbnailId: dto.thumbnailId,
             updatedAt: new Date(),
+            tags: dto.tags,
         });
         if (!updatedPost) {
             throw new common_1.InternalServerErrorException();
@@ -105,7 +143,30 @@ let PostsService = class PostsService {
         if (!posts) {
             throw new common_1.InternalServerErrorException();
         }
-        return posts;
+        return posts.map((i) => ({
+            title: i.title,
+            content: i.content,
+            commentCount: i.comments.length,
+            likedCount: i.likedBy.length,
+            thumbnailId: i.thumbnailId,
+            tags: i.tags,
+        }));
+    }
+    async getPostById(postId) {
+        const post = await this.postsModel.aggregate([
+            { $match: { _id: postId } },
+            {
+                $lookup: {
+                    from: 'comments',
+                    localField: 'comments',
+                    foreignField: '_id',
+                    as: 'comments',
+                },
+            },
+        ]);
+        if (!post || post.length === 0)
+            throw new common_1.InternalServerErrorException('Could not find the post');
+        return post[0];
     }
 };
 exports.PostsService = PostsService;
@@ -113,6 +174,7 @@ exports.PostsService = PostsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(post_schema_1.Post.name)),
     __metadata("design:paramtypes", [mongoose_2.Model,
-        user_service_1.UsersService])
+        user_service_1.UsersService,
+        image_service_1.ImageService])
 ], PostsService);
 //# sourceMappingURL=posts.service.js.map

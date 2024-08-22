@@ -17,20 +17,26 @@ export class Post {
   @Prop({ required: true })
   content: string;
 
-  @Prop([String])
-  imageIds: string[];
-
-  @Prop({ required: true, type: String, ref: 'User' })
+  @Prop({ required: true, type: mongoose.Schema.Types.ObjectId, ref: 'User' })
   user: User;
 
   @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'Comment' })
-  commentIds: Comment[];
+  comments: Comment[];
 
   @Prop({ required: true })
   createdAt: Date;
 
   @Prop({ required: true })
   updatedAt: Date;
+
+  @Prop({ type: String, ref: 'Image' })
+  thumbnailId: string;
+
+  @Prop({ type: [String], ref: 'User' })
+  likedBy: string[];
+
+  @Prop({ type: [String], required: true })
+  tags: string[];
 }
 
 export const PostSchema = SchemaFactory.createForClass(Post);

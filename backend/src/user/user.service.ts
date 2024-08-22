@@ -8,7 +8,8 @@ import { User } from '../schemes/user.schema';
 import { ActivationCode } from '../schemes/activationCode.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { ObjectId } from 'bson';
+import * as mongoose from 'mongoose';
+//import { ObjectId } from 'bson';
 import {
   ActivateUserDTO,
   CreateUserDTO,
@@ -17,6 +18,7 @@ import {
 import { readFile } from 'node:fs/promises';
 import * as bcrypt from 'bcrypt';
 import * as nodemailer from 'nodemailer';
+import { ImageService } from 'src/image/image.service';
 
 let blocklist;
 
@@ -68,6 +70,7 @@ export class UsersService {
     @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(ActivationCode.name)
     private activationCodeModel: Model<ActivationCode>,
+    private imageService: ImageService,
   ) {}
 
   async activate(dto: ActivateUserDTO) {
@@ -80,7 +83,7 @@ export class UsersService {
     }
 
     const activationCodes = await this.activationCodeModel.find({
-      user_id: dto.user_id,
+      user_id: new mongoose.Types.ObjectId(dto.user_id as any),
     });
     if (!activationCodes || !activationCodes.length) {
       throw new InternalServerErrorException();
@@ -156,7 +159,7 @@ export class UsersService {
       ...dto,
       password: encryptedPassword,
       isActivated: false,
-      _id: new ObjectId(),
+      _id: new mongoose.Types.ObjectId(),
     });
 
     const createdActivationCode = new this.activationCodeModel({
@@ -201,7 +204,10 @@ export class UsersService {
       );
     }
 
-    const activationCode = Math.floor(Math.random() * 1000000);
+    let activationCode;
+    do {
+      activationCode = Math.floor(Math.random() * 1000000);
+    } while (String(activationCode).length !== 6);
 
     const isActivationSent = await sendActivationEmail(
       user.email,
@@ -228,5 +234,35 @@ export class UsersService {
     return await this.userModel.findOne({
       $or: [{ username: usernameOrEmail }, { email: usernameOrEmail }],
     });
+  }
+
+  async getById(user_id: string) {
+    const user = await this.userModel.findById(
+      new mongoose.Types.ObjectId(user_id),
+    );
+    if (!user) {
+      throw new InternalServerErrorException();
+    }
+    return {
+      firstname: user.firstname,
+      lastname: user.lastname,
+      username: user.username,
+      email: user.email,
+      profilePictureId: user.profilePictureId,
+    };
+  }
+
+  async changeProfilePicture(pictureId: string, userId: string) {
+    const image = await this.imageService.getImageWithId(pictureId);
+    if (!image) throw new InternalServerErrorException();
+    const updatedUser = await this.userModel.updateOne(
+      { _id: new mongoose.Types.ObjectId(userId) },
+      { profilePictureId: pictureId },
+    );
+    if (!updatedUser) throw new InternalServerErrorException();
+
+    await this.imageService.relateImage(pictureId);
+
+    return { message: 'Profile picture changed successfully.' };
   }
 }

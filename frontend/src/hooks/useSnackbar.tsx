@@ -1,67 +1,62 @@
-import { useState } from "react";
-import { createRoot } from "react-dom/client";
+import React, { createContext, useContext, useState, ReactNode } from "react";
 import { Snackbar, Alert, AlertColor, Slide, SlideProps } from "@mui/material";
 
-const createToastContainer = () => {
-  const container = document.createElement("div");
-  container.id = "toast-container";
-  container.style.position = "fixed";
-  container.style.bottom = "10px";
-  container.style.right = "10px";
-  container.style.zIndex = "9999";
-  container.style.display = "flex";
-  container.style.flexDirection = "column";
-  container.style.gap = "1rem";
-  document.body.appendChild(container);
-  return container;
-};
+interface SnackbarContextProps {
+  setSnackBar: (message: string, status: AlertColor) => void;
+}
 
-export default function useSnackbar() {
-  const [isSnackbarOpen, setIsSnackbarOpen] = useState(false);
+const SnackbarContext = createContext<SnackbarContextProps | undefined>(
+  undefined
+);
 
+export const SnackbarProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const [snackbarMessage, setSnackbarMessage] = useState<{
     message: string;
     status: AlertColor;
-  }>({ message: "", status: "success" });
+  } | null>(null);
 
-  function SlideTransition(props: SlideProps) {
-    return <Slide {...props} direction="up" />;
-  }
+  const handleCloseSnackbar = () => {
+    setSnackbarMessage(null);
+  };
 
-  function handleCloseSnackbar() {
-    setIsSnackbarOpen(false);
-  }
+  const value = {
+    setSnackBar: (message: string, status: AlertColor) => {
+      setSnackbarMessage({ message, status });
+    },
+  };
 
-  function setSnackBar(message: string, status: AlertColor) {
-    setIsSnackbarOpen(true);
-    setSnackbarMessage({ message, status });
-  }
-
-  const container =
-    document.getElementById("toast-container") || createToastContainer();
-  const toastId = Date.now();
-  const toastElement = document.createElement("div");
-  toastElement.id = String(toastId);
-  container.appendChild(toastElement);
-
-  const root = createRoot(toastElement);
-  root.render(
-    <Snackbar
-      open={isSnackbarOpen}
-      autoHideDuration={6000}
-      onClose={handleCloseSnackbar}
-      TransitionComponent={SlideTransition}
-    >
-      <Alert
-        onClose={handleCloseSnackbar}
-        severity={snackbarMessage.status}
-        variant="filled"
-        sx={{ width: "100%" }}
-      >
-        {JSON.stringify(snackbarMessage.message)}
-      </Alert>
-    </Snackbar>
+  return (
+    <SnackbarContext.Provider value={value}>
+      {children}
+      {snackbarMessage && (
+        <Snackbar
+          open={Boolean(snackbarMessage)}
+          autoHideDuration={6000}
+          onClose={handleCloseSnackbar}
+          TransitionComponent={(props: SlideProps) => (
+            <Slide {...props} direction="up" />
+          )}
+        >
+          <Alert
+            onClose={handleCloseSnackbar}
+            severity={snackbarMessage.status}
+            variant="filled"
+            sx={{ width: "100%" }}
+          >
+            {snackbarMessage.message}
+          </Alert>
+        </Snackbar>
+      )}
+    </SnackbarContext.Provider>
   );
+};
 
-  return { setSnackBar };
+export default function useSnackbar() {
+  const context = useContext(SnackbarContext);
+  if (context === undefined) {
+    throw new Error("useSnackbar must be used within a SnackbarProvider");
+  }
+  return context;
 }

@@ -13,6 +13,7 @@ export declare class CommentsService {
         message: string;
     }>;
     findCommentByCommentIdAndUserId(commentId: string, userId: string): Promise<import("mongoose").Document<unknown, {}, Comment> & Comment & Required<{
-        _id: string;
+        _id: import("mongoose").Schema.Types.ObjectId;
     }>>;
+    getByPage(page: number, commentIds: string[]): Promise<any[]>;
 }

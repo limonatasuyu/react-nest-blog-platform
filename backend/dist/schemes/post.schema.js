@@ -29,17 +29,13 @@ __decorate([
     __metadata("design:type", String)
 ], Post.prototype, "content", void 0);
 __decorate([
-    (0, mongoose_1.Prop)([String]),
-    __metadata("design:type", Array)
-], Post.prototype, "imageIds", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ required: true, type: String, ref: 'User' }),
+    (0, mongoose_1.Prop)({ required: true, type: mongoose.Schema.Types.ObjectId, ref: 'User' }),
     __metadata("design:type", user_schema_1.User)
 ], Post.prototype, "user", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ type: [mongoose.Schema.Types.ObjectId], ref: 'Comment' }),
     __metadata("design:type", Array)
-], Post.prototype, "commentIds", void 0);
+], Post.prototype, "comments", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
     __metadata("design:type", Date)
@@ -48,6 +44,18 @@ __decorate([
     (0, mongoose_1.Prop)({ required: true }),
     __metadata("design:type", Date)
 ], Post.prototype, "updatedAt", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, ref: 'Image' }),
+    __metadata("design:type", String)
+], Post.prototype, "thumbnailId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: [String], ref: 'User' }),
+    __metadata("design:type", Array)
+], Post.prototype, "likedBy", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: [String], required: true }),
+    __metadata("design:type", Array)
+], Post.prototype, "tags", void 0);
 exports.Post = Post = __decorate([
     (0, mongoose_1.Schema)()
 ], Post);

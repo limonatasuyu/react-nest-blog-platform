@@ -13,14 +13,16 @@ import {
   ListItemIcon,
   ListItemText,
   Link,
+  Typography,
+  Avatar,
 } from "@mui/material";
-import logo_black from "/logo_black.png";
 import SearchIcon from "@mui/icons-material/Search";
 import HistoryEduIcon from "@mui/icons-material/HistoryEdu";
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import DynamicFeedIcon from "@mui/icons-material/DynamicFeed";
 import Logout from "@mui/icons-material/Logout";
+import logo_black from "/logo_black.png";
 
 export default function Layout1({ children }: { children: ReactNode }) {
   const [searchValue, setSearchValue] = useState("");
@@ -38,58 +40,62 @@ export default function Layout1({ children }: { children: ReactNode }) {
   };
 
   function handleLogout() {
-    window.sessionStorage.removeItem("access_token")
-    window.location.pathname = "/login"
+    window.sessionStorage.removeItem("access_token");
+    window.location.pathname = "/login";
   }
 
   return (
-    <Box display="flex" sx={{ flexDirection: "column" }}>
+    <Box
+      display="flex"
+      flexDirection="column"
+      sx={{ minHeight: "100vh", backgroundColor: "#f5f5f5" }}
+    >
       <Box
         display="flex"
-        sx={{ justifyContent: "space-between", alignItems: "center", mx: 4 }}
+        alignItems="center"
+        justifyContent="space-between"
+        sx={{ padding: 2, backgroundColor: "#ffffff", boxShadow: 1 }}
       >
-        <Box display="flex" sx={{ gap: 2, alignItems: "center", mt: 1 }}>
-          <Link href="/"><img src={logo_black} height="50rem" style={{ padding: "10px" }} /></Link>
-          <FormControl variant="outlined">
-            <InputLabel htmlFor="search">Search</InputLabel>
-            <OutlinedInput
-              sx={{ borderRadius: "10px" }}
-              inputProps={{
-                id: "search",
-                value: searchValue,
-                onChange: (e: ChangeEvent<HTMLInputElement>) => {
-                  setSearchValue(e.target.value);
-                },
-              }}
-              type="text"
-              endAdornment={
-                <InputAdornment position="end">
-                  <IconButton aria-label="search" edge="end">
-                    <SearchIcon />
-                  </IconButton>
-                </InputAdornment>
-              }
-              label="Search"
-            />
-          </FormControl>
-        </Box>
-        <Box display="flex">
+        <Link href="/" sx={{ display: "flex", alignItems: "center" }}>
+          <img src={logo_black} height="50" alt="Logo" style={{ padding: "10px" }} />
+        </Link>
+
+        <FormControl variant="outlined" sx={{ flex: 1, maxWidth: "500px" }}>
+          <InputLabel htmlFor="search">Search</InputLabel>
+          <OutlinedInput
+            id="search"
+            value={searchValue}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchValue(e.target.value)}
+            endAdornment={
+              <InputAdornment position="end">
+                <IconButton aria-label="search">
+                  <SearchIcon />
+                </IconButton>
+              </InputAdornment>
+            }
+            label="Search"
+            sx={{ borderRadius: "20px" }}
+          />
+        </FormControl>
+
+        <Box display="flex" alignItems="center" sx={{ ml: 2 }}>
           <Tooltip title="Write" arrow>
-            <IconButton href="/create_post">
+            <IconButton href="/create_post" sx={{ margin: 1 }}>
               <HistoryEduIcon />
             </IconButton>
           </Tooltip>
           <Tooltip title="Notifications" arrow>
-            <IconButton>
+            <IconButton sx={{ margin: 1 }}>
               <NotificationsNoneIcon />
             </IconButton>
           </Tooltip>
           <Tooltip title="Account" arrow>
-            <IconButton onClick={handleAccountMenuClick}>
+            <IconButton onClick={handleAccountMenuClick} sx={{ margin: 1 }}>
               <AccountCircleIcon />
             </IconButton>
           </Tooltip>
         </Box>
+
         <Menu
           anchorEl={accountAnchorEl}
           open={accountMenuOpen}
@@ -103,27 +109,41 @@ export default function Layout1({ children }: { children: ReactNode }) {
             <ListItemIcon>
               <AccountCircleIcon fontSize="small" />
             </ListItemIcon>
-            <ListItemText>Profile</ListItemText>
+            <ListItemText primary="Profile" />
           </MenuItem>
-          <MenuItem onClick={handleAccountMenuClose}
+          <MenuItem
+            onClick={handleAccountMenuClose}
             component="a"
             href="/my_posts"
           >
             <ListItemIcon>
               <DynamicFeedIcon fontSize="small" />
             </ListItemIcon>
-            <ListItemText>My Posts</ListItemText>
+            <ListItemText primary="My Posts" />
           </MenuItem>
           <MenuItem onClick={handleLogout}>
             <ListItemIcon>
               <Logout fontSize="small" />
             </ListItemIcon>
-            <ListItemText>Logout</ListItemText>
+            <ListItemText primary="Logout" />
           </MenuItem>
         </Menu>
       </Box>
+
       <Divider />
-      {children}
+
+      <Box
+        sx={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          padding: 2,
+          backgroundColor: "#ffffff",
+        }}
+      >
+        {children}
+      </Box>
     </Box>
   );
 }
+

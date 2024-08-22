@@ -1,6 +1,7 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import mongoose, { Model } from 'mongoose';
+import { Model } from 'mongoose';
+import * as mongoose from 'mongoose';
 import { Post } from 'src/schemes/post.schema';
 import { UsersService } from 'src/user/user.service';
 import {
@@ -11,12 +12,14 @@ import {
   UpdatePostDTO,
 } from '../dto/post-dto';
 import { ObjectId } from 'bson';
+import { ImageService } from 'src/image/image.service';
 
 @Injectable()
 export class PostsService {
   constructor(
     @InjectModel(Post.name) private postsModel: Model<Post>,
     private usersService: UsersService,
+    private imageService: ImageService,
   ) {}
 
   async getPostByIdAndUser(postId: string, user_id: string) {
@@ -28,12 +31,27 @@ export class PostsService {
       .find({ tags: { $in: dto.tags } })
       .limit(10)
       .skip((dto.page - 1) * 10)
+      .populate({
+        path: 'user',
+        select: 'username firstname lastname',
+      })
       .exec();
 
     if (!posts) {
       throw new InternalServerErrorException();
     }
-    return posts;
+    return posts.map((i) => ({
+      title: i.title,
+      content: i.content,
+      commentCount: i.comments.length,
+      likedCount: i.likedBy.length,
+      thumbnailId: i.thumbnailId,
+      tags: i.tags,
+      user: {
+        username: i.user.username,
+        name: i.user.firstname + ' ' + i.user.lastname,
+      },
+    }));
   }
 
   async getRecentPosts(dto: GetRecentPostsDTO) {
@@ -42,11 +60,27 @@ export class PostsService {
       .limit(10)
       .skip((dto.page - 1) * 10)
       .sort({ createdAt: -1 })
+      .populate({
+        path: 'user',
+        select: 'username firstname lastname',
+      })
       .exec();
     if (!posts) {
       throw new InternalServerErrorException();
     }
-    return posts;
+    return posts.map((i) => ({
+      id: i._id,
+      title: i.title,
+      content: i.content,
+      commentCount: i.comments.length,
+      likedCount: i.likedBy.length,
+      thumbnailId: i.thumbnailId,
+      tags: i.tags,
+      user: {
+        username: i.user.username,
+        name: i.user.firstname + ' ' + i.user.lastname,
+      },
+    }));
   }
 
   async createPost(dto: CreatePostDTO, username: string) {
@@ -60,14 +94,19 @@ export class PostsService {
       _id: new ObjectId(),
       title: dto.title,
       content: dto.content,
-      imageIds: dto.imageDataUrls,
+      thumbnailId: dto.thumbnailId,
       user: user,
+      tags: dto.tags,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
 
     if (!createdPost) {
       throw new InternalServerErrorException();
+    }
+
+    if (dto.thumbnailId) {
+      await this.imageService.relateImage(dto.thumbnailId);
     }
 
     return { message: 'Post created successfully' };
@@ -100,8 +139,9 @@ export class PostsService {
       {
         title: dto.title,
         content: dto.content,
-        imageIds: dto.imageDataUrls,
+        thumbnailId: dto.thumbnailId,
         updatedAt: new Date(),
+        tags: dto.tags,
       },
     );
 
@@ -125,11 +165,32 @@ export class PostsService {
     }
 
     return posts.map((i) => ({
-      commentIds: i.commentIds,
-      content: i.content,
-      thumbnail: i.thumbnail,
       title: i.title,
+      content: i.content,
+      commentCount: i.comments.length,
       likedCount: i.likedBy.length,
+      thumbnailId: i.thumbnailId,
+      tags: i.tags,
     }));
+  }
+  async getPostById(postId: string) {
+    const post = await this.postsModel.aggregate([
+      // Match the post by its ID
+      { $match: { _id: postId } },
+      // Lookup the comments related to the post
+      {
+        $lookup: {
+          from: 'comments',
+          localField: 'comments',
+          foreignField: '_id',
+          as: 'comments',
+        },
+      },
+    ]);
+
+    if (!post || post.length === 0)
+      throw new InternalServerErrorException('Could not find the post');
+
+    return post[0];
   }
 }

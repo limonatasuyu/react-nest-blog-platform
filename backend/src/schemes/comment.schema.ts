@@ -8,7 +8,7 @@ export type CommentDocument = HydratedDocument<Comment>;
 @Schema()
 export class Comment {
   @Prop({ required: true })
-  _id: string;
+  _id: mongoose.Schema.Types.ObjectId;
 
   @Prop({ required: true })
   content: string;
