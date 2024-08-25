@@ -265,4 +265,17 @@ export class UsersService {
 
     return { message: 'Profile picture changed successfully.' };
   }
+
+  async changeDescription(description: string, userId: string) {
+    const updatedUser = await this.userModel.updateOne(
+      { _id: new mongoose.Types.ObjectId(userId) },
+      { $set: { description } },
+    );
+
+    if (!updatedUser || !updatedUser.acknowledged) {
+      throw new InternalServerErrorException();
+    }
+
+    return { message: 'Description changed successully.' };
+  }
 }

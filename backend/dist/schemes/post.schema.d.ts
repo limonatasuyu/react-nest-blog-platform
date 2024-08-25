@@ -12,7 +12,7 @@ export declare class Post {
     createdAt: Date;
     updatedAt: Date;
     thumbnailId: string;
-    likedBy: string[];
+    likedBy: User[];
     tags: string[];
 }
 export declare const PostSchema: mongoose.Schema<Post, mongoose.Model<Post, any, any, any, mongoose.Document<unknown, any, Post> & Post & Required<{

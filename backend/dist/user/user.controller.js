@@ -20,6 +20,17 @@ let UserModuleController = class UserModuleController {
     constructor(usersService) {
         this.usersService = usersService;
     }
+    async getUser(username) {
+        const user = await this.usersService.findOne(username);
+        return {
+            username: user.username,
+            firstname: user.firstname,
+            lastname: user.lastname,
+            description: user.description,
+            email: user.email,
+            profilePictureId: user.profilePictureId,
+        };
+    }
     async create(dto) {
         return await this.usersService.create(dto);
     }
@@ -32,8 +43,18 @@ let UserModuleController = class UserModuleController {
     async changePicture(req, { imageId }) {
         return await this.usersService.changeProfilePicture(imageId, req.user.sub);
     }
+    async change_description(req, { description }) {
+        return await this.usersService.changeDescription(description, req.user.sub);
+    }
 };
 exports.UserModuleController = UserModuleController;
+__decorate([
+    (0, common_1.Get)('profile/:username'),
+    __param(0, (0, common_1.Param)('username')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], UserModuleController.prototype, "getUser", null);
 __decorate([
     (0, common_1.Post)('sign'),
     __param(0, (0, common_1.Body)()),
@@ -64,6 +85,15 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], UserModuleController.prototype, "changePicture", null);
+__decorate([
+    (0, common_1.UseGuards)(user_guard_1.UserGuard),
+    (0, common_1.Put)('change_description'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], UserModuleController.prototype, "change_description", null);
 exports.UserModuleController = UserModuleController = __decorate([
     (0, common_1.Controller)('user'),
     __metadata("design:paramtypes", [user_service_1.UsersService])

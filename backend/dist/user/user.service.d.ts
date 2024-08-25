@@ -26,4 +26,7 @@ export declare class UsersService {
     changeProfilePicture(pictureId: string, userId: string): Promise<{
         message: string;
     }>;
+    changeDescription(description: string, userId: string): Promise<{
+        message: string;
+    }>;
 }

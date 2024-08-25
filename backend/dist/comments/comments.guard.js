@@ -33,7 +33,7 @@ let CommentsGuard = class CommentsGuard {
         catch {
             throw new common_1.UnauthorizedException();
         }
-        if (request.method === 'POST')
+        if (request.method === 'POST' || request.method === 'GET')
             return true;
         const commentId = this.getCommentIdFromQuery(request);
         if (!commentId) {

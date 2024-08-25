@@ -16,6 +16,7 @@ exports.CommentsService = void 0;
 const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
+const mongoose = require("mongoose");
 const post_schema_1 = require("../schemes/post.schema");
 const comment_schema_1 = require("../schemes/comment.schema");
 const bson_1 = require("bson");
@@ -31,6 +32,7 @@ let CommentsService = class CommentsService {
             content: dto.content,
             user: userId,
             answerTo: dto.answeredCommentId,
+            createdAt: new Date(),
         });
         if (!createdComment) {
             throw new common_1.InternalServerErrorException();
@@ -58,6 +60,36 @@ let CommentsService = class CommentsService {
     }
     async findCommentByCommentIdAndUserId(commentId, userId) {
         return await this.commentsModel.findOne({ _id: commentId, user: userId });
+    }
+    async likeComment(commentId, user_id) {
+        const updatedComment = await this.commentsModel.updateOne({ _id: new mongoose.Types.ObjectId(commentId) }, [
+            {
+                $set: {
+                    likedBy: {
+                        $cond: [
+                            { $in: [new mongoose.Types.ObjectId(user_id), '$likedBy'] },
+                            {
+                                $setDifference: [
+                                    '$likedBy',
+                                    [new mongoose.Types.ObjectId(user_id)],
+                                ],
+                            },
+                            {
+                                $concatArrays: [
+                                    '$likedBy',
+                                    [new mongoose.Types.ObjectId(user_id)],
+                                ],
+                            },
+                        ],
+                    },
+                },
+            },
+        ]);
+        if (!updatedComment) {
+            throw new common_1.InternalServerErrorException();
+        }
+        console.log('updatedComment: ', updatedComment);
+        return { message: 'Operation handled successfully' };
     }
     async getByPage(page, commentIds) {
         const comments = await this.commentsModel

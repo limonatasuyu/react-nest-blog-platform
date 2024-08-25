@@ -32,6 +32,14 @@ __decorate([
     (0, mongoose_1.Prop)({ type: mongoose.Schema.Types.ObjectId, ref: 'Comment' }),
     __metadata("design:type", Comment)
 ], Comment.prototype, "answerTo", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", Date)
+], Comment.prototype, "createdAt", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: [mongoose.Schema.Types.ObjectId], ref: 'User' }),
+    __metadata("design:type", Array)
+], Comment.prototype, "likedBy", void 0);
 exports.Comment = Comment = __decorate([
     (0, mongoose_1.Schema)()
 ], Comment);

@@ -42,6 +42,19 @@ export class PostsController {
   }
 
   @UseGuards(PostsGuard)
+  @Get(':id/like')
+  likePost(@Req() req, @Param('id') postId: string) {
+    return this.postsService.likePost(postId, req.user.sub);
+  }
+ 
+  @UseGuards(PostsGuard)
+  @Get('save/:id')
+  savePost(@Req() req, @Param('id') postId: string) {
+    return this.postsService.savePost(postId, req.user.sub);
+  }
+
+
+  @UseGuards(PostsGuard)
   @Post()
   createPost(@Req() req, @Body() dto: CreatePostDTO) {
     return this.postsService.createPost(dto, req.user.username);
@@ -74,7 +87,7 @@ export class PostsController {
 
   @UseGuards(PostsGuard)
   @Get(':id')
-  async getPost(@Param('id') postId: string) {
-    return this.postsService.getPostById(postId);
+  async getPost(@Req() req, @Param('id') postId: string) {
+    return this.postsService.getPostById(postId, req.user.sub);
   }
 }

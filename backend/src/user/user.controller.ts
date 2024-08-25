@@ -1,4 +1,13 @@
-import { Controller, Post, Body, UseGuards, Req, Put } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Req,
+  Put,
+  Get,
+  Param,
+} from '@nestjs/common';
 import { UsersService } from './user.service';
 import {
   CreateUserDTO,
@@ -10,6 +19,19 @@ import { UserGuard } from './user.guard';
 @Controller('user')
 export class UserModuleController {
   constructor(private readonly usersService: UsersService) {}
+
+  @Get('profile/:username')
+  async getUser(@Param('username') username) {
+    const user = await this.usersService.findOne(username);
+    return {
+      username: user.username,
+      firstname: user.firstname,
+      lastname: user.lastname,
+      description: user.description,
+      email: user.email,
+      profilePictureId: user.profilePictureId,
+    };
+  }
 
   @Post('sign')
   async create(@Body() dto: CreateUserDTO): Promise<any> {
@@ -30,5 +52,11 @@ export class UserModuleController {
   @Put('change_picture')
   async changePicture(@Req() req, @Body() { imageId }) {
     return await this.usersService.changeProfilePicture(imageId, req.user.sub);
+  }
+
+  @UseGuards(UserGuard)
+  @Put('change_description')
+  async change_description(@Req() req, @Body() { description }) {
+    return await this.usersService.changeDescription(description, req.user.sub);
   }
 }

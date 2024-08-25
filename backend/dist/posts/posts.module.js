@@ -11,6 +11,7 @@ const common_1 = require("@nestjs/common");
 const posts_service_1 = require("./posts.service");
 const posts_controller_1 = require("./posts.controller");
 const post_schema_1 = require("../schemes/post.schema");
+const user_schema_1 = require("../schemes/user.schema");
 const mongoose_1 = require("@nestjs/mongoose");
 const user_module_1 = require("../user/user.module");
 const image_module_1 = require("../image/image.module");
@@ -20,7 +21,10 @@ exports.PostsModule = PostsModule;
 exports.PostsModule = PostsModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            mongoose_1.MongooseModule.forFeature([{ name: post_schema_1.Post.name, schema: post_schema_1.PostSchema }]),
+            mongoose_1.MongooseModule.forFeature([
+                { name: post_schema_1.Post.name, schema: post_schema_1.PostSchema },
+                { name: user_schema_1.User.name, schema: user_schema_1.UserSchema },
+            ]),
             user_module_1.UserModule,
             image_module_1.ImageModule,
         ],

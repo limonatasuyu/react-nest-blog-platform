@@ -18,6 +18,12 @@ export class Comment {
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Comment' })
   answerTo: Comment;
+
+  @Prop({ required: true })
+  createdAt: Date;
+
+  @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'User' })
+  likedBy: User[];
 }
 
 export const CommentSchema = SchemaFactory.createForClass(Comment);

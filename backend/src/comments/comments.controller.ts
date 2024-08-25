@@ -6,6 +6,8 @@ import {
   Query,
   UseGuards,
   Req,
+  Param,
+  Get,
 } from '@nestjs/common';
 import { CommentsService } from './comments.service';
 import { AddCommentDTO, DeleteCommentDTO } from 'src/dto/comment-dto';
@@ -26,4 +28,11 @@ export class CommentsController {
   async deleteComment(@Query() dto: DeleteCommentDTO) {
     return await this.commentsService.deleteComment(dto);
   }
+
+  @UseGuards(CommentsGuard)
+  @Get(':id/like')
+  async likeComment(@Req() req, @Param('id') commentId: string) {
+    return await this.commentsService.likeComment(commentId, req.user.sub);
+  }
 }
+

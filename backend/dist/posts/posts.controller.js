@@ -29,6 +29,12 @@ let PostsController = class PostsController {
     getRecentPosts({ page }) {
         return this.postsService.getRecentPosts({ page });
     }
+    likePost(req, postId) {
+        return this.postsService.likePost(postId, req.user.sub);
+    }
+    savePost(req, postId) {
+        return this.postsService.savePost(postId, req.user.sub);
+    }
     createPost(req, dto) {
         return this.postsService.createPost(dto, req.user.username);
     }
@@ -41,8 +47,8 @@ let PostsController = class PostsController {
     getMyPosts(req) {
         return this.postsService.getUsersPosts(req.user.username);
     }
-    async getPost(postId) {
-        return this.postsService.getPostById(postId);
+    async getPost(req, postId) {
+        return this.postsService.getPostById(postId, req.user.sub);
     }
 };
 exports.PostsController = PostsController;
@@ -70,6 +76,24 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], PostsController.prototype, "getRecentPosts", null);
+__decorate([
+    (0, common_1.UseGuards)(posts_guard_1.PostsGuard),
+    (0, common_1.Get)(':id/like'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], PostsController.prototype, "likePost", null);
+__decorate([
+    (0, common_1.UseGuards)(posts_guard_1.PostsGuard),
+    (0, common_1.Get)('save/:id'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], PostsController.prototype, "savePost", null);
 __decorate([
     (0, common_1.UseGuards)(posts_guard_1.PostsGuard),
     (0, common_1.Post)(),
@@ -109,9 +133,10 @@ __decorate([
 __decorate([
     (0, common_1.UseGuards)(posts_guard_1.PostsGuard),
     (0, common_1.Get)(':id'),
-    __param(0, (0, common_1.Param)('id')),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", Promise)
 ], PostsController.prototype, "getPost", null);
 exports.PostsController = PostsController = __decorate([

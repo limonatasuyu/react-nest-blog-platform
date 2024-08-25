@@ -49,7 +49,7 @@ __decorate([
     __metadata("design:type", String)
 ], Post.prototype, "thumbnailId", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ type: [String], ref: 'User' }),
+    (0, mongoose_1.Prop)({ type: [mongoose.Schema.Types.ObjectId], ref: 'User' }),
     __metadata("design:type", Array)
 ], Post.prototype, "likedBy", void 0);
 __decorate([

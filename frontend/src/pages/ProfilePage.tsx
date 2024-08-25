@@ -1,4 +1,4 @@
-import { Box, TextField, Button, Avatar, Paper } from "@mui/material";
+import { Box, TextField, Button, Avatar, Paper, Modal, Typography } from "@mui/material";
 import Layout1 from "../Layout1";
 import { ChangeEvent, useCallback, useEffect, useState } from "react";
 import useSnackbar from "../hooks/useSnackbar";
@@ -31,7 +31,7 @@ function fileToDataUri(file: File) {
   });
 }
 
-export default function ProfilePage() {
+export default function ProfilePage({ username }: { username: string }) {
   const [userInfo, setUserInfo] = useState<{
     email: string;
     firstname: string;
@@ -45,11 +45,52 @@ export default function ProfilePage() {
   const [imageId, setImageId] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [description, setDescription] = useState("");
+  const [descriptionError, setDescriptionError] = useState("");
+  const [descriptionTouched, setDescriptionTouched] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  function handleDescriptionSubmit() {
+    setDescriptionTouched(true);
+    if (description.length < 5 || description.length > 25) {
+      setDescriptionError(
+        "Description must be at least 5, at most 25 charcters"
+      );
+      return;
+    }
+
+    const token = window.sessionStorage.getItem("access_token");
+    fetch("http://localhost:5000/user/change_description", {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-type": "application/json",
+      },
+      body: JSON.stringify({ description }),
+    })
+      .then((res) => {
+        if (!res.ok) {
+          res
+            .json()
+            .then((res) =>
+              setSnackBar(res.message ?? "Unexpected error occured", "error")
+            );
+          return;
+        }
+        setSnackBar("Description changed successully.", "success");
+      })
+      .catch((err) =>
+        setSnackBar(err.message ?? "Unexpected error occured", "error")
+      );
+  }
 
   const fetchUserInfo = useCallback(() => {
+    if (!username) return;
     const token = window.sessionStorage.getItem("access_token");
-    fetch("http://localhost:5000/auth/profile", {
-      headers: { Authorization: `Bearer ${token}` },
+    fetch(`http://localhost:5000/user/profile/${username}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     })
       .then(async (res) => {
         const jsonResponse = await res.json();
@@ -62,6 +103,7 @@ export default function ProfilePage() {
           return;
         }
         setUserInfo(jsonResponse);
+        setDescription(jsonResponse.description);
       })
       .catch((err) =>
         setSnackBar(
@@ -70,11 +112,11 @@ export default function ProfilePage() {
         )
       )
       .finally(() => setLoaded(true));
-  }, []);
+  }, [username]);
 
   useEffect(() => {
     fetchUserInfo();
-  }, [fetchUserInfo]);
+  }, [fetchUserInfo, username]);
 
   async function handleImageUpload(image: File) {
     const formData = new FormData();
@@ -217,6 +259,32 @@ export default function ProfilePage() {
               disabled
               fullWidth
             />
+
+            <TextField
+              id="description"
+              label="Description"
+              placeholder="Little description of who you are"
+              value={description}
+              onChange={(e) => {
+                setDescription(e.target.value);
+                if (!descriptionTouched) return;
+                if (description.length < 5 || description.length > 25) {
+                  setDescriptionError(
+                    "Description must be at least 5, at most 25 charcters"
+                  );
+                } else {
+                  setDescriptionError("");
+                }
+              }}
+              fullWidth
+              InputProps={{
+                endAdornment: (
+                  <Button onClick={handleDescriptionSubmit}>Submit</Button>
+                ),
+              }}
+              error={Boolean(descriptionError)}
+              helperText={descriptionError}
+            />
             <Box
               display="flex"
               sx={{ gap: 2, justifyContent: "center", mt: 4 }}
@@ -268,7 +336,7 @@ export default function ProfilePage() {
                     />
                   </Button>
                   <Button
-                    href="/change_password"
+                    onClick={() => setIsModalOpen(true)}
                     variant="outlined"
                     fullWidth
                     startIcon={<LockIcon />}
@@ -280,6 +348,28 @@ export default function ProfilePage() {
             </Box>
           </Box>
         </Paper>
+        <Modal
+          open={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          aria-labelledby="modal-modal-title"
+          aria-describedby="modal-modal-description"
+        >
+          <Box
+            sx={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: 400,
+              bgcolor: "background.paper",
+              boxShadow: 24,
+              p: 4,
+            }}
+          >
+            <Typography>You can change your password once a month</Typography>
+            <Button href="/change_password">Go change it</Button>
+          </Box>
+        </Modal>
       </Box>
     </Layout1>
   );

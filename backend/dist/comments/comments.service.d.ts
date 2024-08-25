@@ -1,4 +1,5 @@
 import { Model } from 'mongoose';
+import * as mongoose from 'mongoose';
 import { Post } from 'src/schemes/post.schema';
 import { Comment } from 'src/schemes/comment.schema';
 import { AddCommentDTO, DeleteCommentDTO } from 'src/dto/comment-dto';
@@ -12,8 +13,11 @@ export declare class CommentsService {
     deleteComment(dto: DeleteCommentDTO): Promise<{
         message: string;
     }>;
-    findCommentByCommentIdAndUserId(commentId: string, userId: string): Promise<import("mongoose").Document<unknown, {}, Comment> & Comment & Required<{
-        _id: import("mongoose").Schema.Types.ObjectId;
+    findCommentByCommentIdAndUserId(commentId: string, userId: string): Promise<mongoose.Document<unknown, {}, Comment> & Comment & Required<{
+        _id: mongoose.Schema.Types.ObjectId;
     }>>;
+    likeComment(commentId: string, user_id: string): Promise<{
+        message: string;
+    }>;
     getByPage(page: number, commentIds: string[]): Promise<any[]>;
 }

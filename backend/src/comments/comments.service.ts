@@ -1,6 +1,7 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import * as mongoose from 'mongoose';
 import { Post } from 'src/schemes/post.schema';
 import { Comment } from 'src/schemes/comment.schema';
 import { AddCommentDTO, DeleteCommentDTO } from 'src/dto/comment-dto';
@@ -20,6 +21,7 @@ export class CommentsService {
       content: dto.content,
       user: userId,
       answerTo: dto.answeredCommentId,
+      createdAt: new Date(),
     });
 
     if (!createdComment) {
@@ -63,6 +65,40 @@ export class CommentsService {
 
   async findCommentByCommentIdAndUserId(commentId: string, userId: string) {
     return await this.commentsModel.findOne({ _id: commentId, user: userId });
+  }
+
+  async likeComment(commentId: string, user_id: string) {
+    const updatedComment = await this.commentsModel.updateOne(
+      { _id: new mongoose.Types.ObjectId(commentId) },
+      [
+        {
+          $set: {
+            likedBy: {
+              $cond: [
+                { $in: [new mongoose.Types.ObjectId(user_id), '$likedBy'] },
+                {
+                  $setDifference: [
+                    '$likedBy',
+                    [new mongoose.Types.ObjectId(user_id)],
+                  ],
+                },
+                {
+                  $concatArrays: [
+                    '$likedBy',
+                    [new mongoose.Types.ObjectId(user_id)],
+                  ],
+                },
+              ],
+            },
+          },
+        },
+      ],
+    );
+    if (!updatedComment) {
+      throw new InternalServerErrorException();
+    }
+    console.log('updatedComment: ', updatedComment);
+    return { message: 'Operation handled successfully' };
   }
 
   async getByPage(page: number, commentIds: string[]) {

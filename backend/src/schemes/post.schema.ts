@@ -32,8 +32,8 @@ export class Post {
   @Prop({ type: String, ref: 'Image' })
   thumbnailId: string;
 
-  @Prop({ type: [String], ref: 'User' })
-  likedBy: string[];
+  @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'User' })
+  likedBy: User[];
 
   @Prop({ type: [String], required: true })
   tags: string[];

@@ -13,8 +13,6 @@ import {
   ListItemIcon,
   ListItemText,
   Link,
-  Typography,
-  Avatar,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import HistoryEduIcon from "@mui/icons-material/HistoryEdu";
@@ -48,7 +46,7 @@ export default function Layout1({ children }: { children: ReactNode }) {
     <Box
       display="flex"
       flexDirection="column"
-      sx={{ minHeight: "100vh", backgroundColor: "#f5f5f5" }}
+      sx={{ minHeight: "100vh", backgroundColor: "#f5f5f5", maxWidth: "100vw", overflow: "hidden" }}
     >
       <Box
         display="flex"

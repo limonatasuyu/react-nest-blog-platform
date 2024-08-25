@@ -43,6 +43,12 @@ export declare class PostsController {
             name: string;
         };
     }[]>;
+    likePost(req: any, postId: string): Promise<{
+        message: string;
+    }>;
+    savePost(req: any, postId: string): Promise<{
+        message: string;
+    }>;
     createPost(req: any, dto: CreatePostDTO): Promise<{
         message: string;
     }>;
@@ -62,5 +68,5 @@ export declare class PostsController {
         thumbnailId: string;
         tags: string[];
     }[]>;
-    getPost(postId: string): Promise<any>;
+    getPost(req: any, postId: string): Promise<any>;
 }

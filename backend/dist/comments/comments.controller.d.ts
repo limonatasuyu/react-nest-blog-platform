@@ -9,4 +9,7 @@ export declare class CommentsController {
     deleteComment(dto: DeleteCommentDTO): Promise<{
         message: string;
     }>;
+    likeComment(req: any, commentId: string): Promise<{
+        message: string;
+    }>;
 }

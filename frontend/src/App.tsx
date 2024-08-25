@@ -20,12 +20,15 @@ import MyPostsPage from "./pages/MyPostsPage";
 import { SnackbarProvider } from "./hooks/useSnackbar";
 import ProfilePage from "./pages/ProfilePage";
 import PostPage from "./pages/PostPage";
+import ChangePasswordPage from "./pages/ChangePasswordPage";
 
 function App() {
   const [route, setRoute] = useState(window.location.pathname);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [userInfo, setUserInfo] = useState(null);
 
-  console.log(route)
+  console.log(route);
+  console.log("userInfo: ", userInfo);
   const checkAccessToken = useCallback(async () => {
     const token = window.sessionStorage.getItem("access_token");
     if (!token) {
@@ -61,6 +64,8 @@ function App() {
     ) {
       setRoute("/");
     }
+    const jsonResponse = await response.json();
+    setUserInfo(jsonResponse);
   }, [route]);
 
   useEffect(() => {
@@ -71,17 +76,20 @@ function App() {
 
     //window.addEventListener("popstate", onPopState);
 
-    let oldHref = window.location.pathname
+    let oldHref = window.location.pathname;
     const observer = new MutationObserver((mutations) => {
       if (oldHref !== window.location.pathname) {
-          oldHref = window.location.pathname
-          setRoute(window.location.pathname)
-        }
-    })
+        oldHref = window.location.pathname;
+        setRoute(window.location.pathname);
+      }
+    });
 
-    observer.observe(document.querySelector("body"), {childList: true, subtree: true})
+    observer.observe(document.querySelector("body"), {
+      childList: true,
+      subtree: true,
+    });
     return () => {
-      observer.disconnect()
+      observer.disconnect();
       //window.removeEventListener("popstate", onPopState);
     };
   }, [checkAccessToken]);
@@ -109,11 +117,12 @@ function App() {
     "/my_posts": MyPostsPage,
     "/profile": ProfilePage,
     "/post": PostPage,
+    "/change_password": ChangePasswordPage,
   };
 
   const renderComponent = () => {
     const Component = components[route] || NotFoundPage;
-    return <Component />;
+    return <>{route === "/profile" ? <Component username={userInfo?.username}/> : <Component />}</>;
   };
 
   const pages = [
@@ -128,23 +137,19 @@ function App() {
     <div>
       <LocalizationProvider dateAdapter={AdapterDayjs}>
         <SnackbarProvider>
-        <Drawer open={isDrawerOpen} onClose={() => setIsDrawerOpen(false)}>
-          <Box>
-            {pages.map((page, index) => (
-              <Link
-                key={index}
-                href={page.path}
-                underline="none"
-              >
-                <ListItemButton onClick={() => setIsDrawerOpen(false)}>
-                  <ListItemIcon>{page.icon}</ListItemIcon>
-                  <ListItemText primary={page.name} />
-                </ListItemButton>
-              </Link>
-            ))}
-          </Box>
-        </Drawer>
-        <div>{renderComponent()}</div>
+          <Drawer open={isDrawerOpen} onClose={() => setIsDrawerOpen(false)}>
+            <Box>
+              {pages.map((page, index) => (
+                <Link key={index} href={page.path} underline="none">
+                  <ListItemButton onClick={() => setIsDrawerOpen(false)}>
+                    <ListItemIcon>{page.icon}</ListItemIcon>
+                    <ListItemText primary={page.name} />
+                  </ListItemButton>
+                </Link>
+              ))}
+            </Box>
+          </Drawer>
+          <div>{renderComponent()}</div>
         </SnackbarProvider>
       </LocalizationProvider>
     </div>

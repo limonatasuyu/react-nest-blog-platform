@@ -26,6 +26,9 @@ let CommentsController = class CommentsController {
     async deleteComment(dto) {
         return await this.commentsService.deleteComment(dto);
     }
+    async likeComment(req, commentId) {
+        return await this.commentsService.likeComment(commentId, req.user.sub);
+    }
 };
 exports.CommentsController = CommentsController;
 __decorate([
@@ -45,6 +48,15 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], CommentsController.prototype, "deleteComment", null);
+__decorate([
+    (0, common_1.UseGuards)(comments_guard_1.CommentsGuard),
+    (0, common_1.Get)(':id/like'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], CommentsController.prototype, "likeComment", null);
 exports.CommentsController = CommentsController = __decorate([
     (0, common_1.Controller)('comments'),
     __metadata("design:paramtypes", [comments_service_1.CommentsService])

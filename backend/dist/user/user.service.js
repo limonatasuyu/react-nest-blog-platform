@@ -204,6 +204,13 @@ let UsersService = class UsersService {
         await this.imageService.relateImage(pictureId);
         return { message: 'Profile picture changed successfully.' };
     }
+    async changeDescription(description, userId) {
+        const updatedUser = await this.userModel.updateOne({ _id: new mongoose.Types.ObjectId(userId) }, { $set: { description } });
+        if (!updatedUser || !updatedUser.acknowledged) {
+            throw new common_1.InternalServerErrorException();
+        }
+        return { message: 'Description changed successully.' };
+    }
 };
 exports.UsersService = UsersService;
 exports.UsersService = UsersService = __decorate([

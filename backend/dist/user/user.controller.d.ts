@@ -3,11 +3,24 @@ import { CreateUserDTO, ActivateUserDTO, CreateActivationCodeDTO } from 'src/dto
 export declare class UserModuleController {
     private readonly usersService;
     constructor(usersService: UsersService);
+    getUser(username: any): Promise<{
+        username: string;
+        firstname: string;
+        lastname: string;
+        description: string;
+        email: string;
+        profilePictureId: string;
+    }>;
     create(dto: CreateUserDTO): Promise<any>;
     activate(dto: ActivateUserDTO): Promise<any>;
     recreateActivation(dto: CreateActivationCodeDTO): Promise<any>;
     changePicture(req: any, { imageId }: {
         imageId: any;
+    }): Promise<{
+        message: string;
+    }>;
+    change_description(req: any, { description }: {
+        description: any;
     }): Promise<{
         message: string;
     }>;

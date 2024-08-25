@@ -32,7 +32,7 @@ export class CommentsGuard implements CanActivate {
       throw new UnauthorizedException();
     }
 
-    if (request.method === 'POST') return true;
+    if (request.method === 'POST' || request.method === 'GET') return true;
 
     const commentId = this.getCommentIdFromQuery(request);
     if (!commentId) {
