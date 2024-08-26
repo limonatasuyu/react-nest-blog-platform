@@ -16,8 +16,12 @@ import { SentimentDissatisfied } from "@mui/icons-material";
 import Loading from "../components/Loading";
 
 export default function MyPostsPage() {
+
+  const params = new URL(document.location.toString()).searchParams;
+  const tagName = params.get("name");
+
   const [posts, setPosts] = useState<{
-      id: string
+      id: string;
       title: string;
       content: string;
       commentCount: number;
@@ -31,7 +35,7 @@ export default function MyPostsPage() {
 
   useEffect(() => {
     const token = window.sessionStorage.getItem("access_token");
-    fetch("http://localhost:5000/posts/my_posts", {
+    fetch(`http://localhost:5000/posts/tag/${tagName}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -71,7 +75,7 @@ export default function MyPostsPage() {
         }}
       >
         <Typography variant="h4" align="center" gutterBottom>
-          Your Posts
+          {tagName.toLowerCase()} Posts
         </Typography>
         {posts.length ? (
           posts.map((post, index) => (

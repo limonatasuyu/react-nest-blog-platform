@@ -90,6 +90,7 @@ export default function ChangePasswordPage() {
       body: JSON.stringify({
         newPassword,
         newPasswordAgain,
+        token: step1Token
       }),
     })
       .then((res) =>
@@ -104,6 +105,9 @@ export default function ChangePasswordPage() {
           return;
         }
         setSnackBar(jsonResponse.message, "success");
+        setTimeout(() => {
+          window.location.pathname = "/"
+        }, 2000)
       })
       .catch((err) => {
         setSnackBar(err.message ?? "Unexpected error occurred.", "error");

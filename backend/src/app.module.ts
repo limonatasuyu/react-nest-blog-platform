@@ -8,6 +8,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
 import { CommentsModule } from './comments/comments.module';
 import { ImageModule } from './image/image.module';
+import { TagModule } from './tag/tag.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { ImageModule } from './image/image.module';
     MongooseModule.forRoot('mongodb://127.0.0.1:27017/blog'),
     CommentsModule,
     ImageModule,
+    TagModule,
   ],
   controllers: [AppController],
   providers: [AppService],

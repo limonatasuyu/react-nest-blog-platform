@@ -5,44 +5,20 @@ export declare class PostsController {
     constructor(postsService: PostsService);
     getPosts({ page }: {
         page: any;
-    }): Promise<{
-        id: string;
-        title: string;
-        content: string;
-        commentCount: number;
-        likedCount: number;
-        thumbnailId: string;
-        tags: string[];
-        user: {
-            username: string;
-            name: string;
-        };
-    }[]>;
+    }): Promise<any[]>;
     getPostsByTags({ tags, page }: GetPostsByTagDTO): Promise<{
         title: string;
         content: string;
         commentCount: number;
         likedCount: number;
         thumbnailId: string;
-        tags: string[];
+        tags: import("../schemes/tag.schema").Tag[];
         user: {
             username: string;
             name: string;
         };
     }[]>;
-    getRecentPosts({ page }: GetRecentPostsDTO): Promise<{
-        id: string;
-        title: string;
-        content: string;
-        commentCount: number;
-        likedCount: number;
-        thumbnailId: string;
-        tags: string[];
-        user: {
-            username: string;
-            name: string;
-        };
-    }[]>;
+    getRecentPosts({ page }: GetRecentPostsDTO): Promise<any[]>;
     likePost(req: any, postId: string): Promise<{
         message: string;
     }>;
@@ -66,7 +42,7 @@ export declare class PostsController {
         commentCount: number;
         likedCount: number;
         thumbnailId: string;
-        tags: string[];
+        tags: import("../schemes/tag.schema").Tag[];
     }[]>;
     getPost(req: any, postId: string): Promise<any>;
 }

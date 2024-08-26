@@ -6,6 +6,7 @@ import { User, UserSchema } from 'src/schemes/user.schema';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UserModule } from 'src/user/user.module';
 import { ImageModule } from 'src/image/image.module';
+import { TagModule } from 'src/tag/tag.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { ImageModule } from 'src/image/image.module';
     ]),
     UserModule,
     ImageModule,
+    TagModule,
   ],
   providers: [PostsService],
   controllers: [PostsController],

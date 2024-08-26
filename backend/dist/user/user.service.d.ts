@@ -16,6 +16,7 @@ export declare class UsersService {
         message: string;
     }>;
     findOne(usernameOrEmail: string): Promise<User | undefined>;
+    findById(userId: string): Promise<User | undefined>;
     getById(user_id: string): Promise<{
         firstname: string;
         lastname: string;

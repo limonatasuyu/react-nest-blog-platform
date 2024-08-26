@@ -17,6 +17,7 @@ const mongoose_1 = require("@nestjs/mongoose");
 const config_1 = require("@nestjs/config");
 const comments_module_1 = require("./comments/comments.module");
 const image_module_1 = require("./image/image.module");
+const tag_module_1 = require("./tag/tag.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -30,6 +31,7 @@ exports.AppModule = AppModule = __decorate([
             mongoose_1.MongooseModule.forRoot('mongodb://127.0.0.1:27017/blog'),
             comments_module_1.CommentsModule,
             image_module_1.ImageModule,
+            tag_module_1.TagModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

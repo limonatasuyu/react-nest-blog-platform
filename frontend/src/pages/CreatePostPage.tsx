@@ -155,7 +155,7 @@ export default function CreatePostPage() {
                     {imageDataUri ? "Change the" : "Upload"} image
                     <VisuallyHiddenInput
                       type="file"
-                      accept=".png,.jpg"
+                      accept=".png,.jpg,.jpeg"
                       onChange={(e) => {
                         if (!e.target.files || !e.target.files.length) return;
                         const file = e.target.files[0];

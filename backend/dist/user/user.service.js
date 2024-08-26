@@ -181,6 +181,9 @@ let UsersService = class UsersService {
             $or: [{ username: usernameOrEmail }, { email: usernameOrEmail }],
         });
     }
+    async findById(userId) {
+        return await this.userModel.findById(new mongoose.Types.ObjectId(userId));
+    }
     async getById(user_id) {
         const user = await this.userModel.findById(new mongoose.Types.ObjectId(user_id));
         if (!user) {

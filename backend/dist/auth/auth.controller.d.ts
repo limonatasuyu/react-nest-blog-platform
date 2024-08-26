@@ -16,4 +16,16 @@ export declare class AuthController {
         email: string;
         profilePictureId: string;
     }>;
+    getChangePasswordToken(req: any, { password }: {
+        password: any;
+    }): Promise<{
+        token: string;
+    }>;
+    changePassword(req: any, { newPassword, newPasswordAgain, token }: {
+        newPassword: any;
+        newPasswordAgain: any;
+        token: any;
+    }): Promise<{
+        message: string;
+    }>;
 }

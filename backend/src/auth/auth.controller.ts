@@ -7,6 +7,7 @@ import {
   Post,
   Request,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { loginDTO } from '../dto/auth-dto';
 import { AuthService } from './auth.service';
@@ -30,5 +31,28 @@ export class AuthController {
   @Get('profile')
   getProfile(@Request() req) {
     return this.usersService.getById(req.user.sub);
+  }
+
+  @UseGuards(AuthGuard)
+  @Post('change_password_one')
+  async getChangePasswordToken(@Req() req, @Body() { password }) {
+    return await this.authService.getChangePasswordToken(
+      req.user.sub,
+      password,
+    );
+  }
+
+  @UseGuards(AuthGuard)
+  @Post('change_password_two')
+  async changePassword(
+    @Req() req,
+    @Body() { newPassword, newPasswordAgain, token },
+  ) {
+    return await this.authService.changePassword(
+      newPassword,
+      newPasswordAgain,
+      req.user.sub,
+      token,
+    );
   }
 }

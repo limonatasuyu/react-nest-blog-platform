@@ -31,7 +31,7 @@ export class User {
   @Prop({ required: true })
   isActivated: boolean;
 
-  @Prop()
+  @Prop ()
   interests: string[];
 
   @Prop()
@@ -42,6 +42,9 @@ export class User {
 
   @Prop()
   description: string;
+
+  @Prop()
+  passwordLastUpdatedAt: Date;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

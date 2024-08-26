@@ -28,6 +28,12 @@ let AuthController = class AuthController {
     getProfile(req) {
         return this.usersService.getById(req.user.sub);
     }
+    async getChangePasswordToken(req, { password }) {
+        return await this.authService.getChangePasswordToken(req.user.sub, password);
+    }
+    async changePassword(req, { newPassword, newPasswordAgain, token }) {
+        return await this.authService.changePassword(newPassword, newPasswordAgain, req.user.sub, token);
+    }
 };
 exports.AuthController = AuthController;
 __decorate([
@@ -46,6 +52,24 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "getProfile", null);
+__decorate([
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
+    (0, common_1.Post)('change_password_one'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "getChangePasswordToken", null);
+__decorate([
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
+    (0, common_1.Post)('change_password_two'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "changePassword", null);
 exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)('auth'),
     __metadata("design:paramtypes", [auth_service_1.AuthService,

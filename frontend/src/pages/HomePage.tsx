@@ -24,19 +24,6 @@ export default function HomePage() {
   const [activeTagTab, setActiveTagTab] = useState("All");
   const [page, setPage] = useState(1);
 
-  const mockTags = ["All", "Technology", "Health", "Finance"];
-  const mockPosts = [
-    {
-      user: "John Doe",
-      imageDataUrl: "https://via.placeholder.com/150",
-      title: "Understanding React Hooks",
-      description:
-        "An in-depth look into React Hooks and how they can simplify your code.",
-      tags: ["React", "JavaScript", "Web Development"],
-    },
-    // Add more mock posts here
-  ];
-  const mockTagsToFollow = ["Science", "Art", "Travel"];
   const mockWhoToFollow = [
     {
       name: "Jane Smith",
@@ -56,11 +43,14 @@ export default function HomePage() {
       thumbnailId?: string;
       tags: string[];
       user: {
-        name: string;
+        firstname: string;
+        lastname: string;
         username: string;
-      }
+        description?: string;
+      };
     }[]
   >([]);
+  const [tags, setTags] = useState<{ name: string }[]>([]);
   const [loaded, setLoaded] = useState(false);
   const { setSnackBar } = useSnackbar();
 
@@ -90,6 +80,12 @@ export default function HomePage() {
         );
       })
       .finally(() => setLoaded(true));
+
+    fetch("http://localhost:5000/tag").then((res) => {
+      if (res.ok) {
+        res.json().then((result) => setTags(result));
+      }
+    });
   }, [page]);
 
   if (!loaded) {
@@ -125,14 +121,21 @@ export default function HomePage() {
         <Box sx={{ flex: 1, maxWidth: "800px" }}>
           {/* Tag Tabs */}
           <Box sx={{ display: "flex", gap: 2, mb: 2, overflowX: "auto" }}>
-            {mockTags.map((tag, index) => (
+            <Button
+              variant={activeTagTab === "All" ? "contained" : "outlined"}
+              color="primary"
+              onClick={() => setActiveTagTab("All")}
+            >
+              All
+            </Button>
+            {tags.map((tag, index) => (
               <Button
                 key={index}
-                variant={activeTagTab === tag ? "contained" : "outlined"}
+                variant={activeTagTab === tag.name ? "contained" : "outlined"}
                 color="primary"
-                onClick={() => setActiveTagTab(tag)}
+                onClick={() => setActiveTagTab(tag.name)}
               >
-                {tag}
+                {tag.name}
               </Button>
             ))}
           </Box>
@@ -141,122 +144,146 @@ export default function HomePage() {
 
           {/* Posts */}
           <Box sx={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            {posts.map((post, index) => (
-              <Paper
-                key={index}
-                elevation={3}
-                sx={{
-                  padding: 3,
-                  borderRadius: 2,
-                  backgroundColor: "#fff",
-                }}
-              >
-                {/* Post Header */}
-                <Box
+            {posts
+              .filter((i) => {
+                if (activeTagTab === "All") return true;
+                return i.tags.find((i_) => i_ === activeTagTab);
+              })
+              .map((post, index) => (
+                <Paper
+                  key={index}
+                  elevation={3}
                   sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    mb: 2,
+                    padding: 3,
+                    borderRadius: 2,
+                    backgroundColor: "#fff",
                   }}
                 >
-                  <Avatar sx={{ mr: 2 }}>
-                    <AccountCircleIcon />
-                  </Avatar>
-                  <Link
-                    href={`/user/${post.user.username}`}
-                    underline="hover"
-                    color="text.primary"
-                    variant="subtitle1"
-                    fontWeight="bold"
-                  >
-                    {post.user.name}
-                  </Link>
-                </Box>
-
-                {/* Post Content */}
-                <Link
-                  href={`/post?id=${post.id}`}
-                  underline="none"
-                  color="inherit"
-                  sx={{
-                    display: "flex",
-                    flexDirection: { xs: "column", sm: "row" },
-                    gap: 2,
-                    mb: 2,
-                  }}
-                >
+                  {/* Post Header */}
                   <Box
-                    component="img"
-                    src={
-                      post.thumbnailId
-                        ? `http://localhost:5000/image/${post.thumbnailId}`
-                        : placeHolderThumbnail
-                    }
-                    alt={post.title}
                     sx={{
-                      width: { xs: "100%", sm: "200px" },
-                      height: "auto",
-                      borderRadius: 2,
-                      objectFit: "cover",
+                      display: "flex",
+                      alignItems: "center",
+                      mb: 2,
                     }}
-                  />
-                  <Box>
-                    <Typography variant="h6" gutterBottom>
-                      {post.title}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{
-                        mt: 1,
-                        display: "-webkit-box",
-                        overflow: "hidden",
-                        WebkitBoxOrient: "vertical",
-                        WebkitLineClamp: 2, // Limit to 2 lines of text
-                      }}
-                    >
-                      {post.content}
-                    </Typography>
-                  </Box>
-                </Link>
+                  >
+                    <Avatar sx={{ mr: 2 }}>
+                      <AccountCircleIcon />
+                    </Avatar>
 
-                {/* Post Footer */}
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <Box sx={{ display: "flex", gap: 1 }}>
-                    <Tooltip title="123 likes" arrow>
-                      <IconButton>
-                        <FavoriteIcon color="error" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="123 comments" arrow>
-                      <IconButton>
-                        <ChatIcon color="primary" />
-                      </IconButton>
-                    </Tooltip>
+                    <Box>
+                      <Link
+                        href={`/user/${post.user.username}`}
+                        underline="hover"
+                        color="text.primary"
+                        variant="subtitle1"
+                        fontWeight="bold"
+                      >
+                        {post.user.firstname + " " + post.user.lastname}
+                      </Link>
+                      <Typography variant="body2" color="text.secondary">
+                        {post.user.description}
+                      </Typography>
+                    </Box>
                   </Box>
-                  <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-                    {post.tags.map((tag, idx) => (
-                      <Chip
-                        key={idx}
-                        label={tag}
-                        component="a"
-                        href={`/tags/${tag}`}
-                        clickable
-                        variant="outlined"
-                        color="primary"
-                        size="small"
-                      />
-                    ))}
+                  {/* Post Content */}
+                  <Link
+                    href={`/post?id=${post.id}`}
+                    underline="none"
+                    color="inherit"
+                    sx={{
+                      display: "flex",
+                      flexDirection: { xs: "column", sm: "row" },
+                      gap: 2,
+                      mb: 2,
+                    }}
+                  >
+                    <Box
+                      component="img"
+                      src={
+                        post.thumbnailId
+                          ? `http://localhost:5000/image/${post.thumbnailId}`
+                          : placeHolderThumbnail
+                      }
+                      alt={post.title}
+                      sx={{
+                        width: { xs: "100%", sm: "200px" },
+                        height: "auto",
+                        borderRadius: 2,
+                        objectFit: "cover",
+                      }}
+                    />
+                    <Box>
+                      <Typography variant="h6" gutterBottom>
+                        {post.title}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{
+                          mt: 1,
+                          display: "-webkit-box",
+                          overflow: "hidden",
+                          WebkitBoxOrient: "vertical",
+                          WebkitLineClamp: 2, // Limit to 2 lines of text
+                        }}
+                      >
+                        {post.content}
+                      </Typography>
+                    </Box>
+                  </Link>
+
+                  {/* Post Footer */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Box sx={{ display: "flex", gap: 1 }}>
+                      <Tooltip title={`${post.likedCount} likes`} arrow>
+                        <IconButton
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 0.5,
+                          }}
+                        >
+                          <FavoriteIcon color="error" />
+                          <Typography sx={{ fontSize: "1rem", mt: 0.1 }}>
+                            {" " + post.likedCount}
+                          </Typography>
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title={`${post.commentCount} comments`} arrow>
+                        <IconButton
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
+                          <ChatIcon color="primary" />{" "}
+                          <Typography sx={{ fontSize: "1rem", mt: 0.1 }}>
+                            {" " + post.likedCount}
+                          </Typography>
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                    <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                      {post.tags.map((tag, idx) => (
+                        <Chip
+                          key={idx}
+                          label={tag}
+                          component="a"
+                          href={`/tags?name=${tag}`}
+                          clickable
+                          variant="outlined"
+                          color="primary"
+                          size="small"
+                        />
+                      ))}
+                    </Box>
                   </Box>
-                </Box>
-              </Paper>
-            ))}
+                </Paper>
+              ))}
           </Box>
         </Box>
 
@@ -280,12 +307,12 @@ export default function HomePage() {
               Recommended Topics
             </Typography>
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-              {mockTagsToFollow.map((tag, index) => (
+              {tags.map((tag, index) => (
                 <Chip
                   key={index}
-                  label={tag}
+                  label={tag.name}
                   component="a"
-                  href={`/tags/${tag}`}
+                  href={`/tags?name=${tag.name}`}
                   clickable
                   variant="outlined"
                   color="primary"

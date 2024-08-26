@@ -5,12 +5,14 @@ import { UsersService } from 'src/user/user.service';
 import { GetPostsByTagDTO, GetRecentPostsDTO, CreatePostDTO, DeletePostDTO, UpdatePostDTO } from '../dto/post-dto';
 import { ImageService } from 'src/image/image.service';
 import { User } from 'src/schemes/user.schema';
+import { TagService } from 'src/tag/tag.service';
 export declare class PostsService {
     private postsModel;
     private usersModel;
     private usersService;
     private imageService;
-    constructor(postsModel: Model<Post>, usersModel: Model<User>, usersService: UsersService, imageService: ImageService);
+    private tagService;
+    constructor(postsModel: Model<Post>, usersModel: Model<User>, usersService: UsersService, imageService: ImageService, tagService: TagService);
     getPostByIdAndUser(postId: string, user_id: string): Promise<mongoose.Document<unknown, {}, Post> & Post & Required<{
         _id: string;
     }>>;
@@ -26,25 +28,13 @@ export declare class PostsService {
         commentCount: number;
         likedCount: number;
         thumbnailId: string;
-        tags: string[];
+        tags: import("../schemes/tag.schema").Tag[];
         user: {
             username: string;
             name: string;
         };
     }[]>;
-    getRecentPosts(dto: GetRecentPostsDTO): Promise<{
-        id: string;
-        title: string;
-        content: string;
-        commentCount: number;
-        likedCount: number;
-        thumbnailId: string;
-        tags: string[];
-        user: {
-            username: string;
-            name: string;
-        };
-    }[]>;
+    getRecentPosts(dto: GetRecentPostsDTO): Promise<any[]>;
     createPost(dto: CreatePostDTO, username: string): Promise<{
         message: string;
     }>;
@@ -60,7 +50,7 @@ export declare class PostsService {
         commentCount: number;
         likedCount: number;
         thumbnailId: string;
-        tags: string[];
+        tags: import("../schemes/tag.schema").Tag[];
     }[]>;
     getPostById(postId: string, user_id: string): Promise<any>;
 }

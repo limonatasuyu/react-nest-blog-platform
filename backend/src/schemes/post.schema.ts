@@ -3,6 +3,7 @@ import { HydratedDocument } from 'mongoose';
 import * as mongoose from 'mongoose';
 import { User } from './user.schema';
 import { Comment } from './comment.schema';
+import { Tag } from './tag.schema';
 
 export type PostDocument = HydratedDocument<Post>;
 
@@ -35,8 +36,8 @@ export class Post {
   @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'User' })
   likedBy: User[];
 
-  @Prop({ type: [String], required: true })
-  tags: string[];
+  @Prop({ type: [mongoose.Schema.Types.ObjectId], required: true, ref: 'Tag' })
+  tags: Tag[];
 }
 
 export const PostSchema = SchemaFactory.createForClass(Post);

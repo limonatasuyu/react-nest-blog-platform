@@ -53,7 +53,7 @@ __decorate([
     __metadata("design:type", Array)
 ], Post.prototype, "likedBy", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ type: [String], required: true }),
+    (0, mongoose_1.Prop)({ type: [mongoose.Schema.Types.ObjectId], required: true, ref: 'Tag' }),
     __metadata("design:type", Array)
 ], Post.prototype, "tags", void 0);
 exports.Post = Post = __decorate([

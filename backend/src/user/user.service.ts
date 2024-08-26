@@ -236,6 +236,11 @@ export class UsersService {
     });
   }
 
+  async findById(userId: string): Promise<User | undefined> {
+    return await this.userModel.findById(new mongoose.Types.ObjectId(userId))  
+  }
+
+
   async getById(user_id: string) {
     const user = await this.userModel.findById(
       new mongoose.Types.ObjectId(user_id),

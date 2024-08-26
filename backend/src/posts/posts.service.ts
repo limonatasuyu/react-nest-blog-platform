@@ -14,6 +14,7 @@ import {
 import { ObjectId } from 'bson';
 import { ImageService } from 'src/image/image.service';
 import { User } from 'src/schemes/user.schema';
+import { TagService } from 'src/tag/tag.service';
 
 @Injectable()
 export class PostsService {
@@ -22,6 +23,7 @@ export class PostsService {
     @InjectModel(User.name) private usersModel: Model<User>,
     private usersService: UsersService,
     private imageService: ImageService,
+    private tagService: TagService,
   ) {}
 
   async getPostByIdAndUser(postId: string, user_id: string) {
@@ -124,31 +126,59 @@ export class PostsService {
 
   async getRecentPosts(dto: GetRecentPostsDTO) {
     const posts = await this.postsModel
-      .find()
-      .limit(10)
-      .skip((dto.page - 1) * 10)
-      .sort({ createdAt: -1 })
-      .populate({
-        path: 'user',
-        select: 'username firstname lastname',
-      })
+      .aggregate([
+        {
+          $lookup: {
+            from: 'tags', // Name of the Tags collection
+            localField: 'tags', // Field in the posts collection
+            foreignField: '_id', // Field in the Tags collection
+            as: 'tagDetails', // Name of the output array
+          },
+        },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'user',
+            foreignField: '_id',
+            as: 'user',
+          },
+        },
+        { $unwind: '$user' },
+        {
+          $project: {
+            id: 1,
+            title: 1,
+            content: 1,
+            thumbnailId: 1,
+            likedCount: { $size: '$likedBy' },
+            commentCount: { $size: '$comments' },
+            tags: {
+              $map: { input: '$tagDetails', as: 'tag', in: '$$tag.name' },
+            },
+            user: {
+              username: 1,
+              firstname: 1,
+              lastname: 1,
+              description: 1,
+            },
+          },
+        },
+        {
+          $sort: { createdAt: -1 },
+        },
+        {
+          $skip: (dto.page - 1) * 10,
+        },
+        {
+          $limit: 10,
+        },
+      ])
       .exec();
+
     if (!posts) {
       throw new InternalServerErrorException();
     }
-    return posts.map((i) => ({
-      id: i._id,
-      title: i.title,
-      content: i.content,
-      commentCount: i.comments.length,
-      likedCount: i.likedBy.length,
-      thumbnailId: i.thumbnailId,
-      tags: i.tags,
-      user: {
-        username: i.user.username,
-        name: i.user.firstname + ' ' + i.user.lastname,
-      },
-    }));
+    return posts;
   }
 
   async createPost(dto: CreatePostDTO, username: string) {
@@ -158,13 +188,15 @@ export class PostsService {
       throw new InternalServerErrorException();
     }
 
+    const createdTags = await this.tagService.createTagsForPost(dto.tags);
+
     const createdPost = await this.postsModel.create({
       _id: new ObjectId(),
       title: dto.title,
       content: dto.content,
       thumbnailId: dto.thumbnailId,
       user: user,
-      tags: dto.tags,
+      tags: createdTags.map((i) => i._id),
       createdAt: new Date(),
       updatedAt: new Date(),
     });

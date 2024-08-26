@@ -22,12 +22,14 @@ const user_service_1 = require("../user/user.service");
 const bson_1 = require("bson");
 const image_service_1 = require("../image/image.service");
 const user_schema_1 = require("../schemes/user.schema");
+const tag_service_1 = require("../tag/tag.service");
 let PostsService = class PostsService {
-    constructor(postsModel, usersModel, usersService, imageService) {
+    constructor(postsModel, usersModel, usersService, imageService, tagService) {
         this.postsModel = postsModel;
         this.usersModel = usersModel;
         this.usersService = usersService;
         this.imageService = imageService;
+        this.tagService = tagService;
     }
     async getPostByIdAndUser(postId, user_id) {
         return await this.postsModel.findOne({ _id: postId, user: user_id });
@@ -119,44 +121,72 @@ let PostsService = class PostsService {
     }
     async getRecentPosts(dto) {
         const posts = await this.postsModel
-            .find()
-            .limit(10)
-            .skip((dto.page - 1) * 10)
-            .sort({ createdAt: -1 })
-            .populate({
-            path: 'user',
-            select: 'username firstname lastname',
-        })
+            .aggregate([
+            {
+                $lookup: {
+                    from: 'tags',
+                    localField: 'tags',
+                    foreignField: '_id',
+                    as: 'tagDetails',
+                },
+            },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'user',
+                    foreignField: '_id',
+                    as: 'user',
+                },
+            },
+            { $unwind: '$user' },
+            {
+                $project: {
+                    id: 1,
+                    title: 1,
+                    content: 1,
+                    thumbnailId: 1,
+                    likedCount: { $size: '$likedBy' },
+                    commentCount: { $size: '$comments' },
+                    tags: {
+                        $map: { input: '$tagDetails', as: 'tag', in: '$$tag.name' },
+                    },
+                    user: {
+                        username: 1,
+                        firstname: 1,
+                        lastname: 1,
+                        description: 1,
+                    },
+                },
+            },
+            {
+                $sort: { createdAt: -1 },
+            },
+            {
+                $skip: (dto.page - 1) * 10,
+            },
+            {
+                $limit: 10,
+            },
+        ])
             .exec();
         if (!posts) {
             throw new common_1.InternalServerErrorException();
         }
-        return posts.map((i) => ({
-            id: i._id,
-            title: i.title,
-            content: i.content,
-            commentCount: i.comments.length,
-            likedCount: i.likedBy.length,
-            thumbnailId: i.thumbnailId,
-            tags: i.tags,
-            user: {
-                username: i.user.username,
-                name: i.user.firstname + ' ' + i.user.lastname,
-            },
-        }));
+        return posts;
     }
     async createPost(dto, username) {
         const user = await this.usersService.findOne(username);
         if (!user) {
             throw new common_1.InternalServerErrorException();
         }
+        const createdTags = await this.tagService.createTagsForPost(dto.tags);
         const createdPost = await this.postsModel.create({
             _id: new bson_1.ObjectId(),
             title: dto.title,
             content: dto.content,
             thumbnailId: dto.thumbnailId,
             user: user,
-            tags: dto.tags,
+            tags: createdTags.map((i) => i._id),
             createdAt: new Date(),
             updatedAt: new Date(),
         });
@@ -322,6 +352,7 @@ exports.PostsService = PostsService = __decorate([
     __metadata("design:paramtypes", [mongoose_2.Model,
         mongoose_2.Model,
         user_service_1.UsersService,
-        image_service_1.ImageService])
+        image_service_1.ImageService,
+        tag_service_1.TagService])
 ], PostsService);
 //# sourceMappingURL=posts.service.js.map
