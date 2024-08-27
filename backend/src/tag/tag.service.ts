@@ -7,6 +7,10 @@ import { Tag } from 'src/schemes/tag.schema';
 export class TagService {
   constructor(@InjectModel(Tag.name) private tagModel: Model<Tag>) {}
 
+  async findOne(name: string) {
+    return await this.tagModel.findOne({ name });
+  }
+
   async getPopularTags() {
     const tags = await this.tagModel
       .find()

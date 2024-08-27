@@ -60,6 +60,10 @@ __decorate([
     __metadata("design:type", Array)
 ], User.prototype, "savedPosts", void 0);
 __decorate([
+    (0, mongoose_1.Prop)({ type: [mongoose.Schema.Types.ObjectId], ref: 'post' }),
+    __metadata("design:type", Array)
+], User.prototype, "posts", void 0);
+__decorate([
     (0, mongoose_1.Prop)(),
     __metadata("design:type", String)
 ], User.prototype, "description", void 0);

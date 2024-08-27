@@ -3,6 +3,7 @@ import { CreateUserDTO, ActivateUserDTO, CreateActivationCodeDTO } from 'src/dto
 export declare class UserModuleController {
     private readonly usersService;
     constructor(usersService: UsersService);
+    getRecommendedUsers(): Promise<any[]>;
     getUser(username: any): Promise<{
         username: string;
         firstname: string;

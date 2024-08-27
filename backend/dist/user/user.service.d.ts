@@ -30,4 +30,5 @@ export declare class UsersService {
     changeDescription(description: string, userId: string): Promise<{
         message: string;
     }>;
+    getRecommendedUsers(): Promise<any[]>;
 }

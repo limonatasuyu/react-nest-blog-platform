@@ -22,18 +22,7 @@ export declare class PostsService {
     likePost(postId: string, user_id: string): Promise<{
         message: string;
     }>;
-    getPostsByTag(dto: GetPostsByTagDTO): Promise<{
-        title: string;
-        content: string;
-        commentCount: number;
-        likedCount: number;
-        thumbnailId: string;
-        tags: import("../schemes/tag.schema").Tag[];
-        user: {
-            username: string;
-            name: string;
-        };
-    }[]>;
+    getPostsByTag(dto: GetPostsByTagDTO): Promise<any[]>;
     getRecentPosts(dto: GetRecentPostsDTO): Promise<any[]>;
     createPost(dto: CreatePostDTO, username: string): Promise<{
         message: string;
@@ -44,13 +33,6 @@ export declare class PostsService {
     updatePost(dto: UpdatePostDTO, username: string): Promise<{
         message: string;
     }>;
-    getUsersPosts(username: string): Promise<{
-        title: string;
-        content: string;
-        commentCount: number;
-        likedCount: number;
-        thumbnailId: string;
-        tags: import("../schemes/tag.schema").Tag[];
-    }[]>;
+    getUsersPosts(username: string): Promise<any[]>;
     getPostById(postId: string, user_id: string): Promise<any>;
 }

@@ -126,6 +126,7 @@ let UsersService = class UsersService {
             password: encryptedPassword,
             isActivated: false,
             _id: new mongoose.Types.ObjectId(),
+            posts: [],
         });
         const createdActivationCode = new this.activationCodeModel({
             user_id: createdUser._id,
@@ -213,6 +214,26 @@ let UsersService = class UsersService {
             throw new common_1.InternalServerErrorException();
         }
         return { message: 'Description changed successully.' };
+    }
+    async getRecommendedUsers() {
+        const tags = await this.userModel.aggregate([
+            { $addFields: { postcount: { $size: { $ifNull: ['$posts', []] } } } },
+            { $sort: { postcount: 1 } },
+            { $limit: 3 },
+            {
+                $project: {
+                    _id: 0,
+                    firstname: 1,
+                    lastname: 1,
+                    username: 1,
+                    description: 1,
+                },
+            },
+        ]);
+        if (!tags) {
+            throw new common_1.InternalServerErrorException();
+        }
+        return tags;
     }
 };
 exports.UsersService = UsersService;

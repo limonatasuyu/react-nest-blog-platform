@@ -1,5 +1,5 @@
 export interface GetPostsByTagDTO {
-  tags: string | string[];
+  tag: string;
   page: number;
 }
 

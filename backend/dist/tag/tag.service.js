@@ -21,6 +21,9 @@ let TagService = class TagService {
     constructor(tagModel) {
         this.tagModel = tagModel;
     }
+    async findOne(name) {
+        return await this.tagModel.findOne({ name });
+    }
     async getPopularTags() {
         const tags = await this.tagModel
             .find()

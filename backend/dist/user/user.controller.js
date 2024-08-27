@@ -20,6 +20,9 @@ let UserModuleController = class UserModuleController {
     constructor(usersService) {
         this.usersService = usersService;
     }
+    async getRecommendedUsers() {
+        return this.usersService.getRecommendedUsers();
+    }
     async getUser(username) {
         const user = await this.usersService.findOne(username);
         return {
@@ -48,6 +51,12 @@ let UserModuleController = class UserModuleController {
     }
 };
 exports.UserModuleController = UserModuleController;
+__decorate([
+    (0, common_1.Get)('recommended'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], UserModuleController.prototype, "getRecommendedUsers", null);
 __decorate([
     (0, common_1.Get)('profile/:username'),
     __param(0, (0, common_1.Param)('username')),

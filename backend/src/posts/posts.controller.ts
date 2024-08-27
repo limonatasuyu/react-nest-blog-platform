@@ -8,7 +8,7 @@ import {
   Req,
   UseGuards,
   Put,
-  Param
+  Param,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import {
@@ -31,8 +31,8 @@ export class PostsController {
 
   @UseGuards(PostsGuard)
   @Get('tag')
-  getPostsByTags(@Query() { tags, page }: GetPostsByTagDTO) {
-    return this.postsService.getPostsByTag({ tags, page });
+  getPostsByTags(@Query() { tag, page }: GetPostsByTagDTO) {
+    return this.postsService.getPostsByTag({ tag, page });
   }
 
   @UseGuards(PostsGuard)
@@ -46,13 +46,12 @@ export class PostsController {
   likePost(@Req() req, @Param('id') postId: string) {
     return this.postsService.likePost(postId, req.user.sub);
   }
- 
+
   @UseGuards(PostsGuard)
   @Get('save/:id')
   savePost(@Req() req, @Param('id') postId: string) {
     return this.postsService.savePost(postId, req.user.sub);
   }
-
 
   @UseGuards(PostsGuard)
   @Post()

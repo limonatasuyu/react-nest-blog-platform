@@ -19,10 +19,10 @@ const mongoose_2 = require("mongoose");
 const mongoose = require("mongoose");
 const post_schema_1 = require("../schemes/post.schema");
 const user_service_1 = require("../user/user.service");
-const bson_1 = require("bson");
 const image_service_1 = require("../image/image.service");
 const user_schema_1 = require("../schemes/user.schema");
 const tag_service_1 = require("../tag/tag.service");
+const rxjs_1 = require("rxjs");
 let PostsService = class PostsService {
     constructor(postsModel, usersModel, usersService, imageService, tagService) {
         this.postsModel = postsModel;
@@ -94,30 +94,59 @@ let PostsService = class PostsService {
         return { message: 'Operation handled successfully' };
     }
     async getPostsByTag(dto) {
-        const posts = await this.postsModel
-            .find({ tags: { $in: dto.tags } })
-            .limit(10)
-            .skip((dto.page - 1) * 10)
-            .populate({
-            path: 'user',
-            select: 'username firstname lastname',
-        })
-            .exec();
-        if (!posts) {
-            throw new common_1.InternalServerErrorException();
+        const tag = await this.tagService.findOne(dto.tag);
+        if (!tag) {
+            throw new rxjs_1.NotFoundError('Tag not found.');
         }
-        return posts.map((i) => ({
-            title: i.title,
-            content: i.content,
-            commentCount: i.comments.length,
-            likedCount: i.likedBy.length,
-            thumbnailId: i.thumbnailId,
-            tags: i.tags,
-            user: {
-                username: i.user.username,
-                name: i.user.firstname + ' ' + i.user.lastname,
+        const posts = await this.postsModel.aggregate([
+            { $match: { tags: { $in: [tag._id] } } },
+            {
+                $lookup: {
+                    from: 'tags',
+                    localField: 'tags',
+                    foreignField: '_id',
+                    as: 'tagDetails',
+                },
             },
-        }));
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'user',
+                    foreignField: '_id',
+                    as: 'user',
+                },
+            },
+            { $unwind: '$user' },
+            {
+                $project: {
+                    id: 1,
+                    title: 1,
+                    content: 1,
+                    thumbnailId: 1,
+                    likedCount: { $size: '$likedBy' },
+                    commentCount: { $size: '$comments' },
+                    tags: {
+                        $map: { input: '$tagDetails', as: 'tag', in: '$$tag.name' },
+                    },
+                    user: {
+                        username: 1,
+                        firstname: 1,
+                        lastname: 1,
+                        description: 1,
+                    },
+                },
+            },
+            {
+                $sort: { createdAt: -1 },
+            },
+            {
+                $skip: (dto.page - 1) * 10,
+            },
+            {
+                $limit: 10,
+            },
+        ]);
+        return posts;
     }
     async getRecentPosts(dto) {
         const posts = await this.postsModel
@@ -180,8 +209,9 @@ let PostsService = class PostsService {
             throw new common_1.InternalServerErrorException();
         }
         const createdTags = await this.tagService.createTagsForPost(dto.tags);
+        const postId = new mongoose.Types.ObjectId();
         const createdPost = await this.postsModel.create({
-            _id: new bson_1.ObjectId(),
+            _id: postId,
             title: dto.title,
             content: dto.content,
             thumbnailId: dto.thumbnailId,
@@ -193,6 +223,8 @@ let PostsService = class PostsService {
         if (!createdPost) {
             throw new common_1.InternalServerErrorException();
         }
+        const updatedUser = await this.usersModel.updateOne({ _id: user._id }, { $push: { posts: postId } });
+        console.log('updatedUser: ', updatedUser);
         if (dto.thumbnailId) {
             await this.imageService.relateImage(dto.thumbnailId);
         }
@@ -231,18 +263,32 @@ let PostsService = class PostsService {
         if (!user) {
             throw new common_1.InternalServerErrorException();
         }
-        const posts = await this.postsModel.find({ user: user._id });
+        const posts = await this.postsModel.aggregate([
+            { $match: { user: user._id } },
+            {
+                $lookup: {
+                    from: 'tags',
+                    localField: 'tags',
+                    foreignField: '_id',
+                    as: 'tags',
+                },
+            },
+            {
+                $project: {
+                    id: "$_id",
+                    title: 1,
+                    content: 1,
+                    likedCount: { $size: '$likedBy' },
+                    commenCount: { $size: '$comments' },
+                    tags: { name: 1 },
+                    thumbnailId: 1
+                },
+            },
+        ]);
         if (!posts) {
             throw new common_1.InternalServerErrorException();
         }
-        return posts.map((i) => ({
-            title: i.title,
-            content: i.content,
-            commentCount: i.comments.length,
-            likedCount: i.likedBy.length,
-            thumbnailId: i.thumbnailId,
-            tags: i.tags,
-        }));
+        return posts;
     }
     async getPostById(postId, user_id) {
         const post = await this.postsModel.aggregate([

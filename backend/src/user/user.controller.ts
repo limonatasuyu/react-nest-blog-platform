@@ -20,6 +20,11 @@ import { UserGuard } from './user.guard';
 export class UserModuleController {
   constructor(private readonly usersService: UsersService) {}
 
+  @Get('recommended')
+  async getRecommendedUsers() {
+    return this.usersService.getRecommendedUsers();
+  }
+
   @Get('profile/:username')
   async getUser(@Param('username') username) {
     const user = await this.usersService.findOne(username);

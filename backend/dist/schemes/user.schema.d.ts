@@ -14,6 +14,7 @@ export declare class User {
     interests: string[];
     profilePictureId: string;
     savedPosts: Post[];
+    posts: Post[];
     description: string;
     passwordLastUpdatedAt: Date;
 }

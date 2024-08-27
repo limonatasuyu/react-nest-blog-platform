@@ -31,7 +31,7 @@ export class User {
   @Prop({ required: true })
   isActivated: boolean;
 
-  @Prop ()
+  @Prop()
   interests: string[];
 
   @Prop()
@@ -39,6 +39,9 @@ export class User {
 
   @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'post' })
   savedPosts: Post[];
+
+  @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'post' })
+  posts: Post[];
 
   @Prop()
   description: string;

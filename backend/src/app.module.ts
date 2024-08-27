@@ -9,6 +9,7 @@ import { ConfigModule } from '@nestjs/config';
 import { CommentsModule } from './comments/comments.module';
 import { ImageModule } from './image/image.module';
 import { TagModule } from './tag/tag.module';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { TagModule } from './tag/tag.module';
     CommentsModule,
     ImageModule,
     TagModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

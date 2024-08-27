@@ -23,8 +23,8 @@ let PostsController = class PostsController {
     getPosts({ page }) {
         return this.postsService.getRecentPosts({ page });
     }
-    getPostsByTags({ tags, page }) {
-        return this.postsService.getPostsByTag({ tags, page });
+    getPostsByTags({ tag, page }) {
+        return this.postsService.getPostsByTag({ tag, page });
     }
     getRecentPosts({ page }) {
         return this.postsService.getRecentPosts({ page });

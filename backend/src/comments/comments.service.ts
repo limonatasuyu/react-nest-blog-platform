@@ -6,12 +6,14 @@ import { Post } from 'src/schemes/post.schema';
 import { Comment } from 'src/schemes/comment.schema';
 import { AddCommentDTO, DeleteCommentDTO } from 'src/dto/comment-dto';
 import { ObjectId } from 'bson';
+import { NotificationService } from 'src/notification/notification.service';
 
 @Injectable()
 export class CommentsService {
   constructor(
     @InjectModel(Comment.name) private commentsModel: Model<Comment>,
     @InjectModel(Post.name) private postsModel: Model<Post>,
+    private notificationService: NotificationService,
   ) {}
 
   async addComment(dto: AddCommentDTO, userId: string) {
