@@ -24,22 +24,36 @@ export class CommentsService {
       user: userId,
       answerTo: dto.answeredCommentId,
       createdAt: new Date(),
+      post: dto.postId,
     });
 
     if (!createdComment) {
       throw new InternalServerErrorException();
     }
 
-    const updatePostResult = await this.postsModel.updateOne(
+    const updatedPost = await this.postsModel.findOneAndUpdate(
       { _id: dto.postId },
       {
         $push: { comments: createdComment },
       },
+      {
+        projection: {
+          user: 1,
+        },
+      },
     );
 
-    if (!updatePostResult) {
+    if (!updatedPost) {
       throw new InternalServerErrorException();
     }
+
+    await this.notificationService.createNotification({
+      type: 'comment',
+      createdBy: userId,
+      createdFor: updatedPost.user as unknown as string,
+      relatedPost: dto.postId,
+      relatedComment: dto.answeredCommentId,
+    });
 
     return { message: 'comment created successfully' };
   }
@@ -70,7 +84,7 @@ export class CommentsService {
   }
 
   async likeComment(commentId: string, user_id: string) {
-    const updatedComment = await this.commentsModel.updateOne(
+    const updatedComment = await this.commentsModel.findOneAndUpdate(
       { _id: new mongoose.Types.ObjectId(commentId) },
       [
         {
@@ -95,11 +109,26 @@ export class CommentsService {
           },
         },
       ],
+      {
+        projection: {
+          user: 1,
+          post: 1,
+          answerTo: 1,
+        },
+      },
     );
     if (!updatedComment) {
       throw new InternalServerErrorException();
     }
-    console.log('updatedComment: ', updatedComment);
+
+    await this.notificationService.createNotification({
+      type: 'comment',
+      createdBy: user_id,
+      createdFor: updatedComment.user as unknown as string,
+      relatedPost: updatedComment.post as unknown as string,
+      relatedComment: updatedComment.answerTo as unknown as string,
+    });
+
     return { message: 'Operation handled successfully' };
   }
 

@@ -24,18 +24,9 @@ export default function HomePage() {
   const [activeTagTab, setActiveTagTab] = useState("All");
   const [page, setPage] = useState(1);
 
-  const mockWhoToFollow = [
-    {
-      name: "Jane Smith",
-      description: "Frontend Developer",
-      avatarUrl: "https://via.placeholder.com/40",
-    },
-    // Add more mock users here
-  ];
-
   const [posts, setPosts] = useState<
     {
-      id: string;
+      _id: string;
       title: string;
       content: string;
       commentCount: number;
@@ -47,11 +38,21 @@ export default function HomePage() {
         lastname: string;
         username: string;
         description?: string;
+        profilePictureId?: string;
       };
     }[]
   >([]);
   const [tags, setTags] = useState<{ name: string }[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [whoToFollow, setWhoToFollow] = useState<
+    {
+      username: string;
+      firstname: string;
+      lastname: string;
+      description?: string;
+      profilePictureId?: string;
+    }[]
+  >([]);
   const { setSnackBar } = useSnackbar();
 
   useEffect(() => {
@@ -84,6 +85,12 @@ export default function HomePage() {
     fetch("http://localhost:5000/tag").then((res) => {
       if (res.ok) {
         res.json().then((result) => setTags(result));
+      }
+    });
+
+    fetch("http://localhost:5000/user/recommended").then((res) => {
+      if (res.ok) {
+        res.json().then((result) => setWhoToFollow(result));
       }
     });
   }, [page]);
@@ -173,7 +180,7 @@ export default function HomePage() {
 
                     <Box>
                       <Link
-                        href={`/user/${post.user.username}`}
+                        href={`/user?username=${post.user.username}`}
                         underline="hover"
                         color="text.primary"
                         variant="subtitle1"
@@ -188,7 +195,7 @@ export default function HomePage() {
                   </Box>
                   {/* Post Content */}
                   <Link
-                    href={`/post?id=${post.id}`}
+                    href={`/post?id=${post._id}`}
                     underline="none"
                     color="inherit"
                     sx={{
@@ -273,7 +280,7 @@ export default function HomePage() {
                           key={idx}
                           label={tag}
                           component="a"
-                          href={`/tags?name=${tag}`}
+                          href={`/tag?name=${tag}`}
                           clickable
                           variant="outlined"
                           color="primary"
@@ -312,7 +319,7 @@ export default function HomePage() {
                   key={index}
                   label={tag.name}
                   component="a"
-                  href={`/tags?name=${tag.name}`}
+                  href={`/tag?name=${tag.name}`}
                   clickable
                   variant="outlined"
                   color="primary"
@@ -320,13 +327,6 @@ export default function HomePage() {
                 />
               ))}
             </Box>
-            <Link
-              href="/tags"
-              underline="hover"
-              sx={{ display: "block", mt: 2 }}
-            >
-              See more
-            </Link>
           </Paper>
 
           {/* Who to Follow */}
@@ -338,21 +338,28 @@ export default function HomePage() {
               Who to Follow
             </Typography>
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              {mockWhoToFollow.map((user, index) => (
+              {whoToFollow.map((user, index) => (
                 <Box
                   key={index}
                   sx={{ display: "flex", alignItems: "center", gap: 2 }}
                 >
-                  <Avatar src={user.avatarUrl}>{user.name.charAt(0)}</Avatar>
+                  <Avatar
+                    src={
+                      user.profilePictureId &&
+                      `http://localhost:5000/image/${user.profilePictureId}`
+                    }
+                  >
+                    {user.firstname.charAt(0)}
+                  </Avatar>
                   <Box>
                     <Link
-                      href="/user"
+                      href={`/user?username=${user.username}`}
                       underline="hover"
                       color="text.primary"
                       variant="subtitle1"
                       fontWeight="bold"
                     >
-                      {user.name}
+                      {user.firstname + " " + user.lastname}
                     </Link>
                     <Typography variant="body2" color="text.secondary">
                       {user.description}
@@ -361,13 +368,6 @@ export default function HomePage() {
                 </Box>
               ))}
             </Box>
-            <Link
-              href="/users"
-              underline="hover"
-              sx={{ display: "block", mt: 2 }}
-            >
-              See more
-            </Link>
           </Paper>
         </Box>
       </Box>

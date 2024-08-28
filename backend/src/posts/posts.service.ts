@@ -2,7 +2,7 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as mongoose from 'mongoose';
-import { Post } from 'src/schemes/post.schema';
+import { Post, PostDocument } from 'src/schemes/post.schema';
 import { UsersService } from 'src/user/user.service';
 import {
   GetPostsByTagDTO,
@@ -16,6 +16,10 @@ import { User } from 'src/schemes/user.schema';
 import { TagService } from 'src/tag/tag.service';
 import { NotFoundError } from 'rxjs';
 import { NotificationService } from 'src/notification/notification.service';
+
+interface PostWithLikeStatus extends PostDocument {
+  isUserLiked: boolean;
+}
 
 @Injectable()
 export class PostsService {
@@ -73,33 +77,53 @@ export class PostsService {
   }
 
   async likePost(postId: string, user_id: string) {
-    const updatedPost = await this.postsModel.updateOne({ _id: postId }, [
-      {
-        $set: {
-          likedBy: {
-            $cond: {
-              if: { $in: [user_id, '$likedBy'] },
-              then: {
-                $filter: {
-                  input: '$likedBy',
-                  as: 'user',
-                  cond: { $ne: ['$$user', user_id] },
+    const updatedPost =
+      await this.postsModel.findOneAndUpdate<PostWithLikeStatus>(
+        { _id: postId },
+        [
+          {
+            $set: {
+              likedBy: {
+                $cond: {
+                  if: { $in: [user_id, '$likedBy'] },
+                  then: {
+                    $filter: {
+                      input: '$likedBy',
+                      as: 'user',
+                      cond: { $ne: ['$$user', user_id] },
+                    },
+                  },
+                  else: { $concatArrays: ['$likedBy', [user_id]] },
                 },
               },
-              else: { $concatArrays: ['$likedBy', [user_id]] },
             },
           },
+        ],
+        {
+          projection: {
+            user: 1,
+            isUserLiked: { $in: [user_id, '$likedBy'] },
+          },
+          new: true,
         },
-      },
-    ]);
+      );
+
     if (!updatedPost) {
       throw new InternalServerErrorException();
     }
 
-    const createdNotification = this.notificationService.createNotification()
+    if (updatedPost.isUserLiked) {
+      await this.notificationService.createNotification({
+        type: 'like',
+        createdBy: user_id,
+        createdFor: updatedPost.user as unknown as string,
+        relatedPost: postId,
+      });
+    }
 
     return { message: 'Operation handled successfully' };
   }
+
   async getPostsByTag(dto: GetPostsByTagDTO) {
     const tag = await this.tagService.findOne(dto.tag);
 
@@ -111,10 +135,10 @@ export class PostsService {
       { $match: { tags: { $in: [tag._id] } } },
       {
         $lookup: {
-          from: 'tags', // Name of the Tags collection
-          localField: 'tags', // Field in the posts collection
-          foreignField: '_id', // Field in the Tags collection
-          as: 'tagDetails', // Name of the output array
+          from: 'tags',
+          localField: 'tags', 
+          foreignField: '_id',
+          as: 'tagDetails',
         },
       },
       {
@@ -164,10 +188,10 @@ export class PostsService {
       .aggregate([
         {
           $lookup: {
-            from: 'tags', // Name of the Tags collection
-            localField: 'tags', // Field in the posts collection
-            foreignField: '_id', // Field in the Tags collection
-            as: 'tagDetails', // Name of the output array
+            from: 'tags',
+            localField: 'tags',
+            foreignField: '_id',
+            as: 'tagDetails',
           },
         },
         {
@@ -312,13 +336,13 @@ export class PostsService {
       },
       {
         $project: {
-          id: "$_id",
+          id: '$_id',
           title: 1,
           content: 1,
           likedCount: { $size: '$likedBy' },
           commenCount: { $size: '$comments' },
           tags: { name: 1 },
-          thumbnailId: 1
+          thumbnailId: 1,
         },
       },
     ]);
@@ -332,9 +356,7 @@ export class PostsService {
 
   async getPostById(postId: string, user_id: string) {
     const post = await this.postsModel.aggregate([
-      // Match the post by its ID
       { $match: { _id: postId } },
-      // Lookup the comments and their associated user data in a single stage
       {
         $lookup: {
           from: 'users',
@@ -363,7 +385,6 @@ export class PostsService {
           as: 'comments',
         },
       },
-      // Filter out empty comment objects and project the necessary fields
       {
         $project: {
           thumbnailId: 1,

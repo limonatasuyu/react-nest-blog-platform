@@ -13,7 +13,7 @@ export class Notification {
   _id: mongoose.Schema.Types.ObjectId;
 
   @Prop({ required: true })
-  type: 'comment' | 'follow' | 'like';
+  type: 'comment' | 'follow' | 'like' | 'answer';
 
   @Prop({ required: true, type: mongoose.Schema.Types.ObjectId, ref: 'User' })
   createdBy: User;
@@ -26,16 +26,22 @@ export class Notification {
 
   @Prop({
     required: true,
-    type: [mongoose.Schema.Types.ObjectId],
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'post',
   })
-  relatedPost: Post[];
+  relatedPost: Post;
 
   @Prop({
     type: [mongoose.Schema.Types.ObjectId],
     ref: 'post',
   })
-  relatedComment: Comment[];
+  relatedComment: Comment;
+
+  @Prop({ required: true })
+  isSeen: boolean;
+
+  @Prop({ required: true })
+  isLookedAt: boolean;
 }
 
 export const NotificationSchema = SchemaFactory.createForClass(Notification);

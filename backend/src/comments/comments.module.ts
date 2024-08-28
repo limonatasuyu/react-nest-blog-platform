@@ -5,6 +5,7 @@ import { PostsModule } from 'src/posts/posts.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Comment, CommentSchema } from 'src/schemes/comment.schema';
 import { Post, PostSchema } from 'src/schemes/post.schema';
+import { NotificationModule } from 'src/notification/notification.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { Post, PostSchema } from 'src/schemes/post.schema';
       { name: Post.name, schema: PostSchema },
     ]),
     PostsModule,
+    NotificationModule,
   ],
   providers: [CommentsService],
   controllers: [CommentsController],

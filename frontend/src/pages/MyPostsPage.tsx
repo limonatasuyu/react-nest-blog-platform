@@ -23,7 +23,7 @@ export default function MyPostsPage() {
       commentCount: number;
       likedCount: number;
       thumbnailId?: string;
-      tags: string[];
+      tags: {name: string}[];
     }[]
   >([]);
   const [loaded, setLoaded] = useState(false);
@@ -86,7 +86,7 @@ export default function MyPostsPage() {
               }}
             >
               <Link
-                href={`/post/${post.id}`}
+                href={`/post?id=${post.id}`}
                 sx={{ textDecoration: "none", color: "inherit" }}
               >
                 <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -146,13 +146,13 @@ export default function MyPostsPage() {
                     </IconButton>
                   </Tooltip>
                 </Box>
-                <Box sx={{ display: "flex", gap: 1 }}>
+                <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
                   {post.tags.map((tag, tagIndex) => (
                     <Chip
                       key={tagIndex}
-                      label={tag}
+                      label={tag.name}
                       component="a"
-                      href={`/tags/${tag}`}
+                      href={`/tag?name=${tag.name}`}
                       clickable
                       variant="outlined"
                       color="primary"

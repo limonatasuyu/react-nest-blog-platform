@@ -14,6 +14,7 @@ const posts_module_1 = require("../posts/posts.module");
 const mongoose_1 = require("@nestjs/mongoose");
 const comment_schema_1 = require("../schemes/comment.schema");
 const post_schema_1 = require("../schemes/post.schema");
+const notification_module_1 = require("../notification/notification.module");
 let CommentsModule = class CommentsModule {
 };
 exports.CommentsModule = CommentsModule;
@@ -25,6 +26,7 @@ exports.CommentsModule = CommentsModule = __decorate([
                 { name: post_schema_1.Post.name, schema: post_schema_1.PostSchema },
             ]),
             posts_module_1.PostsModule,
+            notification_module_1.NotificationModule,
         ],
         providers: [comments_service_1.CommentsService],
         controllers: [comments_controller_1.CommentsController],

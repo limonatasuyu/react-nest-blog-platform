@@ -23,13 +23,15 @@ const image_service_1 = require("../image/image.service");
 const user_schema_1 = require("../schemes/user.schema");
 const tag_service_1 = require("../tag/tag.service");
 const rxjs_1 = require("rxjs");
+const notification_service_1 = require("../notification/notification.service");
 let PostsService = class PostsService {
-    constructor(postsModel, usersModel, usersService, imageService, tagService) {
+    constructor(postsModel, usersModel, usersService, imageService, tagService, notificationService) {
         this.postsModel = postsModel;
         this.usersModel = usersModel;
         this.usersService = usersService;
         this.imageService = imageService;
         this.tagService = tagService;
+        this.notificationService = notificationService;
     }
     async getPostByIdAndUser(postId, user_id) {
         return await this.postsModel.findOne({ _id: postId, user: user_id });
@@ -69,7 +71,7 @@ let PostsService = class PostsService {
         return { message: 'Operation handled successfully.' };
     }
     async likePost(postId, user_id) {
-        const updatedPost = await this.postsModel.updateOne({ _id: postId }, [
+        const updatedPost = await this.postsModel.findOneAndUpdate({ _id: postId }, [
             {
                 $set: {
                     likedBy: {
@@ -87,9 +89,23 @@ let PostsService = class PostsService {
                     },
                 },
             },
-        ]);
+        ], {
+            projection: {
+                user: 1,
+                isUserLiked: { $in: [user_id, '$likedBy'] },
+            },
+            new: true,
+        });
         if (!updatedPost) {
             throw new common_1.InternalServerErrorException();
+        }
+        if (updatedPost.isUserLiked) {
+            await this.notificationService.createNotification({
+                type: 'like',
+                createdBy: user_id,
+                createdFor: updatedPost.user,
+                relatedPost: postId,
+            });
         }
         return { message: 'Operation handled successfully' };
     }
@@ -275,13 +291,13 @@ let PostsService = class PostsService {
             },
             {
                 $project: {
-                    id: "$_id",
+                    id: '$_id',
                     title: 1,
                     content: 1,
                     likedCount: { $size: '$likedBy' },
                     commenCount: { $size: '$comments' },
                     tags: { name: 1 },
-                    thumbnailId: 1
+                    thumbnailId: 1,
                 },
             },
         ]);
@@ -399,6 +415,7 @@ exports.PostsService = PostsService = __decorate([
         mongoose_2.Model,
         user_service_1.UsersService,
         image_service_1.ImageService,
-        tag_service_1.TagService])
+        tag_service_1.TagService,
+        notification_service_1.NotificationService])
 ], PostsService);
 //# sourceMappingURL=posts.service.js.map

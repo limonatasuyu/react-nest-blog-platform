@@ -20,10 +20,12 @@ const mongoose = require("mongoose");
 const post_schema_1 = require("../schemes/post.schema");
 const comment_schema_1 = require("../schemes/comment.schema");
 const bson_1 = require("bson");
+const notification_service_1 = require("../notification/notification.service");
 let CommentsService = class CommentsService {
-    constructor(commentsModel, postsModel) {
+    constructor(commentsModel, postsModel, notificationService) {
         this.commentsModel = commentsModel;
         this.postsModel = postsModel;
+        this.notificationService = notificationService;
     }
     async addComment(dto, userId) {
         const commentId = new bson_1.ObjectId();
@@ -33,16 +35,28 @@ let CommentsService = class CommentsService {
             user: userId,
             answerTo: dto.answeredCommentId,
             createdAt: new Date(),
+            post: dto.postId,
         });
         if (!createdComment) {
             throw new common_1.InternalServerErrorException();
         }
-        const updatePostResult = await this.postsModel.updateOne({ _id: dto.postId }, {
+        const updatedPost = await this.postsModel.findOneAndUpdate({ _id: dto.postId }, {
             $push: { comments: createdComment },
+        }, {
+            projection: {
+                user: 1,
+            },
         });
-        if (!updatePostResult) {
+        if (!updatedPost) {
             throw new common_1.InternalServerErrorException();
         }
+        await this.notificationService.createNotification({
+            type: 'comment',
+            createdBy: userId,
+            createdFor: updatedPost.user,
+            relatedPost: dto.postId,
+            relatedComment: dto.answeredCommentId,
+        });
         return { message: 'comment created successfully' };
     }
     async deleteComment(dto) {
@@ -62,7 +76,7 @@ let CommentsService = class CommentsService {
         return await this.commentsModel.findOne({ _id: commentId, user: userId });
     }
     async likeComment(commentId, user_id) {
-        const updatedComment = await this.commentsModel.updateOne({ _id: new mongoose.Types.ObjectId(commentId) }, [
+        const updatedComment = await this.commentsModel.findOneAndUpdate({ _id: new mongoose.Types.ObjectId(commentId) }, [
             {
                 $set: {
                     likedBy: {
@@ -84,11 +98,23 @@ let CommentsService = class CommentsService {
                     },
                 },
             },
-        ]);
+        ], {
+            projection: {
+                user: 1,
+                post: 1,
+                answerTo: 1,
+            },
+        });
         if (!updatedComment) {
             throw new common_1.InternalServerErrorException();
         }
-        console.log('updatedComment: ', updatedComment);
+        await this.notificationService.createNotification({
+            type: 'comment',
+            createdBy: user_id,
+            createdFor: updatedComment.user,
+            relatedPost: updatedComment.post,
+            relatedComment: updatedComment.answerTo,
+        });
         return { message: 'Operation handled successfully' };
     }
     async getByPage(page, commentIds) {
@@ -146,6 +172,7 @@ exports.CommentsService = CommentsService = __decorate([
     __param(0, (0, mongoose_1.InjectModel)(comment_schema_1.Comment.name)),
     __param(1, (0, mongoose_1.InjectModel)(post_schema_1.Post.name)),
     __metadata("design:paramtypes", [mongoose_2.Model,
-        mongoose_2.Model])
+        mongoose_2.Model,
+        notification_service_1.NotificationService])
 ], CommentsService);
 //# sourceMappingURL=comments.service.js.map

@@ -6,13 +6,15 @@ import { GetPostsByTagDTO, GetRecentPostsDTO, CreatePostDTO, DeletePostDTO, Upda
 import { ImageService } from 'src/image/image.service';
 import { User } from 'src/schemes/user.schema';
 import { TagService } from 'src/tag/tag.service';
+import { NotificationService } from 'src/notification/notification.service';
 export declare class PostsService {
     private postsModel;
     private usersModel;
     private usersService;
     private imageService;
     private tagService;
-    constructor(postsModel: Model<Post>, usersModel: Model<User>, usersService: UsersService, imageService: ImageService, tagService: TagService);
+    private notificationService;
+    constructor(postsModel: Model<Post>, usersModel: Model<User>, usersService: UsersService, imageService: ImageService, tagService: TagService, notificationService: NotificationService);
     getPostByIdAndUser(postId: string, user_id: string): Promise<mongoose.Document<unknown, {}, Post> & Post & Required<{
         _id: string;
     }>>;

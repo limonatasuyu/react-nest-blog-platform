@@ -21,6 +21,7 @@ import { SnackbarProvider } from "./hooks/useSnackbar";
 import ProfilePage from "./pages/ProfilePage";
 import PostPage from "./pages/PostPage";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
+import TagPage from "./pages/TagPage";
 
 function App() {
   const [route, setRoute] = useState(window.location.pathname);
@@ -118,6 +119,7 @@ function App() {
     "/profile": ProfilePage,
     "/post": PostPage,
     "/change_password": ChangePasswordPage,
+    "/tag": TagPage,
   };
 
   const renderComponent = () => {

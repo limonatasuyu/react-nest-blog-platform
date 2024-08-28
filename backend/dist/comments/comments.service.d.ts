@@ -3,10 +3,12 @@ import * as mongoose from 'mongoose';
 import { Post } from 'src/schemes/post.schema';
 import { Comment } from 'src/schemes/comment.schema';
 import { AddCommentDTO, DeleteCommentDTO } from 'src/dto/comment-dto';
+import { NotificationService } from 'src/notification/notification.service';
 export declare class CommentsService {
     private commentsModel;
     private postsModel;
-    constructor(commentsModel: Model<Comment>, postsModel: Model<Post>);
+    private notificationService;
+    constructor(commentsModel: Model<Comment>, postsModel: Model<Post>, notificationService: NotificationService);
     addComment(dto: AddCommentDTO, userId: string): Promise<{
         message: string;
     }>;

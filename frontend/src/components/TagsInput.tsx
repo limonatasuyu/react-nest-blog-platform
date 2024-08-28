@@ -15,7 +15,7 @@ const TagsInput = ({
   setFieldValue,
 }: {
   values: string[];
-  error: string;
+  error?: string | false;
   touched: boolean;
   name: string;
   setFieldValue: (name: string, val: string[]) => void;
@@ -55,7 +55,7 @@ const TagsInput = ({
         value={tagValue}
         onChange={(e) => setTagValue(e.target.value)}
         onKeyDown={handleKeyDown}
-        //error={Boolean(error)}
+        error={Boolean(error)}
         type="text"
         label="Tags"
         inputProps={{ style: { width: "min-content", flexGrow: 1, padding: 0 } }}
@@ -71,7 +71,7 @@ const TagsInput = ({
           </>
         }
       />
-      <FormHelperText error>{touched && error}</FormHelperText>
+      <FormHelperText error>{(touched && error) ?? ""}</FormHelperText>
     </FormControl>
   );
 };

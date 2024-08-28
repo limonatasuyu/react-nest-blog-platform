@@ -16,6 +16,7 @@ const mongoose_1 = require("@nestjs/mongoose");
 const user_module_1 = require("../user/user.module");
 const image_module_1 = require("../image/image.module");
 const tag_module_1 = require("../tag/tag.module");
+const notification_module_1 = require("../notification/notification.module");
 let PostsModule = class PostsModule {
 };
 exports.PostsModule = PostsModule;
@@ -29,6 +30,7 @@ exports.PostsModule = PostsModule = __decorate([
             user_module_1.UserModule,
             image_module_1.ImageModule,
             tag_module_1.TagModule,
+            notification_module_1.NotificationModule
         ],
         providers: [posts_service_1.PostsService],
         controllers: [posts_controller_1.PostsController],

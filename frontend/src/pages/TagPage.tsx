@@ -31,11 +31,12 @@ export default function MyPostsPage() {
     }[]
   >([]);
   const [loaded, setLoaded] = useState(false);
+  const [page, setPage] = useState(1)
   const { setSnackBar } = useSnackbar();
 
   useEffect(() => {
     const token = window.sessionStorage.getItem("access_token");
-    fetch(`http://localhost:5000/posts/tag/${tagName}`, {
+    fetch(`http://localhost:5000/posts/tag?tag=${tagName}&page=${page}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -74,8 +75,8 @@ export default function MyPostsPage() {
           px: 2,
         }}
       >
-        <Typography variant="h4" align="center" gutterBottom>
-          {tagName.toLowerCase()} Posts
+        <Typography variant="h4" align="center" gutterBottom sx={{ textTransform: 'capitalize' }}>
+          {tagName} Posts
         </Typography>
         {posts.length ? (
           posts.map((post, index) => (
@@ -156,7 +157,7 @@ export default function MyPostsPage() {
                       key={tagIndex}
                       label={tag}
                       component="a"
-                      href={`/tags/${tag}`}
+                      href={`/tag?name=${tag}`}
                       clickable
                       variant="outlined"
                       color="primary"
@@ -198,7 +199,7 @@ export default function MyPostsPage() {
           }}
         >
           <Link
-            href="/create_post"
+            href={`/create_post?tag=${tagName}`}
             sx={{ textDecoration: "none", color: "inherit" }}
           >
             <Box sx={{ display: "flex", alignItems: "center" }}>

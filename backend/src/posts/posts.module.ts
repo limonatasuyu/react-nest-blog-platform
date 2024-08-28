@@ -7,6 +7,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { UserModule } from 'src/user/user.module';
 import { ImageModule } from 'src/image/image.module';
 import { TagModule } from 'src/tag/tag.module';
+import { NotificationModule } from 'src/notification/notification.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { TagModule } from 'src/tag/tag.module';
     UserModule,
     ImageModule,
     TagModule,
+    NotificationModule
   ],
   providers: [PostsService],
   controllers: [PostsController],

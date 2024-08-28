@@ -18,6 +18,7 @@ const config_1 = require("@nestjs/config");
 const comments_module_1 = require("./comments/comments.module");
 const image_module_1 = require("./image/image.module");
 const tag_module_1 = require("./tag/tag.module");
+const notification_module_1 = require("./notification/notification.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -32,6 +33,7 @@ exports.AppModule = AppModule = __decorate([
             comments_module_1.CommentsModule,
             image_module_1.ImageModule,
             tag_module_1.TagModule,
+            notification_module_1.NotificationModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

@@ -1,4 +1,4 @@
-import { Box, TextField, Button, Typography, Tabs, Tab, AlertColor } from "@mui/material";
+import { Box, TextField, Button, Typography, Tabs, Tab } from "@mui/material";
 import Layout1 from "../Layout1";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { styled } from "@mui/material/styles";
@@ -31,6 +31,9 @@ function fileToDataUri(file: File) {
 }
 
 export default function CreatePostPage() {
+  const params = new URL(document.location.toString()).searchParams;
+  const tagName = params.get("tag");
+
   const { setSnackBar } = useSnackbar();
   const [tabValue, setTabValue] = useState(0);
   const [imageDataUri, setImageDataUri] = useState<null | string>(null);
@@ -39,20 +42,30 @@ export default function CreatePostPage() {
     setTabValue(newValue);
   };
 
-  function handleValidation(values: { title: string; content: string; tags: string[] }) {
+  function handleValidation(values: {
+    title: string;
+    content: string;
+    tags: string[];
+  }) {
     const errors: { title?: string; content?: string; tags?: string } = {};
     if (!values.title) errors.title = "Title is required";
     if (!values.content) errors.content = "Content is required";
     if (!values.tags.length) errors.tags = "Please provide at least one tag";
+    console.log("errors: ", errors);
+    console.log("values: ", values);
     return errors;
   }
 
   function handleSubmit(
-    values: { title: string; content: string; tags: string[]; thumbnailId: string | null },
+    values: {
+      title: string;
+      content: string;
+      tags: string[];
+      thumbnailId: string | null;
+    },
     { setSubmitting }: { setSubmitting: (is: boolean) => void }
   ) {
     const token = window.sessionStorage.getItem("access_token");
-
     fetch("http://localhost:5000/posts", {
       method: "POST",
       headers: {
@@ -63,21 +76,29 @@ export default function CreatePostPage() {
     })
       .then(async (res) => {
         const jsonResponse = await res.json();
-        const message = jsonResponse.message;
-        let status: AlertColor;
-        if (res.ok) {
-          status = "success";
-          setTimeout(() => {
-            window.location.pathname = "/";
-          }, 3000);
-        } else {
-          status = "error";
+        if (!res.ok) {
+          setSnackBar(
+            jsonResponse.message ??
+              "Something went wrong, please try again later.",
+            "error"
+          );
+          return;
         }
 
-        setSnackBar(message, status);
+        setSnackBar(
+          jsonResponse.message ?? "Post created successfully.",
+          "success"
+        );
+
+        setTimeout(() => {
+          window.location.pathname = "/";
+        }, 2000);
       })
       .catch((err) => {
-        setSnackBar(err.message ?? "Something went wrong, please try again later.", "error");
+        setSnackBar(
+          err.message ?? "Something went wrong, please try again later.",
+          "error"
+        );
       })
       .finally(() => setSubmitting(false));
   }
@@ -96,7 +117,11 @@ export default function CreatePostPage() {
 
     const responseJson = await res.json();
     if (!res.ok) {
-      setSnackBar(responseJson.message ?? "Error while uploading the image, please try again", "error");
+      setSnackBar(
+        responseJson.message ??
+          "Error while uploading the image, please try again",
+        "error"
+      );
     } else {
       return { result: responseJson.imageId };
     }
@@ -104,17 +129,29 @@ export default function CreatePostPage() {
 
   return (
     <Layout1>
-      <Typography variant="h4" component="h1" sx={{ textAlign: "center", mb: 3 }}>
+      <Typography
+        variant="h4"
+        component="h1"
+        sx={{ textAlign: "center", mb: 3 }}
+      >
         Create a New Post
       </Typography>
-      <Box display="flex" sx={{ justifyContent: "center", width: "100%", mb: 3 }}>
+      <Box
+        display="flex"
+        sx={{ justifyContent: "center", width: "100%", mb: 3 }}
+      >
         <Tabs value={tabValue} onChange={handleTabChange} sx={{ mb: 3 }}>
           <Tab label="Create" />
           <Tab label="Overview" />
         </Tabs>
       </Box>
       <Formik
-        initialValues={{ title: "", content: "", tags: [], thumbnailId: null }}
+        initialValues={{
+          title: "",
+          content: "",
+          tags: tagName ? [tagName] : [],
+          thumbnailId: null,
+        }}
         validate={handleValidation}
         onSubmit={handleSubmit}
       >
@@ -127,12 +164,24 @@ export default function CreatePostPage() {
           touched,
           setFieldValue,
         }) => (
-          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <form
+            onSubmit={handleSubmit}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
             {tabValue === 0 && (
               <Box sx={{ maxWidth: "600px", width: "100%", padding: 2 }}>
                 <Box sx={{ mb: 2, position: "relative", textAlign: "center" }}>
                   <img
-                    style={{ width: "100%", height: "auto", borderRadius: "8px", objectFit: "cover" }}
+                    style={{
+                      width: "100%",
+                      height: "auto",
+                      borderRadius: "8px",
+                      objectFit: "cover",
+                    }}
                     src={imageDataUri ?? placeholderThumbnail}
                     alt="Post Thumbnail"
                   />
@@ -159,7 +208,9 @@ export default function CreatePostPage() {
                       onChange={(e) => {
                         if (!e.target.files || !e.target.files.length) return;
                         const file = e.target.files[0];
-                        fileToDataUri(file).then((res) => setImageDataUri(res as string));
+                        fileToDataUri(file).then((res) =>
+                          setImageDataUri(res as string)
+                        );
                         handleImageUpload(file).then((res) => {
                           if (res?.result) {
                             setFieldValue("thumbnailId", res.result);
@@ -179,6 +230,8 @@ export default function CreatePostPage() {
                   sx={{ mb: 2 }}
                   value={values.title}
                   onChange={handleChange}
+                  error={touched.title && Boolean(errors.title)}
+                  helperText={touched.title && errors.title}
                 />
                 <TextField
                   id="content"
@@ -190,11 +243,13 @@ export default function CreatePostPage() {
                   sx={{ mb: 2 }}
                   value={values.content}
                   onChange={handleChange}
+                  error={touched.content && Boolean(errors.content)}
+                  helperText={touched.content && errors.content}
                 />
                 <TagsInput
                   name="tags"
                   values={values.tags}
-                  error={String(errors.tags)}
+                  error={touched.tags && errors.tags && String(errors.tags)}
                   touched={Boolean(touched.tags)}
                   setFieldValue={setFieldValue}
                 />
@@ -213,14 +268,28 @@ export default function CreatePostPage() {
 
             {tabValue === 1 && (
               <Box
-                sx={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center", padding: 2 }}
+                sx={{
+                  width: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  padding: 2,
+                }}
               >
                 <Box sx={{ width: "50%", textAlign: "center" }}>
                   <Typography variant="h4" sx={{ mb: 2 }}>
-                    {values.title.length ? values.title : "Title would be in here"}
+                    {values.title.length
+                      ? values.title
+                      : "Title would be in here"}
                   </Typography>
                   <img
-                    style={{ width: "100%", height: "auto", borderRadius: "8px", objectFit: "cover", marginBottom: "2rem" }}
+                    style={{
+                      width: "100%",
+                      height: "auto",
+                      borderRadius: "8px",
+                      objectFit: "cover",
+                      marginBottom: "2rem",
+                    }}
                     src={imageDataUri ?? placeholderThumbnail}
                     alt="Post Thumbnail"
                   />
@@ -242,4 +311,3 @@ export default function CreatePostPage() {
     </Layout1>
   );
 }
-
