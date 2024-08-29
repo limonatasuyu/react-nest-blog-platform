@@ -52,8 +52,22 @@ export class CommentsService {
       createdBy: userId,
       createdFor: updatedPost.user as unknown as string,
       relatedPost: dto.postId,
-      relatedComment: dto.answeredCommentId,
+      relatedComment: createdComment._id as unknown as string,
     });
+
+    if (
+      dto.answeredCommentId &&
+      updatedPost.user._id !== createdComment.answerTo.user._id
+    ) {
+      await this.notificationService.createNotification({
+        type: 'answer',
+        createdBy: userId,
+        createdFor: createdComment.answerTo.user._id as unknown as string,
+        relatedPost: dto.postId,
+        relatedComment: createdComment._id as unknown as string,
+        answeredComment: dto.answeredCommentId,
+      });
+    }
 
     return { message: 'comment created successfully' };
   }

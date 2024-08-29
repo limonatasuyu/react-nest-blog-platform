@@ -24,18 +24,27 @@ export class Notification {
   @Prop({ required: true })
   createdAt: Date;
 
+  @Prop({ required: true })
+  updatedAt: Date;
+
   @Prop({
     required: true,
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'post',
+    ref: 'Post',
   })
   relatedPost: Post;
 
   @Prop({
-    type: [mongoose.Schema.Types.ObjectId],
-    ref: 'post',
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Comment',
   })
   relatedComment: Comment;
+
+  @Prop({
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Comment',
+  })
+  answeredComment: Comment;
 
   @Prop({ required: true })
   isSeen: boolean;

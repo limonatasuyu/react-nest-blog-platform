@@ -10,8 +10,12 @@ export declare class Notification {
     createdBy: User;
     createdFor: User;
     createdAt: Date;
+    updatedAt: Date;
     relatedPost: Post;
     relatedComment: Comment;
+    answeredComment: Comment;
+    isSeen: boolean;
+    isLookedAt: boolean;
 }
 export declare const NotificationSchema: mongoose.Schema<Notification, mongoose.Model<Notification, any, any, any, mongoose.Document<unknown, any, Notification> & Notification & Required<{
     _id: mongoose.Schema.Types.ObjectId;

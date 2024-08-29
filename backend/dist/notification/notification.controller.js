@@ -23,8 +23,11 @@ let NotificationController = class NotificationController {
     async getNotifications(req) {
         return await this.notificationService.getNotifications(req.user.sub);
     }
-    async markNotification(req, { notificationId }) {
-        return await this.notificationService.markNotification(notificationId, req.user.sub);
+    async seeNotification(req, { notificationIds }) {
+        return await this.notificationService.seeNotifications(notificationIds, req.user.sub);
+    }
+    async lookAtNotifications(req, { notificationIds }) {
+        return await this.notificationService.lookToNotifications(notificationIds, req.user.sub);
     }
 };
 exports.NotificationController = NotificationController;
@@ -36,13 +39,21 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], NotificationController.prototype, "getNotifications", null);
 __decorate([
-    (0, common_1.Post)(),
+    (0, common_1.Post)('see'),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
-], NotificationController.prototype, "markNotification", null);
+], NotificationController.prototype, "seeNotification", null);
+__decorate([
+    (0, common_1.Post)('look'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], NotificationController.prototype, "lookAtNotifications", null);
 exports.NotificationController = NotificationController = __decorate([
     (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
     (0, common_1.Controller)('notification'),

@@ -157,6 +157,8 @@ export class UsersService {
 
     const createdUser = new this.userModel({
       ...dto,
+      firstname: dto.firstname[0].toUpperCase() + dto.firstname.slice(1),
+      lastname: dto.lastname[0].toUpperCase() + dto.lastname.slice(1),
       password: encryptedPassword,
       isActivated: false,
       _id: new mongoose.Types.ObjectId(),

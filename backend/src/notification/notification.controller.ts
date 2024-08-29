@@ -12,10 +12,21 @@ export class NotificationController {
     return await this.notificationService.getNotifications(req.user.sub);
   }
 
-  @Post()
-  async markNotification(@Req() req, @Body() { notificationId }) {
-    return await this.notificationService.markNotification(
-      notificationId,
+  @Post('see')
+  async seeNotification(@Req() req, @Body() { notificationIds }) {
+    return await this.notificationService.seeNotifications(
+      notificationIds,
+      req.user.sub,
+    );
+  }
+
+  @Post('look')
+  async lookAtNotifications(
+    @Req() req,
+    @Body() { notificationIds }: { notificationIds: string[] },
+  ) {
+    return await this.notificationService.lookToNotifications(
+      notificationIds,
       req.user.sub,
     );
   }

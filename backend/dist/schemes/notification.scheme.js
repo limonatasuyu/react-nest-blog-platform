@@ -39,20 +39,39 @@ __decorate([
     __metadata("design:type", Date)
 ], Notification.prototype, "createdAt", void 0);
 __decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", Date)
+], Notification.prototype, "updatedAt", void 0);
+__decorate([
     (0, mongoose_1.Prop)({
         required: true,
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'post',
+        ref: 'Post',
     }),
     __metadata("design:type", post_schema_1.Post)
 ], Notification.prototype, "relatedPost", void 0);
 __decorate([
     (0, mongoose_1.Prop)({
-        type: [mongoose.Schema.Types.ObjectId],
-        ref: 'post',
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Comment',
     }),
     __metadata("design:type", comment_schema_1.Comment)
 ], Notification.prototype, "relatedComment", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Comment',
+    }),
+    __metadata("design:type", comment_schema_1.Comment)
+], Notification.prototype, "answeredComment", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", Boolean)
+], Notification.prototype, "isSeen", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", Boolean)
+], Notification.prototype, "isLookedAt", void 0);
 exports.Notification = Notification = __decorate([
     (0, mongoose_1.Schema)()
 ], Notification);

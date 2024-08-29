@@ -55,8 +55,19 @@ let CommentsService = class CommentsService {
             createdBy: userId,
             createdFor: updatedPost.user,
             relatedPost: dto.postId,
-            relatedComment: dto.answeredCommentId,
+            relatedComment: createdComment._id,
         });
+        if (dto.answeredCommentId &&
+            updatedPost.user._id !== createdComment.answerTo.user._id) {
+            await this.notificationService.createNotification({
+                type: 'answer',
+                createdBy: userId,
+                createdFor: createdComment.answerTo.user._id,
+                relatedPost: dto.postId,
+                relatedComment: createdComment._id,
+                answeredComment: dto.answeredCommentId,
+            });
+        }
         return { message: 'comment created successfully' };
     }
     async deleteComment(dto) {

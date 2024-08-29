@@ -24,11 +24,12 @@ import DynamicFeedIcon from "@mui/icons-material/DynamicFeed";
 import Logout from "@mui/icons-material/Logout";
 import logo_black from "/logo_black.png";
 import CircleIcon from "@mui/icons-material/Circle";
+import placeHolderThumbnail from "/placeholderThumbnail.jpg";
 
 export default function Layout1({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<
     {
-      type: "like";
+      type: "like" | "comment" | "answer" | "follow";
       commentId: string;
       postId: string;
       lastPerson: {
@@ -39,12 +40,20 @@ export default function Layout1({ children }: { children: ReactNode }) {
       };
       count: number;
       isLookedAt: boolean;
+      notificationIds: string[];
+      isSeen: boolean;
+      targetHref: string;
+      commentContent?: string;
+      thumbnailId?: string;
+      answerContent?: string;
+      passedTime: string;
     }[]
   >([]);
   const [searchValue, setSearchValue] = useState("");
   const [menuType, setMenuType] = useState<"notification" | "profile" | null>(
     null
   );
+  const [isNewNotificationExists, setIsNewNotificationExists] = useState(false);
 
   const [AnchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const menuOpen = Boolean(AnchorEl);
@@ -54,6 +63,34 @@ export default function Layout1({ children }: { children: ReactNode }) {
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
+
+  async function handleSeeNotification(notificationIds: string[]) {
+    console.log("i got a cal");
+    const token = window.sessionStorage.getItem("access_token");
+    await fetch("http://localhost:5000/notification/see", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-type": "application/json",
+      },
+      method: "POST",
+      body: JSON.stringify({ notificationIds }),
+    });
+  }
+
+  function handleLookAtNotifications() {
+    if (!isNewNotificationExists) return;
+    const token = window.sessionStorage.getItem("access_token");
+    fetch("http://localhost:5000/notification/look", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-type": "application/json",
+      },
+      method: "POST",
+      body: JSON.stringify({
+        notificationIds: notifications.map((i) => i.notificationIds).flat(),
+      }),
+    });
+  }
 
   function handleLogout() {
     window.sessionStorage.removeItem("access_token");
@@ -66,7 +103,12 @@ export default function Layout1({ children }: { children: ReactNode }) {
       headers: { Authorization: `Bearer ${token}` },
     }).then((res) => {
       if (res.ok) {
-        res.json().then((result) => setNotifications(result));
+        res.json().then((result) => {
+          setNotifications(result);
+          setIsNewNotificationExists(
+            result.find((i: { isLookedAt: boolean }) => !i.isLookedAt)
+          );
+        });
       }
     });
   }, []);
@@ -127,15 +169,24 @@ export default function Layout1({ children }: { children: ReactNode }) {
               onClick={(e) => {
                 handleMenuClick(e);
                 setMenuType("notification");
+                setIsNewNotificationExists(false);
+                handleLookAtNotifications();
               }}
               sx={{ margin: 1 }}
             >
               <>
                 <NotificationsNoneIcon />
-                {notifications.find(i => !i.looked) && <CircleIcon
-                  color="error"
-                  sx={{ fontSize: ".7rem", position: "absolute", right: 8, top: 8 }}
-                />}
+                {isNewNotificationExists && (
+                  <CircleIcon
+                    color="error"
+                    sx={{
+                      fontSize: ".7rem",
+                      position: "absolute",
+                      right: 8,
+                      top: 8,
+                    }}
+                  />
+                )}
               </>
             </IconButton>
           </Tooltip>
@@ -153,7 +204,7 @@ export default function Layout1({ children }: { children: ReactNode }) {
         </Box>
         <Menu anchorEl={AnchorEl} open={menuOpen} onClose={handleMenuClose}>
           {menuType === "profile" ? (
-            <>
+            <div>
               <MenuItem onClick={handleMenuClose} component="a" href="/profile">
                 <ListItemIcon>
                   <AccountCircleIcon fontSize="small" />
@@ -176,61 +227,115 @@ export default function Layout1({ children }: { children: ReactNode }) {
                 </ListItemIcon>
                 <ListItemText primary="Logout" />
               </MenuItem>
-            </>
+            </div>
           ) : (
-            <>
+            <div style={{ padding: 4 }}>
               {notifications.map((notification, index) => (
                 <MenuItem
-                  onClick={handleMenuClose}
-                  component="a"
-                  href="/my_posts"
+                  onClick={() => {
+                    handleSeeNotification(notification.notificationIds);
+                    window.location.href = notification.targetHref;
+                  }}
                   key={index}
                   sx={{
                     display: "flex",
                     alignItems: "center",
-                    padding: "8px 16px",
+                    padding: "12px",
                     gap: 2,
+                    position: "relative",
+                    backgroundColor: notification.isSeen ? "#fff" : "#f5f5f5",
                     "&:hover": {
-                      backgroundColor: "rgba(0, 0, 0, 0.08)",
+                      backgroundColor: "#e0e0e0",
                     },
+                    borderRadius: 1,
+                    mt: 1,
+                    boxShadow: notification.isLookedAt
+                      ? "none"
+                      : "0px 2px 4px rgba(0,0,0,0.1)",
                   }}
                 >
-                  {notification.type === "like" && !notification.commentId && (
-                    <Link
-                      href={`/post?id=${notification.postId}`}
-                      underline="none"
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 2,
-                        textDecoration: "none",
-                        color: "inherit",
-                      }}
-                    >
-                      <Avatar
-                        src={
-                          notification.lastPerson.profilePictureId &&
-                          `http://localhost:5000/image/${notification.lastPerson.profilePictureId}`
-                        }
-                      >
-                        {notification.lastPerson.firstname.charAt(0)}
-                      </Avatar>
+                  <Avatar
+                    src={
+                      notification.lastPerson.profilePictureId &&
+                      `http://localhost:5000/image/${notification.lastPerson.profilePictureId}`
+                    }
+                    sx={{ width: 48, height: 48 }}
+                  >
+                    {notification.lastPerson.firstname.charAt(0)}
+                  </Avatar>
 
-                      <Box>
-                        <Typography variant="body2" sx={{ fontWeight: "bold" }}>
-                          {notification.lastPerson.firstname +
-                            " " +
-                            notification.lastPerson.lastname}{" "}
-                          {notification.count > 1 &&
-                            `and ${notification.count - 1} other people`}
+                  <Box sx={{ flex: 1, ml: 1 }}>
+                    <Typography
+                      variant="body1"
+                      sx={{ fontWeight: "bold", mb: 0.5 }}
+                    >
+                      {notification.lastPerson.firstname}{" "}
+                      {notification.lastPerson.lastname}{" "}
+                      {notification.count > 1 &&
+                        `and ${notification.count - 1} others`}
+                    </Typography>
+
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "text.secondary" }}
+                    >
+                      {notification.type === "like" &&
+                        `liked your ${
+                          notification.commentId ? "comment" : "post"
+                        }`}
+                      {notification.type === "comment" &&
+                        `commented on your post:`}
+                      {notification.type === "answer" &&
+                        `answered your comment:`}
+                      {notification.type === "follow" && `followed you`}
+                    </Typography>
+                    {notification.type !== "follow" &&
+                      notification.commentContent && (
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: "text.secondary",
+                            mt: 0.5,
+                            fontStyle: "italic",
+                          }}
+                        >
+                          {notification.commentContent}
                         </Typography>
-                        <Typography variant="body2">liked your post</Typography>
-                      </Box>
-                    </Link>
+                      )}
+
+                    <Typography
+                      variant="subtitle1"
+                      sx={{ color: "text.secondary", fontSize: 10 }}
+                    >
+                      {notification.passedTime}
+                    </Typography>
+                  </Box>
+
+                  {notification.thumbnailId && (
+                    <Box
+                      component="img"
+                      src={notification.thumbnailId ? `http://localhost:5000/image/${notification.thumbnailId}` : placeHolderThumbnail}
+                      sx={{
+                        width: 80,
+                        height: 80,
+                        borderRadius: 1,
+                        objectFit: "cover",
+                        ml: 2,
+                      }}
+                    />
+                  )}
+
+                  {!notification.isSeen && (
+                    <CircleIcon
+                      color="error"
+                      sx={{
+                        fontSize: ".7rem",
+                      }}
+                    />
                   )}
                 </MenuItem>
               ))}
-            </>
+            </div>
           )}
         </Menu>
       </Box>

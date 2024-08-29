@@ -4,6 +4,40 @@ import { Notification } from '../schemes/notification.scheme';
 import mongoose, { Model } from 'mongoose';
 import { CreateNotificationDTO } from 'src/dto/notification-dto';
 
+function getPassedTime(time: Date): string {
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - time.getTime()) / 1000);
+
+  const secondsInMinute = 60;
+  const secondsInHour = secondsInMinute * 60;
+  const secondsInDay = secondsInHour * 24;
+  const secondsInWeek = secondsInDay * 7;
+  const secondsInMonth = secondsInDay * 30; // Approximation
+  const secondsInYear = secondsInDay * 365; // Approximation
+
+  if (diffInSeconds < secondsInMinute) {
+    return `${diffInSeconds} second${diffInSeconds !== 1 ? 's' : ''} ago`;
+  } else if (diffInSeconds < secondsInHour) {
+    const minutes = Math.floor(diffInSeconds / secondsInMinute);
+    return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
+  } else if (diffInSeconds < secondsInDay) {
+    const hours = Math.floor(diffInSeconds / secondsInHour);
+    return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+  } else if (diffInSeconds < secondsInWeek) {
+    const days = Math.floor(diffInSeconds / secondsInDay);
+    return `${days} day${days !== 1 ? 's' : ''} ago`;
+  } else if (diffInSeconds < secondsInMonth) {
+    const weeks = Math.floor(diffInSeconds / secondsInWeek);
+    return `${weeks} week${weeks !== 1 ? 's' : ''} ago`;
+  } else if (diffInSeconds < secondsInYear) {
+    const months = Math.floor(diffInSeconds / secondsInMonth);
+    return `${months} month${months !== 1 ? 's' : ''} ago`;
+  } else {
+    const years = Math.floor(diffInSeconds / secondsInYear);
+    return `${years} year${years !== 1 ? 's' : ''} ago`;
+  }
+}
+
 @Injectable()
 export class NotificationService {
   constructor(
@@ -29,9 +63,13 @@ export class NotificationService {
         createdBy: new mongoose.Types.ObjectId(dto.createdBy),
         createdFor: new mongoose.Types.ObjectId(dto.createdFor),
         createdAt: new Date(),
+        updatedAt: new Date(),
         relatedPost: new mongoose.Types.ObjectId(dto.relatedPost),
         relatedComment: dto.relatedComment
           ? new mongoose.Types.ObjectId(dto.relatedComment)
+          : null,
+        answeredComment: dto.relatedComment
+          ? new mongoose.Types.ObjectId(dto.answeredComment)
           : null,
         isSeen: false,
         isLookedAt: false,
@@ -58,132 +96,197 @@ export class NotificationService {
   }
 
   async getNotifications(userId: string) {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+
     const notifications = await this.notificationModel
       .find({
-        createdFor: new mongoose.Types.ObjectId(userId),
-        isLookedAt: false,
+        $or: [
+          {
+            createdFor: new mongoose.Types.ObjectId(userId),
+            isSeen: false,
+          },
+          {
+            createdFor: new mongoose.Types.ObjectId(userId),
+            isSeen: true,
+            updatedAt: { $gt: yesterday },
+          },
+        ],
       })
       .sort({ createdAt: -1 })
       .populate({
         path: 'createdBy',
-        select: 'username firstname lastname profilePictureId',
+        select: '_id username firstname lastname profilePictureId',
+      })
+      .populate({
+        path: 'relatedComment',
+        select: '_id content',
+      })
+      .populate({
+        path: 'answeredComment',
+        select: '_id content',
+      })
+      .populate({
+        path: 'relatedPost',
+        select: '_id title thumbnailId',
       });
 
-    /*
-     * -relatedPostları aynı olup relatedCommentleri olmayanlar ( bunların type'ı 'like' olmak zorunda olduğu için tekrar type'a bakmaya gerek yok ),
-     * -relatedPostları ve relatedCommentleri aynı olan ve typeları 'like' olanlar,
-     * -relatedPostları ve relatedCommentleri aynı olan ve typeları 'comment' olanlar,
-     * -relatedPostları ve relatedCommentleri aynı olan ve typeları 'answer' olanlar,
-     * -relatedUserları olanlar
-     */
-
-    const postNotifications: Map<
+    type Notification<T> = Map<
       string,
       {
         count: number;
-        lastPerson: { firstname: string; lastname: string };
-        type: 'like';
-        postId: string;
-      }
-    > = new Map();
+        lastPerson: {
+          firstname: string;
+          lastname: string;
+          profilePictureId?: string;
+        };
+        targetHref: string;
+        isLookedAt: boolean;
+        isSeen: boolean;
+        notificationIds: string[];
+        passedTime: string;
+      } & T
+    >;
 
-    const commentLikeNotifications: Map<
-      string,
-      {
-        count: number;
-        lastPerson: { firstname: string; lastname: string };
-        type: 'like';
-        postId: string;
-        commentId: string;
-      }
-    > = new Map();
+    const postNotifications: Notification<{
+      type: 'like';
+      postTitle: string;
+      thumbnailId?: string;
+    }> = new Map();
 
-    const commentNotifications: Map<
-      string,
-      {
-        count: number;
-        lastPerson: { firstname: string; lastname: string };
-        type: 'comment';
-        postId: string;
-        commentId: string;
-      }
-    > = new Map();
+    const commentLikeNotifications: Notification<{
+      type: 'like';
+    }> = new Map();
 
-    const commentAnswerNotifications: Map<
-      string,
-      {
-        count: number;
-        lastPerson: { firstname: string; lastname: string };
-        type: 'answer';
-        postId: string;
-        commentId: string;
-      }
-    > = new Map();
+    const commentNotifications: Notification<{
+      type: 'comment';
+      commentContent: string;
+      thumbnailId?: string;
+    }> = new Map();
 
-    const followNotifications = [];
+    const commentAnswerNotifications: Notification<{
+      type: 'answer';
+      commentContent: string;
+      answerContent: string;
+      postTitle: string;
+      thumbnailId?: string;
+    }> = new Map();
+
+    const followNotifications: {
+      firstname: string;
+      lastname: string;
+      username: string;
+      profilePictureId?: string;
+      notificationId: string;
+      isLookedAt: boolean;
+      isSeen: boolean;
+      targetHref: string;
+      passedTime: string;
+    }[] = [];
 
     notifications.forEach((i) => {
       const lastPerson = {
         firstname: i.createdBy.firstname,
         lastname: i.createdBy.lastname,
+        profilePictureId: i.createdBy.profilePictureId,
       };
-      const relatedPost = String(i.relatedPost);
       const type = i.type;
+      const isLookedAt = i.isLookedAt;
+      const isSeen = i.isSeen;
+      const notificationId = String(i._id);
+      const passedTime = getPassedTime(i.createdAt);
 
+      if (type === 'follow') {
+        followNotifications.push({
+          ...lastPerson,
+          username: i.createdBy.username,
+          isLookedAt,
+          notificationId,
+          isSeen,
+          targetHref: `/user?id=${String(i.createdBy)}`,
+          passedTime,
+        });
+        return;
+      }
+
+      let notificationIds = [notificationId];
+      const relatedPost = String(i.relatedPost._id);
+      let count = 1;
       if (relatedPost && type === 'like' && !i.relatedComment) {
-        let count = 1;
         if (postNotifications.has(relatedPost)) {
-          count = postNotifications.get(relatedPost).count + 1;
+          const notifications = postNotifications.get(relatedPost);
+          count = notifications.count + 1;
+          notificationIds = [...notifications.notificationIds, notificationId];
         }
         postNotifications.set(relatedPost, {
           count,
           lastPerson,
+          targetHref: `/post?id=${relatedPost}`,
+          isLookedAt,
+          isSeen,
+          notificationIds,
           type,
-          postId: relatedPost,
+          postTitle: i.relatedPost.title,
+          thumbnailId: i.relatedPost.thumbnailId,
+          passedTime,
         });
       } else if (relatedPost && type === 'like' && i.relatedComment) {
-        const relatedComment = String(i.relatedComment);
-        let count = 1;
+        const relatedComment = String(i.relatedComment._id);
         if (commentLikeNotifications.has(relatedComment)) {
-          count = commentLikeNotifications.get(relatedComment).count + 1;
+          const notifications = commentLikeNotifications.get(relatedComment);
+          count = notifications.count + 1;
+          notificationIds = [...notifications.notificationIds, notificationId];
         }
         commentLikeNotifications.set(relatedComment, {
           count,
           lastPerson,
-          postId: relatedPost,
-          commentId: relatedComment,
+          targetHref: `/post?id=${relatedPost}&comment=${relatedComment}`,
+          isLookedAt,
+          isSeen,
+          notificationIds,
           type,
+          passedTime,
         });
       } else if (relatedPost && type === 'comment' && i.relatedComment) {
-        const relatedComment = String(i.relatedComment);
-        let count = 1;
+        const relatedComment = String(i.relatedComment._id);
         if (commentNotifications.has(relatedComment)) {
-          count = commentLikeNotifications.get(relatedComment).count + 1;
+          const notifications = commentNotifications.get(relatedComment);
+          count = notifications.count + 1;
+          notificationIds = [...notifications.notificationIds, notificationId];
         }
         commentNotifications.set(relatedComment, {
           count,
           lastPerson,
-          postId: relatedPost,
-          commentId: relatedComment,
+          targetHref: `/post?id=${relatedPost}&comment=${relatedComment}`,
+          isLookedAt,
+          isSeen,
+          notificationIds,
           type,
+          commentContent: i.relatedComment.content,
+          thumbnailId: i.relatedPost.thumbnailId,
+          passedTime,
         });
       } else if (type === 'answer') {
-        const relatedComment = String(i.relatedComment);
-        let count = 1;
+        const relatedComment = String(i.relatedComment._id);
         if (commentAnswerNotifications.has(relatedComment)) {
-          count = commentAnswerNotifications.get(relatedComment).count + 1;
+          const notifications = commentAnswerNotifications.get(relatedComment);
+          count = notifications.count + 1;
+          notificationIds = [...notifications.notificationIds, notificationId];
         }
         commentAnswerNotifications.set(relatedComment, {
           count,
           lastPerson,
-          postId: relatedPost,
+          targetHref: `/post?id=${relatedPost}&comment=${relatedComment}&answer=${i.answeredComment._id}`,
+          isLookedAt,
+          isSeen,
+          notificationIds,
           type,
-          commentId: relatedComment,
-        });
-      } else if (i.type === 'follow') {
-        followNotifications.push({
-          ...lastPerson,
-          username: i.createdBy.username,
+          commentContent: i.answeredComment.content,
+          answerContent: i.relatedComment.content,
+          postTitle: i.relatedPost.title,
+          thumbnailId: i.relatedPost.thumbnailId,
+          passedTime,
         });
       }
     });
@@ -198,34 +301,42 @@ export class NotificationService {
     return formattedNotifications;
   }
 
-
-  async lookToNotification(notificationId: string, userId: string) {
-    const updatedNotification = this.notificationModel.updateOne(
-      {
-        createdFor: new mongoose.Types.ObjectId(userId),
-        _id: new mongoose.Types.ObjectId(notificationId),
+  async lookToNotifications(notificationIds: string[], userId: string) {
+    const ops = notificationIds.map((i) => ({
+      updateOne: {
+        filter: {
+          createdFor: new mongoose.Types.ObjectId(userId),
+          _id: new mongoose.Types.ObjectId(i),
+        },
+        update: { isLookedAt: true },
       },
-      { isLookedAt: true },
-    );
-    if (!updatedNotification) {
+    }));
+
+    const updatedNotifications = await this.notificationModel.bulkWrite(ops);
+    if (!updatedNotifications) {
       throw new InternalServerErrorException();
     }
 
-    return { message: 'Notification marked succesfully' };
+    return { message: 'Notifications marked succesfully' };
   }
 
-  async seeNotification(notificationId: string, userId: string) {
-    const updatedNotification = this.notificationModel.updateOne(
-      {
-        createdFor: new mongoose.Types.ObjectId(userId),
-        _id: new mongoose.Types.ObjectId(notificationId),
+  async seeNotifications(notificationIds: string[], userId: string) {
+    const ops = notificationIds.map((i) => ({
+      updateOne: {
+        filter: {
+          createdFor: new mongoose.Types.ObjectId(userId),
+          _id: new mongoose.Types.ObjectId(i),
+        },
+        update: { isSeen: true },
       },
-      { isSeem: true },
-    );
-    if (!updatedNotification) {
+    }));
+
+    const updatedNotifications = await this.notificationModel.bulkWrite(ops);
+
+    if (!updatedNotifications) {
       throw new InternalServerErrorException();
     }
 
-    return { message: 'Notification marked succesfully' };
+    return { message: 'Notifications marked succesfully' };
   }
 }
