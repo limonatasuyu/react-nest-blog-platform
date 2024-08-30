@@ -1,19 +1,17 @@
 import { PostsService } from './posts.service';
-import { GetPostsByTagDTO, GetRecentPostsDTO, CreatePostDTO, UpdatePostDTO } from '../dto/post-dto';
+import { GetPostsDTO, CreatePostDTO, UpdatePostDTO } from '../dto/post-dto';
 export declare class PostsController {
     private readonly postsService;
     constructor(postsService: PostsService);
-    getPosts({ page }: {
-        page: any;
-    }): Promise<any[]>;
-    getPostsByTags({ tag, page }: GetPostsByTagDTO): Promise<any[]>;
-    getRecentPosts({ page }: GetRecentPostsDTO): Promise<any[]>;
+    getPosts(dto: GetPostsDTO): Promise<any>;
+    getPost(req: any, postId: string): Promise<any>;
     likePost(req: any, postId: string): Promise<{
         message: string;
     }>;
     savePost(req: any, postId: string): Promise<{
         message: string;
     }>;
+    reportPost(): void;
     createPost(req: any, dto: CreatePostDTO): Promise<{
         message: string;
     }>;
@@ -25,6 +23,4 @@ export declare class PostsController {
     }): Promise<{
         message: string;
     }>;
-    getMyPosts(req: any): Promise<any[]>;
-    getPost(req: any, postId: string): Promise<any>;
 }

@@ -1,7 +1,7 @@
 import { useState } from "react";
-import Layout2 from "../Layout2";
+import LoginLayout from "../Layouts/LoginLayout";
 import { TextField, Typography, Button, Box, AlertColor } from "@mui/material";
-import useTimer from "../hooks/timer";
+import useTimer from "../hooks/useTimer";
 import useSnackbar from "../hooks/useSnackbar";
 
 export default function ActivateUserPage() {
@@ -92,7 +92,7 @@ export default function ActivateUserPage() {
   }
 
   return (
-    <Layout2>
+    <LoginLayout>
       <Box
         display="flex"
         sx={{ alignItems: "center", flexDirection: "column" }}
@@ -145,6 +145,6 @@ export default function ActivateUserPage() {
           </Box>
         </Box>
       </Box>
-    </Layout2>
+    </LoginLayout>
   );
 }

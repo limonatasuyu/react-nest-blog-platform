@@ -5,8 +5,7 @@ import * as mongoose from 'mongoose';
 import { Post, PostDocument } from 'src/schemes/post.schema';
 import { UsersService } from 'src/user/user.service';
 import {
-  GetPostsByTagDTO,
-  GetRecentPostsDTO,
+  GetPostsDTO,
   CreatePostDTO,
   DeletePostDTO,
   UpdatePostDTO,
@@ -14,7 +13,6 @@ import {
 import { ImageService } from 'src/image/image.service';
 import { User } from 'src/schemes/user.schema';
 import { TagService } from 'src/tag/tag.service';
-import { NotFoundError } from 'rxjs';
 import { NotificationService } from 'src/notification/notification.service';
 
 interface PostWithLikeStatus extends PostDocument {
@@ -124,19 +122,14 @@ export class PostsService {
     return { message: 'Operation handled successfully' };
   }
 
-  async getPostsByTag(dto: GetPostsByTagDTO) {
-    const tag = await this.tagService.findOne(dto.tag);
+  async getPosts(dto: GetPostsDTO) {
+    const pageSize = 10;
 
-    if (!tag) {
-      throw new NotFoundError('Tag not found.');
-    }
-
-    const posts = await this.postsModel.aggregate([
-      { $match: { tags: { $in: [tag._id] } } },
+    const ops: mongoose.PipelineStage[] = [
       {
         $lookup: {
           from: 'tags',
-          localField: 'tags', 
+          localField: 'tags',
           foreignField: '_id',
           as: 'tagDetails',
         },
@@ -151,93 +144,72 @@ export class PostsService {
       },
       { $unwind: '$user' },
       {
-        $project: {
-          id: 1,
-          title: 1,
-          content: 1,
-          thumbnailId: 1,
-          likedCount: { $size: '$likedBy' },
-          commentCount: { $size: '$comments' },
-          tags: {
-            $map: { input: '$tagDetails', as: 'tag', in: '$$tag.name' },
-          },
-          user: {
-            username: 1,
-            firstname: 1,
-            lastname: 1,
-            description: 1,
-          },
-        },
-      },
-      {
-        $sort: { createdAt: -1 },
-      },
-      {
-        $skip: (dto.page - 1) * 10,
-      },
-      {
-        $limit: 10,
-      },
-    ]);
-
-    return posts;
-  }
-
-  async getRecentPosts(dto: GetRecentPostsDTO) {
-    const posts = await this.postsModel
-      .aggregate([
-        {
-          $lookup: {
-            from: 'tags',
-            localField: 'tags',
-            foreignField: '_id',
-            as: 'tagDetails',
-          },
-        },
-        {
-          $lookup: {
-            from: 'users',
-            localField: 'user',
-            foreignField: '_id',
-            as: 'user',
-          },
-        },
-        { $unwind: '$user' },
-        {
-          $project: {
-            id: 1,
-            title: 1,
-            content: 1,
-            thumbnailId: 1,
-            likedCount: { $size: '$likedBy' },
-            commentCount: { $size: '$comments' },
-            tags: {
-              $map: { input: '$tagDetails', as: 'tag', in: '$$tag.name' },
+        $facet: {
+          paginatedResults: [
+            {
+              $project: {
+                id: 1,
+                title: 1,
+                content: 1,
+                thumbnailId: 1,
+                likedCount: { $size: '$likedBy' },
+                commentCount: { $size: '$comments' },
+                tags: {
+                  $map: { input: '$tagDetails', as: 'tag', in: '$$tag.name' },
+                },
+                user: {
+                  username: 1,
+                  firstname: 1,
+                  lastname: 1,
+                  description: 1,
+                },
+              },
             },
-            user: {
-              username: 1,
-              firstname: 1,
-              lastname: 1,
-              description: 1,
+            {
+              $sort: { createdAt: -1 },
+            },
+            {
+              $skip: (dto.page - 1) * pageSize,
+            },
+            {
+              $limit: pageSize,
+            },
+          ],
+          totalRecordCount: [{ $count: 'count' }],
+        },
+      },
+      {
+        $addFields: {
+          totalPageCount: {
+            $ceil: {
+              $divide: [
+                { $arrayElemAt: ['$totalRecordCount.count', 0] },
+                pageSize,
+              ],
             },
           },
         },
-        {
-          $sort: { createdAt: -1 },
-        },
-        {
-          $skip: (dto.page - 1) * 10,
-        },
-        {
-          $limit: 10,
-        },
-      ])
-      .exec();
+      },
+    ];
 
-    if (!posts) {
+    if (dto.tag && dto.tag.toLowerCase() !== 'all' && dto.username) {
+      const tag = await this.tagService.findOne(dto.tag);
+      const user = await this.usersService.findOne(dto.username);
+      ops.unshift({ $match: { tags: { $in: [tag._id] }, user: user._id } });
+    } else if (dto.tag && dto.tag.toLowerCase() !== 'all') {
+      const tag = await this.tagService.findOne(dto.tag);
+      ops.unshift({ $match: { tags: { $in: [tag._id] } } });
+    } else if (dto.username) {
+      const user = await this.usersService.findOne(dto.username);
+      ops.unshift({ $match: { user: user._id } });
+    }
+
+    const posts = await this.postsModel.aggregate(ops).exec();
+
+    if (!posts || !posts[0]) {
       throw new InternalServerErrorException();
     }
-    return posts;
+    return posts[0];
   }
 
   async createPost(dto: CreatePostDTO, username: string) {
@@ -265,11 +237,10 @@ export class PostsService {
       throw new InternalServerErrorException();
     }
 
-    const updatedUser = await this.usersModel.updateOne(
+    await this.usersModel.updateOne(
       { _id: user._id },
       { $push: { posts: postId } },
     );
-    console.log('updatedUser: ', updatedUser);
 
     if (dto.thumbnailId) {
       await this.imageService.relateImage(dto.thumbnailId);
@@ -316,42 +287,6 @@ export class PostsService {
     }
 
     return { message: 'Post updated successfully' };
-  }
-
-  async getUsersPosts(username: string) {
-    const user = await this.usersService.findOne(username);
-    if (!user) {
-      throw new InternalServerErrorException();
-    }
-
-    const posts = await this.postsModel.aggregate([
-      { $match: { user: user._id } },
-      {
-        $lookup: {
-          from: 'tags',
-          localField: 'tags',
-          foreignField: '_id',
-          as: 'tags',
-        },
-      },
-      {
-        $project: {
-          id: '$_id',
-          title: 1,
-          content: 1,
-          likedCount: { $size: '$likedBy' },
-          commenCount: { $size: '$comments' },
-          tags: { name: 1 },
-          thumbnailId: 1,
-        },
-      },
-    ]);
-
-    if (!posts) {
-      throw new InternalServerErrorException();
-    }
-
-    return posts;
   }
 
   async getPostById(postId: string, user_id: string) {

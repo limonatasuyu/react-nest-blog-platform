@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { Box } from "@mui/material";
 import login_background from "/login_background.jpg";
 
-export default function Layout2({ children }: { children: ReactNode }) {
+export default function LoginLayout({ children }: { children: ReactNode }) {
   return (
     <Box
       sx={{

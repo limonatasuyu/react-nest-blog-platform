@@ -1,9 +1,7 @@
-export interface GetPostsByTagDTO {
-    tag: string;
+export interface GetPostsDTO {
     page: number;
-}
-export interface GetRecentPostsDTO {
-    page: number;
+    tag?: string;
+    username?: string;
 }
 export interface CreatePostDTO {
     title: string;

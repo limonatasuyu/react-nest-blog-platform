@@ -22,7 +22,6 @@ const user_service_1 = require("../user/user.service");
 const image_service_1 = require("../image/image.service");
 const user_schema_1 = require("../schemes/user.schema");
 const tag_service_1 = require("../tag/tag.service");
-const rxjs_1 = require("rxjs");
 const notification_service_1 = require("../notification/notification.service");
 let PostsService = class PostsService {
     constructor(postsModel, usersModel, usersService, imageService, tagService, notificationService) {
@@ -109,115 +108,92 @@ let PostsService = class PostsService {
         }
         return { message: 'Operation handled successfully' };
     }
-    async getPostsByTag(dto) {
-        const tag = await this.tagService.findOne(dto.tag);
-        if (!tag) {
-            throw new rxjs_1.NotFoundError('Tag not found.');
+    async getPosts(dto) {
+        const pageSize = 10;
+        const ops = [
+            {
+                $lookup: {
+                    from: 'tags',
+                    localField: 'tags',
+                    foreignField: '_id',
+                    as: 'tagDetails',
+                },
+            },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'user',
+                    foreignField: '_id',
+                    as: 'user',
+                },
+            },
+            { $unwind: '$user' },
+            {
+                $facet: {
+                    paginatedResults: [
+                        {
+                            $project: {
+                                id: 1,
+                                title: 1,
+                                content: 1,
+                                thumbnailId: 1,
+                                likedCount: { $size: '$likedBy' },
+                                commentCount: { $size: '$comments' },
+                                tags: {
+                                    $map: { input: '$tagDetails', as: 'tag', in: '$$tag.name' },
+                                },
+                                user: {
+                                    username: 1,
+                                    firstname: 1,
+                                    lastname: 1,
+                                    description: 1,
+                                },
+                            },
+                        },
+                        {
+                            $sort: { createdAt: -1 },
+                        },
+                        {
+                            $skip: (dto.page - 1) * pageSize,
+                        },
+                        {
+                            $limit: pageSize,
+                        },
+                    ],
+                    totalRecordCount: [{ $count: 'count' }],
+                },
+            },
+            {
+                $addFields: {
+                    totalPageCount: {
+                        $ceil: {
+                            $divide: [
+                                { $arrayElemAt: ['$totalRecordCount.count', 0] },
+                                pageSize,
+                            ],
+                        },
+                    },
+                },
+            },
+        ];
+        if (dto.tag && dto.tag.toLowerCase() !== 'all' && dto.username) {
+            const tag = await this.tagService.findOne(dto.tag);
+            const user = await this.usersService.findOne(dto.username);
+            ops.unshift({ $match: { tags: { $in: [tag._id] }, user: user._id } });
         }
-        const posts = await this.postsModel.aggregate([
-            { $match: { tags: { $in: [tag._id] } } },
-            {
-                $lookup: {
-                    from: 'tags',
-                    localField: 'tags',
-                    foreignField: '_id',
-                    as: 'tagDetails',
-                },
-            },
-            {
-                $lookup: {
-                    from: 'users',
-                    localField: 'user',
-                    foreignField: '_id',
-                    as: 'user',
-                },
-            },
-            { $unwind: '$user' },
-            {
-                $project: {
-                    id: 1,
-                    title: 1,
-                    content: 1,
-                    thumbnailId: 1,
-                    likedCount: { $size: '$likedBy' },
-                    commentCount: { $size: '$comments' },
-                    tags: {
-                        $map: { input: '$tagDetails', as: 'tag', in: '$$tag.name' },
-                    },
-                    user: {
-                        username: 1,
-                        firstname: 1,
-                        lastname: 1,
-                        description: 1,
-                    },
-                },
-            },
-            {
-                $sort: { createdAt: -1 },
-            },
-            {
-                $skip: (dto.page - 1) * 10,
-            },
-            {
-                $limit: 10,
-            },
-        ]);
-        return posts;
-    }
-    async getRecentPosts(dto) {
-        const posts = await this.postsModel
-            .aggregate([
-            {
-                $lookup: {
-                    from: 'tags',
-                    localField: 'tags',
-                    foreignField: '_id',
-                    as: 'tagDetails',
-                },
-            },
-            {
-                $lookup: {
-                    from: 'users',
-                    localField: 'user',
-                    foreignField: '_id',
-                    as: 'user',
-                },
-            },
-            { $unwind: '$user' },
-            {
-                $project: {
-                    id: 1,
-                    title: 1,
-                    content: 1,
-                    thumbnailId: 1,
-                    likedCount: { $size: '$likedBy' },
-                    commentCount: { $size: '$comments' },
-                    tags: {
-                        $map: { input: '$tagDetails', as: 'tag', in: '$$tag.name' },
-                    },
-                    user: {
-                        username: 1,
-                        firstname: 1,
-                        lastname: 1,
-                        description: 1,
-                    },
-                },
-            },
-            {
-                $sort: { createdAt: -1 },
-            },
-            {
-                $skip: (dto.page - 1) * 10,
-            },
-            {
-                $limit: 10,
-            },
-        ])
-            .exec();
-        if (!posts) {
+        else if (dto.tag && dto.tag.toLowerCase() !== 'all') {
+            const tag = await this.tagService.findOne(dto.tag);
+            ops.unshift({ $match: { tags: { $in: [tag._id] } } });
+        }
+        else if (dto.username) {
+            const user = await this.usersService.findOne(dto.username);
+            ops.unshift({ $match: { user: user._id } });
+        }
+        const posts = await this.postsModel.aggregate(ops).exec();
+        if (!posts || !posts[0]) {
             throw new common_1.InternalServerErrorException();
         }
-        return posts;
+        return posts[0];
     }
     async createPost(dto, username) {
         const user = await this.usersService.findOne(username);
@@ -239,8 +215,7 @@ let PostsService = class PostsService {
         if (!createdPost) {
             throw new common_1.InternalServerErrorException();
         }
-        const updatedUser = await this.usersModel.updateOne({ _id: user._id }, { $push: { posts: postId } });
-        console.log('updatedUser: ', updatedUser);
+        await this.usersModel.updateOne({ _id: user._id }, { $push: { posts: postId } });
         if (dto.thumbnailId) {
             await this.imageService.relateImage(dto.thumbnailId);
         }
@@ -273,38 +248,6 @@ let PostsService = class PostsService {
             throw new common_1.InternalServerErrorException();
         }
         return { message: 'Post updated successfully' };
-    }
-    async getUsersPosts(username) {
-        const user = await this.usersService.findOne(username);
-        if (!user) {
-            throw new common_1.InternalServerErrorException();
-        }
-        const posts = await this.postsModel.aggregate([
-            { $match: { user: user._id } },
-            {
-                $lookup: {
-                    from: 'tags',
-                    localField: 'tags',
-                    foreignField: '_id',
-                    as: 'tags',
-                },
-            },
-            {
-                $project: {
-                    id: '$_id',
-                    title: 1,
-                    content: 1,
-                    likedCount: { $size: '$likedBy' },
-                    commenCount: { $size: '$comments' },
-                    tags: { name: 1 },
-                    thumbnailId: 1,
-                },
-            },
-        ]);
-        if (!posts) {
-            throw new common_1.InternalServerErrorException();
-        }
-        return posts;
     }
     async getPostById(postId, user_id) {
         const post = await this.postsModel.aggregate([

@@ -15,7 +15,7 @@ import { Formik } from "formik";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { useState } from "react";
-import Layout2 from "../Layout2";
+import LoginLayout from "../Layouts/LoginLayout";
 import useSnackbar from "../hooks/useSnackbar";
 
 export default function LoginPage() {
@@ -87,7 +87,7 @@ export default function LoginPage() {
   }
 
   return (
-    <Layout2>
+    <LoginLayout>
       <img src={logo_white} style={{ marginBottom: "2rem" }} />
       <Formik
         initialValues={{ email: "", password: "" }}
@@ -172,6 +172,6 @@ export default function LoginPage() {
           </form>
         )}
       </Formik>
-    </Layout2>
+    </LoginLayout>
   );
 }

@@ -1,5 +1,5 @@
 import { Box, TextField, Button, Typography, Tabs, Tab } from "@mui/material";
-import Layout1 from "../Layout1";
+import AppLayout from "../Layouts/AppLayout";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { styled } from "@mui/material/styles";
 import { useState } from "react";
@@ -128,7 +128,7 @@ export default function CreatePostPage() {
   }
 
   return (
-    <Layout1>
+    <AppLayout>
       <Typography
         variant="h4"
         component="h1"
@@ -308,6 +308,6 @@ export default function CreatePostPage() {
           </form>
         )}
       </Formik>
-    </Layout1>
+    </AppLayout>
   );
 }

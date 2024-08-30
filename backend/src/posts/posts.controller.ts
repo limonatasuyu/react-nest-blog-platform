@@ -9,14 +9,10 @@ import {
   UseGuards,
   Put,
   Param,
+  NotImplementedException,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
-import {
-  GetPostsByTagDTO,
-  GetRecentPostsDTO,
-  CreatePostDTO,
-  UpdatePostDTO,
-} from '../dto/post-dto';
+import { GetPostsDTO, CreatePostDTO, UpdatePostDTO } from '../dto/post-dto';
 import { PostsGuard } from './posts.guard';
 
 @Controller('posts')
@@ -25,24 +21,18 @@ export class PostsController {
 
   @UseGuards(PostsGuard)
   @Get()
-  getPosts(@Query() { page }) {
-    return this.postsService.getRecentPosts({ page });
+  getPosts(@Query() dto: GetPostsDTO) {
+    return this.postsService.getPosts(dto);
   }
 
   @UseGuards(PostsGuard)
-  @Get('tag')
-  getPostsByTags(@Query() { tag, page }: GetPostsByTagDTO) {
-    return this.postsService.getPostsByTag({ tag, page });
+  @Get(':id')
+  async getPost(@Req() req, @Param('id') postId: string) {
+    return this.postsService.getPostById(postId, req.user.sub);
   }
 
   @UseGuards(PostsGuard)
-  @Get('recent')
-  getRecentPosts(@Query() { page }: GetRecentPostsDTO) {
-    return this.postsService.getRecentPosts({ page });
-  }
-
-  @UseGuards(PostsGuard)
-  @Get(':id/like')
+  @Get('like/:id')
   likePost(@Req() req, @Param('id') postId: string) {
     return this.postsService.likePost(postId, req.user.sub);
   }
@@ -51,6 +41,12 @@ export class PostsController {
   @Get('save/:id')
   savePost(@Req() req, @Param('id') postId: string) {
     return this.postsService.savePost(postId, req.user.sub);
+  }
+
+  @UseGuards(PostsGuard)
+  @Post('report/:id')
+  reportPost(/*@Req() req, @Param('id') postId: string*/) {
+    throw new NotImplementedException();
   }
 
   @UseGuards(PostsGuard)
@@ -76,17 +72,5 @@ export class PostsController {
       { ...(body as any), postId },
       req.user.username,
     );
-  }
-
-  @UseGuards(PostsGuard)
-  @Get('my_posts')
-  getMyPosts(@Req() req) {
-    return this.postsService.getUsersPosts(req.user.username);
-  }
-
-  @UseGuards(PostsGuard)
-  @Get(':id')
-  async getPost(@Req() req, @Param('id') postId: string) {
-    return this.postsService.getPostById(postId, req.user.sub);
   }
 }

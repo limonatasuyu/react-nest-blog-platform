@@ -1,47 +1,16 @@
-import { useState, useEffect } from "react";
-import {
-  Box,
-  Typography,
-  Divider,
-  Button,
-  Link,
-  IconButton,
-  Tooltip,
-  Chip,
-  Avatar,
-  Paper,
-} from "@mui/material";
-import {
-  AccountCircle as AccountCircleIcon,
-  Favorite as FavoriteIcon,
-  Chat as ChatIcon,
-} from "@mui/icons-material";
-import Layout1 from "../Layout1";
+import { useState, useEffect, ChangeEvent } from "react";
+import { Box, Typography, Divider, Button, Link, Chip, Avatar, Paper, Pagination } from "@mui/material";
+import AppLayout from "../Layouts/AppLayout";
 import useSnackbar from "../hooks/useSnackbar";
-import placeHolderThumbnail from "/placeholderThumbnail.jpg";
+import { PostData } from "../interfaces";
+import PostCard from "../components/PostCard";
 
 export default function HomePage() {
   const [activeTagTab, setActiveTagTab] = useState("All");
   const [page, setPage] = useState(1);
+  const [totalPageCount, setTotalPageCount] = useState(1);
 
-  const [posts, setPosts] = useState<
-    {
-      _id: string;
-      title: string;
-      content: string;
-      commentCount: number;
-      likedCount: number;
-      thumbnailId?: string;
-      tags: string[];
-      user: {
-        firstname: string;
-        lastname: string;
-        username: string;
-        description?: string;
-        profilePictureId?: string;
-      };
-    }[]
-  >([]);
+  const [posts, setPosts] = useState<PostData[]>([]);
   const [tags, setTags] = useState<{ name: string }[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [whoToFollow, setWhoToFollow] = useState<
@@ -57,7 +26,7 @@ export default function HomePage() {
 
   useEffect(() => {
     const token = window.sessionStorage.getItem("access_token");
-    fetch(`http://localhost:5000/posts?page=${page}`, {
+    fetch(`http://localhost:5000/posts?page=${page}&tag=${activeTagTab}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -65,20 +34,14 @@ export default function HomePage() {
       .then(async (res) => {
         const jsonResponse = await res.json();
         if (!res.ok) {
-          setSnackBar(
-            jsonResponse.message ??
-              "Something went wrong, please try again later",
-            "error"
-          );
+          setSnackBar(jsonResponse.message ?? "Something went wrong, please try again later", "error");
           return;
         }
-        setPosts(jsonResponse);
+        setPosts(jsonResponse.paginatedResults);
+        setTotalPageCount(jsonResponse.totalPageCount);
       })
       .catch((err) => {
-        setSnackBar(
-          err.message ?? "Something went wrong, please try again later",
-          "error"
-        );
+        setSnackBar(err.message ?? "Something went wrong, please try again later", "error");
       })
       .finally(() => setLoaded(true));
 
@@ -93,11 +56,11 @@ export default function HomePage() {
         res.json().then((result) => setWhoToFollow(result));
       }
     });
-  }, [page]);
+  }, [page, activeTagTab]);
 
   if (!loaded) {
     return (
-      <Layout1>
+      <AppLayout>
         <Box
           display="flex"
           sx={{
@@ -109,24 +72,22 @@ export default function HomePage() {
         >
           <Typography variant="h3">Loading..</Typography>
         </Box>
-      </Layout1>
+      </AppLayout>
     );
   }
 
   return (
-    <Layout1>
+    <AppLayout>
       <Box
         sx={{
           display: "flex",
           justifyContent: "center",
           mt: 8,
-          gap: 4,
+          gap: 8,
           flexWrap: { xs: "wrap", md: "nowrap" },
         }}
       >
-        {/* Main Content */}
         <Box sx={{ flex: 1, maxWidth: "800px" }}>
-          {/* Tag Tabs */}
           <Box sx={{ display: "flex", gap: 2, mb: 2, overflowX: "auto" }}>
             <Button
               variant={activeTagTab === "All" ? "contained" : "outlined"}
@@ -149,7 +110,6 @@ export default function HomePage() {
 
           <Divider sx={{ mb: 4 }} />
 
-          {/* Posts */}
           <Box sx={{ display: "flex", flexDirection: "column", gap: 4 }}>
             {posts
               .filter((i) => {
@@ -157,144 +117,22 @@ export default function HomePage() {
                 return i.tags.find((i_) => i_ === activeTagTab);
               })
               .map((post, index) => (
-                <Paper
-                  key={index}
-                  elevation={3}
-                  sx={{
-                    padding: 3,
-                    borderRadius: 2,
-                    backgroundColor: "#fff",
-                  }}
-                >
-                  {/* Post Header */}
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      mb: 2,
-                    }}
-                  >
-                    <Avatar sx={{ mr: 2 }}>
-                      <AccountCircleIcon />
-                    </Avatar>
-
-                    <Box>
-                      <Link
-                        href={`/user?username=${post.user.username}`}
-                        underline="hover"
-                        color="text.primary"
-                        variant="subtitle1"
-                        fontWeight="bold"
-                      >
-                        {post.user.firstname + " " + post.user.lastname}
-                      </Link>
-                      <Typography variant="body2" color="text.secondary">
-                        {post.user.description}
-                      </Typography>
-                    </Box>
-                  </Box>
-                  {/* Post Content */}
-                  <Link
-                    href={`/post?id=${post._id}`}
-                    underline="none"
-                    color="inherit"
-                    sx={{
-                      display: "flex",
-                      flexDirection: { xs: "column", sm: "row" },
-                      gap: 2,
-                      mb: 2,
-                    }}
-                  >
-                    <Box
-                      component="img"
-                      src={
-                        post.thumbnailId
-                          ? `http://localhost:5000/image/${post.thumbnailId}`
-                          : placeHolderThumbnail
-                      }
-                      alt={post.title}
-                      sx={{
-                        width: { xs: "100%", sm: "200px" },
-                        height: "auto",
-                        borderRadius: 2,
-                        objectFit: "cover",
-                      }}
-                    />
-                    <Box>
-                      <Typography variant="h6" gutterBottom>
-                        {post.title}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{
-                          mt: 1,
-                          display: "-webkit-box",
-                          overflow: "hidden",
-                          WebkitBoxOrient: "vertical",
-                          WebkitLineClamp: 2, // Limit to 2 lines of text
-                        }}
-                      >
-                        {post.content}
-                      </Typography>
-                    </Box>
-                  </Link>
-
-                  {/* Post Footer */}
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Box sx={{ display: "flex", gap: 1 }}>
-                      <Tooltip title={`${post.likedCount} likes`} arrow>
-                        <IconButton
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 0.5,
-                          }}
-                        >
-                          <FavoriteIcon color="error" />
-                          <Typography sx={{ fontSize: "1rem", mt: 0.1 }}>
-                            {" " + post.likedCount}
-                          </Typography>
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title={`${post.commentCount} comments`} arrow>
-                        <IconButton
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <ChatIcon color="primary" />{" "}
-                          <Typography sx={{ fontSize: "1rem", mt: 0.1 }}>
-                            {" " + post.likedCount}
-                          </Typography>
-                        </IconButton>
-                      </Tooltip>
-                    </Box>
-                    <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-                      {post.tags.map((tag, idx) => (
-                        <Chip
-                          key={idx}
-                          label={tag}
-                          component="a"
-                          href={`/tag?name=${tag}`}
-                          clickable
-                          variant="outlined"
-                          color="primary"
-                          size="small"
-                        />
-                      ))}
-                    </Box>
-                  </Box>
-                </Paper>
+                <PostCard post={post} key={index} />
               ))}
+            {totalPageCount > 1 && (
+              <Pagination
+                count={totalPageCount}
+                shape="rounded"
+                sx={{ alignSelf: "center" }}
+                showLastButton
+                showFirstButton
+                //@ts-expect-error i only need the second argument
+                onChange={(e: ChangeEvent<unknown>, v: number) => setPage(v)}
+              />
+            )}
           </Box>
         </Box>
 
-        {/* Sidebar */}
         <Box
           sx={{
             width: { xs: "100%", md: "300px" },
@@ -305,11 +143,7 @@ export default function HomePage() {
             mt: { xs: 4, md: 0 },
           }}
         >
-          {/* Recommended Topics */}
-          <Paper
-            elevation={3}
-            sx={{ padding: 3, borderRadius: 2, backgroundColor: "#fff" }}
-          >
+          <Paper elevation={3} sx={{ padding: 3, borderRadius: 2, backgroundColor: "#fff" }}>
             <Typography variant="h6" gutterBottom>
               Recommended Topics
             </Typography>
@@ -329,25 +163,15 @@ export default function HomePage() {
             </Box>
           </Paper>
 
-          {/* Who to Follow */}
-          <Paper
-            elevation={3}
-            sx={{ padding: 3, borderRadius: 2, backgroundColor: "#fff" }}
-          >
+          <Paper elevation={3} sx={{ padding: 3, borderRadius: 2, backgroundColor: "#fff" }}>
             <Typography variant="h6" gutterBottom>
               Who to Follow
             </Typography>
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
               {whoToFollow.map((user, index) => (
-                <Box
-                  key={index}
-                  sx={{ display: "flex", alignItems: "center", gap: 2 }}
-                >
+                <Box key={index} sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                   <Avatar
-                    src={
-                      user.profilePictureId &&
-                      `http://localhost:5000/image/${user.profilePictureId}`
-                    }
+                    src={user.profilePictureId && `http://localhost:5000/image/${user.profilePictureId}`}
                   >
                     {user.firstname.charAt(0)}
                   </Avatar>
@@ -371,6 +195,6 @@ export default function HomePage() {
           </Paper>
         </Box>
       </Box>
-    </Layout1>
+    </AppLayout>
   );
 }

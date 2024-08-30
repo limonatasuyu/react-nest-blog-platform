@@ -2,7 +2,7 @@ import { Model } from 'mongoose';
 import * as mongoose from 'mongoose';
 import { Post } from 'src/schemes/post.schema';
 import { UsersService } from 'src/user/user.service';
-import { GetPostsByTagDTO, GetRecentPostsDTO, CreatePostDTO, DeletePostDTO, UpdatePostDTO } from '../dto/post-dto';
+import { GetPostsDTO, CreatePostDTO, DeletePostDTO, UpdatePostDTO } from '../dto/post-dto';
 import { ImageService } from 'src/image/image.service';
 import { User } from 'src/schemes/user.schema';
 import { TagService } from 'src/tag/tag.service';
@@ -24,8 +24,7 @@ export declare class PostsService {
     likePost(postId: string, user_id: string): Promise<{
         message: string;
     }>;
-    getPostsByTag(dto: GetPostsByTagDTO): Promise<any[]>;
-    getRecentPosts(dto: GetRecentPostsDTO): Promise<any[]>;
+    getPosts(dto: GetPostsDTO): Promise<any>;
     createPost(dto: CreatePostDTO, username: string): Promise<{
         message: string;
     }>;
@@ -35,6 +34,5 @@ export declare class PostsService {
     updatePost(dto: UpdatePostDTO, username: string): Promise<{
         message: string;
     }>;
-    getUsersPosts(username: string): Promise<any[]>;
     getPostById(postId: string, user_id: string): Promise<any>;
 }

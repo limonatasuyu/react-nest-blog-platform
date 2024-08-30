@@ -1,9 +1,9 @@
-import Layout1 from "../Layout1";
+import AppLayout from "../Layouts/AppLayout";
 import { Box, Typography } from "@mui/material";
 
 export default function Loading() {
   return (
-    <Layout1>
+    <AppLayout>
       <Box
         display="flex"
         sx={{
@@ -15,6 +15,6 @@ export default function Loading() {
       >
         <Typography variant="h3">Loading..</Typography>
       </Box>
-    </Layout1>
+    </AppLayout>
   );
 }

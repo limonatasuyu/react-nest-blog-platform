@@ -15,7 +15,7 @@ import { Formik } from "formik";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { useState } from "react";
-import Layout2 from "../Layout2";
+import LoginLayout from "../Layouts/LoginLayout";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import useSnackbar from "../hooks/useSnackbar";
@@ -121,7 +121,7 @@ export default function SignUpPage() {
   }
 
   return (
-    <Layout2>
+    <LoginLayout>
       <img src={logo_white} style={{ marginBottom: "2rem" }} />
       <Formik
         initialValues={{
@@ -291,6 +291,6 @@ export default function SignUpPage() {
           </form>
         )}
       </Formik>
-    </Layout2>
+    </LoginLayout>
   );
 }

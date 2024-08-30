@@ -1,5 +1,5 @@
 import { Box, TextField, Button, Avatar, Paper, Modal, Typography } from "@mui/material";
-import Layout1 from "../Layout1";
+import AppLayout from "../Layouts/AppLayout";
 import { ChangeEvent, useCallback, useEffect, useState } from "react";
 import useSnackbar from "../hooks/useSnackbar";
 import Loading from "../components/Loading";
@@ -31,12 +31,12 @@ function fileToDataUri(file: File) {
   });
 }
 
-export default function ProfilePage({ username }: { username: string }) {
+export default function ProfilePage({ currentUserName }: { currentUserName: string }) {
   const [userInfo, setUserInfo] = useState<{
     email: string;
     firstname: string;
     lastname: string;
-    username: string;
+    currentUserName: string;
     profilePictureId?: string;
   } | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -85,9 +85,9 @@ export default function ProfilePage({ username }: { username: string }) {
   }
 
   const fetchUserInfo = useCallback(() => {
-    if (!username) return;
+    if (!currentUserName) return;
     const token = window.sessionStorage.getItem("access_token");
-    fetch(`http://localhost:5000/user/profile/${username}`, {
+    fetch(`http://localhost:5000/user/profile/${currentUserName}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -112,11 +112,11 @@ export default function ProfilePage({ username }: { username: string }) {
         )
       )
       .finally(() => setLoaded(true));
-  }, [username]);
+  }, [currentUserName]);
 
   useEffect(() => {
     fetchUserInfo();
-  }, [fetchUserInfo, username]);
+  }, [fetchUserInfo, currentUserName]);
 
   async function handleImageUpload(image: File) {
     const formData = new FormData();
@@ -201,7 +201,7 @@ export default function ProfilePage({ username }: { username: string }) {
   if (!loaded) return <Loading />;
 
   return (
-    <Layout1>
+    <AppLayout>
       <Box
         display="flex"
         sx={{
@@ -371,6 +371,6 @@ export default function ProfilePage({ username }: { username: string }) {
           </Box>
         </Modal>
       </Box>
-    </Layout1>
+    </AppLayout>
   );
 }

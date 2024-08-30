@@ -26,7 +26,7 @@ import logo_black from "/logo_black.png";
 import CircleIcon from "@mui/icons-material/Circle";
 import placeHolderThumbnail from "/placeholderThumbnail.jpg";
 
-export default function Layout1({ children }: { children: ReactNode }) {
+export default function AppLayout({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<
     {
       type: "like" | "comment" | "answer" | "follow";

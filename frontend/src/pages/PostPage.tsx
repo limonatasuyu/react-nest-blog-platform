@@ -20,7 +20,7 @@ import {
   ListItemIcon,
   ListItemText,
 } from "@mui/material";
-import Layout1 from "../Layout1";
+import AppLayout from "../Layouts/AppLayout";
 import { useEffect, useState } from "react";
 import Loading from "../components/Loading";
 import useSnackbar from "../hooks/useSnackbar";
@@ -217,7 +217,7 @@ export default function PostPage() {
     const isLiked = !isUserLiked;
     setIsUserLiked(isLiked);
     const token = window.sessionStorage.getItem("access_token");
-    fetch(`http://localhost:5000/posts/${postId}/like`, {
+    fetch(`http://localhost:5000/posts/like/${postId}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => {
@@ -247,7 +247,7 @@ export default function PostPage() {
   if (!post || !postId) return <NotFoundPage />;
 
   return (
-    <Layout1>
+    <AppLayout>
       <Box display="flex" justifyContent="center" mb={3}>
         <Box
           display="flex"
@@ -557,7 +557,7 @@ export default function PostPage() {
           </Grid>
         </Grid>
       </Box>
-    </Layout1>
+    </AppLayout>
   );
 }
 

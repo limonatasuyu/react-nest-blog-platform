@@ -1,37 +1,24 @@
 import { useState, useEffect } from "react";
-import Layout1 from "../Layout1";
-import {
-  Box,
-  Link,
-  Typography,
-  Tooltip,
-  IconButton,
-  Chip,
-} from "@mui/material";
-import FavoriteIcon from "@mui/icons-material/Favorite";
-import ChatIcon from "@mui/icons-material/Chat";
+import AppLayout from "../Layouts/AppLayout";
+import { Box, Link, Typography, Pagination } from "@mui/material";
 import useSnackbar from "../hooks/useSnackbar";
 import placeholderThumbnail from "/placeholderThumbnail.jpg";
 import { SentimentDissatisfied } from "@mui/icons-material";
 import Loading from "../components/Loading";
+import { PostCardMinimal } from "../components/PostCard";
+import { PostData } from "../interfaces";
 
-export default function MyPostsPage() {
-  const [posts, setPosts] = useState<{
-      id: string
-      title: string;
-      content: string;
-      commentCount: number;
-      likedCount: number;
-      thumbnailId?: string;
-      tags: {name: string}[];
-    }[]
-  >([]);
+export default function MyPostsPage({ currentUserName }: { currentUserName: string }) {
+  const [posts, setPosts] = useState<PostData[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPageCount, setTotalPageCount] = useState(1);
   const { setSnackBar } = useSnackbar();
 
   useEffect(() => {
+    if (!currentUserName) return;
     const token = window.sessionStorage.getItem("access_token");
-    fetch("http://localhost:5000/posts/my_posts", {
+    fetch(`http://localhost:5000/posts?page=${page}&username=${currentUserName}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -39,28 +26,22 @@ export default function MyPostsPage() {
       .then(async (res) => {
         const jsonResponse = await res.json();
         if (!res.ok) {
-          setSnackBar(
-            jsonResponse.message ??
-              "Something went wrong, please try again later",
-            "error"
-          );
+          setSnackBar(jsonResponse.message ?? "Something went wrong, please try again later", "error");
           return;
         }
-        setPosts(jsonResponse);
+        setPosts(jsonResponse.paginatedResults);
+        setTotalPageCount(jsonResponse.totalPageCount);
       })
       .catch((err) => {
-        setSnackBar(
-          err.message ?? "Something went wrong, please try again later",
-          "error"
-        );
+        setSnackBar(err.message ?? "Something went wrong, please try again later", "error");
       })
       .finally(() => setLoaded(true));
-  }, []);
+  }, [currentUserName]);
 
   if (!loaded) return <Loading />;
 
   return (
-    <Layout1>
+    <AppLayout>
       <Box
         sx={{
           width: "100%",
@@ -68,101 +49,15 @@ export default function MyPostsPage() {
           mx: "auto",
           mt: 8,
           px: 2,
+          display: "flex",
+          flexDirection: "column",
         }}
       >
         <Typography variant="h4" align="center" gutterBottom>
           Your Posts
         </Typography>
         {posts.length ? (
-          posts.map((post, index) => (
-            <Box
-              key={index}
-              sx={{
-                mb: 4,
-                p: 2,
-                backgroundColor: "background.paper",
-                borderRadius: 2,
-                boxShadow: 1,
-              }}
-            >
-              <Link
-                href={`/post?id=${post.id}`}
-                sx={{ textDecoration: "none", color: "inherit" }}
-              >
-                <Box sx={{ display: "flex", alignItems: "center" }}>
-                  <Box
-                    component="img"
-                    src={
-                      post.thumbnailId
-                        ? `http://localhost:5000/image/${post.thumbnailId}`
-                        : placeholderThumbnail
-                    }
-                    sx={{
-                      width: "100px",
-                      height: "100px",
-                      borderRadius: 1,
-                      mr: 2,
-                      objectFit: "cover",
-                    }}
-                    alt="Post thumbnail"
-                  />
-                  <Box>
-                    <Typography variant="h6">{post.title}</Typography>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{
-                        mt: 1,
-                        display: "-webkit-box",
-                        overflow: "hidden",
-                        WebkitBoxOrient: "vertical",
-                        WebkitLineClamp: 2, // Limit to 2 lines of text
-                      }}
-                    >
-                      {post.content}
-                    </Typography>
-                  </Box>
-                </Box>
-              </Link>
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  mt: 2,
-                }}
-              >
-                <Box sx={{ display: "flex", gap: 2 }}>
-                  <Tooltip title={`${post.likedCount} likes`} arrow>
-                    <IconButton disableRipple>
-                      <FavoriteIcon color="primary" sx={{ mr: 1 }} />
-                      {post.likedCount}
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title={`${post.commentCount} comments`} arrow>
-                    <IconButton disableRipple>
-                      <ChatIcon color="primary" sx={{ mr: 1 }} />
-                      {post.commentCount}
-                    </IconButton>
-                  </Tooltip>
-                </Box>
-                <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-                  {post.tags.map((tag, tagIndex) => (
-                    <Chip
-                      key={tagIndex}
-                      label={tag.name}
-                      component="a"
-                      href={`/tag?name=${tag.name}`}
-                      clickable
-                      variant="outlined"
-                      color="primary"
-                      size="small"
-                    />
-                  ))}
-                </Box>
-              </Box>
-            </Box>
-          ))
+          posts.map((post, index) => <PostCardMinimal post={post} key={index} />)
         ) : (
           <Box
             display="flex"
@@ -175,13 +70,11 @@ export default function MyPostsPage() {
               borderRadius: 2,
               color: "gray",
               backgroundColor: "#c9c9c9",
-              py: 2
+              py: 2,
             }}
           >
             <SentimentDissatisfied sx={{ fontSize: "inherit" }} />
-            <Typography sx={{ fontSize: "inheriinheritt" }}>
-              No articles found.
-            </Typography>
+            <Typography sx={{ fontSize: "inheriinheritt" }}>No articles found.</Typography>
           </Box>
         )}
         <Box
@@ -193,10 +86,7 @@ export default function MyPostsPage() {
             boxShadow: 1,
           }}
         >
-          <Link
-            href="/create_post"
-            sx={{ textDecoration: "none", color: "inherit" }}
-          >
+          <Link href="/create_post" sx={{ textDecoration: "none", color: "inherit" }}>
             <Box sx={{ display: "flex", alignItems: "center" }}>
               <Box
                 component="img"
@@ -229,7 +119,19 @@ export default function MyPostsPage() {
             </Box>
           </Link>
         </Box>
+
+        {totalPageCount > 1 && (
+          <Pagination
+            count={totalPageCount}
+            sx={{ alignSelf: "center" }}
+            showLastButton
+            showFirstButton
+            shape="rounded"
+            //@ts-expect-error i only need the second argument
+            onChange={(e, v) => setPage(v)}
+          />
+        )}
       </Box>
-    </Layout1>
+    </AppLayout>
   );
 }
