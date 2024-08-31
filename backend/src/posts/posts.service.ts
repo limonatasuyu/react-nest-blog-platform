@@ -145,7 +145,7 @@ export class PostsService {
       { $unwind: '$user' },
       {
         $facet: {
-          paginatedResults: [
+          posts: [
             {
               $project: {
                 id: 1,

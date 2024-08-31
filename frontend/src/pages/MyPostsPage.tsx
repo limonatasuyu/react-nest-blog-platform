@@ -1,44 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import AppLayout from "../Layouts/AppLayout";
 import { Box, Link, Typography, Pagination } from "@mui/material";
-import useSnackbar from "../hooks/useSnackbar";
 import placeholderThumbnail from "/placeholderThumbnail.jpg";
 import { SentimentDissatisfied } from "@mui/icons-material";
 import Loading from "../components/Loading";
 import { PostCardMinimal } from "../components/PostCard";
-import { PostData } from "../interfaces";
+import usePosts from "../hooks/usePosts";
 
 export default function MyPostsPage({ currentUserName }: { currentUserName: string }) {
-  const [posts, setPosts] = useState<PostData[]>([]);
-  const [loaded, setLoaded] = useState(false);
+  
   const [page, setPage] = useState(1);
-  const [totalPageCount, setTotalPageCount] = useState(1);
-  const { setSnackBar } = useSnackbar();
+  const { postsData, loading, error } = usePosts({page, username: currentUserName})
 
-  useEffect(() => {
-    if (!currentUserName) return;
-    const token = window.sessionStorage.getItem("access_token");
-    fetch(`http://localhost:5000/posts?page=${page}&username=${currentUserName}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then(async (res) => {
-        const jsonResponse = await res.json();
-        if (!res.ok) {
-          setSnackBar(jsonResponse.message ?? "Something went wrong, please try again later", "error");
-          return;
-        }
-        setPosts(jsonResponse.paginatedResults);
-        setTotalPageCount(jsonResponse.totalPageCount);
-      })
-      .catch((err) => {
-        setSnackBar(err.message ?? "Something went wrong, please try again later", "error");
-      })
-      .finally(() => setLoaded(true));
-  }, [currentUserName]);
-
-  if (!loaded) return <Loading />;
+  //if (!currentUserName || error) return <ErrorPage />
+  if (loading) return <Loading />;
 
   return (
     <AppLayout>
@@ -56,8 +31,8 @@ export default function MyPostsPage({ currentUserName }: { currentUserName: stri
         <Typography variant="h4" align="center" gutterBottom>
           Your Posts
         </Typography>
-        {posts.length ? (
-          posts.map((post, index) => <PostCardMinimal post={post} key={index} />)
+        {postsData.posts.length ? (
+          postsData.posts.map((post, index) => <PostCardMinimal post={post} key={index} />)
         ) : (
           <Box
             display="flex"
@@ -120,9 +95,9 @@ export default function MyPostsPage({ currentUserName }: { currentUserName: stri
           </Link>
         </Box>
 
-        {totalPageCount > 1 && (
+        {postsData.totalPageCount > 1 && (
           <Pagination
-            count={totalPageCount}
+            count={postsData.totalPageCount}
             sx={{ alignSelf: "center" }}
             showLastButton
             showFirstButton

@@ -1,18 +1,13 @@
 import { useState, useEffect, ChangeEvent } from "react";
 import { Box, Typography, Divider, Button, Link, Chip, Avatar, Paper, Pagination } from "@mui/material";
 import AppLayout from "../Layouts/AppLayout";
-import useSnackbar from "../hooks/useSnackbar";
-import { PostData } from "../interfaces";
 import PostCard from "../components/PostCard";
+import usePosts from "../hooks/usePosts";
 
 export default function HomePage() {
   const [activeTagTab, setActiveTagTab] = useState("All");
   const [page, setPage] = useState(1);
-  const [totalPageCount, setTotalPageCount] = useState(1);
-
-  const [posts, setPosts] = useState<PostData[]>([]);
   const [tags, setTags] = useState<{ name: string }[]>([]);
-  const [loaded, setLoaded] = useState(false);
   const [whoToFollow, setWhoToFollow] = useState<
     {
       username: string;
@@ -22,29 +17,10 @@ export default function HomePage() {
       profilePictureId?: string;
     }[]
   >([]);
-  const { setSnackBar } = useSnackbar();
+  //const { setSnackBar } = useSnackbar();
+  const { postsData, loading, error } = usePosts({ page });
 
   useEffect(() => {
-    const token = window.sessionStorage.getItem("access_token");
-    fetch(`http://localhost:5000/posts?page=${page}&tag=${activeTagTab}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then(async (res) => {
-        const jsonResponse = await res.json();
-        if (!res.ok) {
-          setSnackBar(jsonResponse.message ?? "Something went wrong, please try again later", "error");
-          return;
-        }
-        setPosts(jsonResponse.paginatedResults);
-        setTotalPageCount(jsonResponse.totalPageCount);
-      })
-      .catch((err) => {
-        setSnackBar(err.message ?? "Something went wrong, please try again later", "error");
-      })
-      .finally(() => setLoaded(true));
-
     fetch("http://localhost:5000/tag").then((res) => {
       if (res.ok) {
         res.json().then((result) => setTags(result));
@@ -58,7 +34,7 @@ export default function HomePage() {
     });
   }, [page, activeTagTab]);
 
-  if (!loaded) {
+  if (loading) {
     return (
       <AppLayout>
         <Box
@@ -111,7 +87,7 @@ export default function HomePage() {
           <Divider sx={{ mb: 4 }} />
 
           <Box sx={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            {posts
+            {postsData.posts
               .filter((i) => {
                 if (activeTagTab === "All") return true;
                 return i.tags.find((i_) => i_ === activeTagTab);
@@ -119,9 +95,9 @@ export default function HomePage() {
               .map((post, index) => (
                 <PostCard post={post} key={index} />
               ))}
-            {totalPageCount > 1 && (
+            {postsData.totalPageCount > 1 && (
               <Pagination
-                count={totalPageCount}
+                count={postsData.totalPageCount}
                 shape="rounded"
                 sx={{ alignSelf: "center" }}
                 showLastButton

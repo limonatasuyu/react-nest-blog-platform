@@ -14,6 +14,7 @@ import PostPage from "./pages/PostPage";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
 import TagPage from "./pages/TagPage";
 import UserPage from "./pages/UserPage";
+import { StateProvider } from "./context/StateProvider";
 
 const routes: { [key: string]: React.FC<{ currentUserName?: string }> } = {
   "/": HomePage,
@@ -40,7 +41,10 @@ function App() {
   const checkAccessToken = useCallback(async () => {
     const token = window.sessionStorage.getItem("access_token");
     if (!token) {
-      if (["/login", "/signup", "/forget_password", "/activate"].includes(route)) return;
+      if (
+        ["/login", "/signup", "/forget_password", "/activate"].includes(route)
+      )
+        return;
       setRoute("/login");
       return;
     }
@@ -50,7 +54,10 @@ function App() {
     });
 
     if (!response.ok) {
-      if (["/login", "/signup", "/forget_password", "/activate"].includes(route)) return;
+      if (
+        ["/login", "/signup", "/forget_password", "/activate"].includes(route)
+      )
+        return;
       setRoute("/login");
       return;
     }
@@ -58,7 +65,9 @@ function App() {
     const jsonResponse = await response.json();
     setUserInfo(jsonResponse);
 
-    if (["/login", "/signup", "/forget_password", "/activate"].includes(route)) {
+    if (
+      ["/login", "/signup", "/forget_password", "/activate"].includes(route)
+    ) {
       setRoute("/");
     }
   }, [route]);
@@ -94,11 +103,11 @@ function App() {
   }
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <SnackbarProvider>
-        {renderPage()}
-      </SnackbarProvider>
-    </LocalizationProvider>
+    <StateProvider>
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <SnackbarProvider>{renderPage()}</SnackbarProvider>
+      </LocalizationProvider>
+    </StateProvider>
   );
 }
 

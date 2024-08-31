@@ -5,7 +5,7 @@ import { Box, Avatar, Typography, Pagination, Grid } from "@mui/material";
 import useSnackbar from "../hooks/useSnackbar";
 import { SentimentDissatisfied } from "@mui/icons-material";
 import PostCard from "../components/PostCard";
-import { PostData } from "../interfaces";
+import usePosts from "../hooks/usePosts";
 
 export default function UserPage({ currentUserName }: { currentUserName: string }) {
   const params = new URL(document.location.toString()).searchParams;
@@ -20,9 +20,9 @@ export default function UserPage({ currentUserName }: { currentUserName: string 
     profilePictureId?: string;
   } | null>(null);
   const { setSnackBar } = useSnackbar();
-  const [posts, setPosts] = useState<PostData[]>([]);
   const [page, setPage] = useState(1);
-  const [totalPageCount, setTotalPageCount] = useState(1);
+  const { postsData, loading, error } = usePosts({ page, userName });
+
 
   useEffect(() => {
     if (userName === currentUserName) {
@@ -47,30 +47,8 @@ export default function UserPage({ currentUserName }: { currentUserName: string 
       });
   }, [userName, currentUserName]);
 
-  useEffect(() => {
-    const token = window.sessionStorage.getItem("access_token");
-    fetch(`http://localhost:5000/posts?page=${page}&username=${userName}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then(async (res) => {
-        const jsonResponse = await res.json();
-        if (!res.ok) {
-          setSnackBar(jsonResponse.message ?? "Something went wrong, please try again later", "error");
-          return;
-        }
-        setPosts(jsonResponse.paginatedResults);
-        setTotalPageCount(jsonResponse.totalPageCount);
-      })
-      .catch((err) => {
-        setSnackBar(err.message ?? "Something went wrong, please try again later", "error");
-      });
-  }, [userName, page]);
+  if (!isInfoSet || loading) return <Loading />;
 
-  if (!isInfoSet) {
-    return <Loading />;
-  }
   return (
     <AppLayout>
       <Box
@@ -135,8 +113,8 @@ export default function UserPage({ currentUserName }: { currentUserName: string 
             <Typography variant="h5">Posts</Typography>
           </Box>
           <Grid container spacing={4} sx={{ rowGap: 4 }}>
-            {posts?.length ? (
-              posts.map((post, index) => <PostCard post={post} key={index} />)
+            {postsData.posts.length ? (
+              postsData.posts.map((post, index) => <PostCard post={post} key={index} />)
             ) : (
               <Box
                 display="flex"
@@ -156,9 +134,9 @@ export default function UserPage({ currentUserName }: { currentUserName: string 
                 <Typography sx={{ fontSize: "inheriinheritt" }}>No articles found.</Typography>
               </Box>
             )}
-            {totalPageCount > 1 && (
+            {postsData.totalPageCount > 1 && (
               <Pagination
-                count={totalPageCount}
+                count={postsData.totalPageCount}
                 showLastButton
                 showFirstButton
                 shape="rounded"

@@ -1,46 +1,22 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import AppLayout from "../Layouts/AppLayout";
 import { Box, Link, Typography, Pagination } from "@mui/material";
-import useSnackbar from "../hooks/useSnackbar";
 import placeholderThumbnail from "/placeholderThumbnail.jpg";
 import { SentimentDissatisfied } from "@mui/icons-material";
 import Loading from "../components/Loading";
 import PostCard from "../components/PostCard";
-import { PostData } from "../interfaces";
+import usePosts from "../hooks/usePosts";
 
-export default function MyPostsPage() {
+export default function TagPage() {
   const params = new URL(document.location.toString()).searchParams;
   const tagName = params.get("name");
 
-  const [posts, setPosts] = useState<PostData[]>([]);
-  const [loaded, setLoaded] = useState(false);
-  const [totalPageCount, setTotalPageCount] = useState(1);
   const [page, setPage] = useState(1);
-  const { setSnackBar } = useSnackbar();
 
-  useEffect(() => {
-    const token = window.sessionStorage.getItem("access_token");
-    fetch(`http://localhost:5000/posts?tag=${tagName}&page=${page}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then(async (res) => {
-        const jsonResponse = await res.json();
-        if (!res.ok) {
-          setSnackBar(jsonResponse.message ?? "Something went wrong, please try again later", "error");
-          return;
-        }
-        setPosts(jsonResponse.paginatedResults);
-        setTotalPageCount(jsonResponse.totalPageCount);
-      })
-      .catch((err) => {
-        setSnackBar(err.message ?? "Something went wrong, please try again later", "error");
-      })
-      .finally(() => setLoaded(true));
-  }, []);
+  const { postsData, loading, error } = usePosts({ page, tag: tagName })
 
-  if (!loaded) return <Loading />;
+  //if (!tagName || error) return <ErroPage />
+  if (loading) return <Loading />;
 
   return (
     <AppLayout>
@@ -53,13 +29,14 @@ export default function MyPostsPage() {
           px: 2,
           display: "flex",
           flexDirection: "column",
+          gap: 2,
         }}
       >
         <Typography variant="h4" align="center" gutterBottom sx={{ textTransform: "capitalize" }}>
           {tagName} Posts
         </Typography>
-        {posts.length ? (
-          posts.map((post, index) => <PostCard post={post} key={index} />)
+        {postsData.posts.length ? (
+          postsData.posts.map((post, index) => <PostCard post={post} key={index} />)
         ) : (
           <Box
             display="flex"
@@ -86,6 +63,7 @@ export default function MyPostsPage() {
             backgroundColor: "background.paper",
             borderRadius: 2,
             boxShadow: 1,
+            width: "102%",
           }}
         >
           <Link href={`/create_post?tag=${tagName}`} sx={{ textDecoration: "none", color: "inherit" }}>
@@ -121,9 +99,9 @@ export default function MyPostsPage() {
             </Box>
           </Link>
         </Box>
-        {totalPageCount > 1 && (
+        {postsData.totalPageCount > 1 && (
           <Pagination
-            count={totalPageCount}
+            count={postsData.totalPageCount}
             sx={{ alignSelf: "center" }}
             showLastButton
             showFirstButton
