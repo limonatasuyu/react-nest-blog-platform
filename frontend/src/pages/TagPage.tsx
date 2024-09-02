@@ -1,13 +1,14 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 import AppLayout from "../Layouts/AppLayout";
-import { Box, Link, Typography, Pagination } from "@mui/material";
+import { Box, Typography, Pagination } from "@mui/material";
 import placeholderThumbnail from "/placeholderThumbnail.jpg";
 import { SentimentDissatisfied } from "@mui/icons-material";
 import Loading from "../components/Loading";
 import PostCard from "../components/PostCard";
 import usePosts from "../hooks/usePosts";
+import CustomLink from "../components/CustomLink";
 
-export default function TagPage() {
+const Tagpage = memo(() => {
   const params = new URL(document.location.toString()).searchParams;
   const tagName = params.get("name");
 
@@ -66,7 +67,7 @@ export default function TagPage() {
             width: "102%",
           }}
         >
-          <Link href={`/create_post?tag=${tagName}`} sx={{ textDecoration: "none", color: "inherit" }}>
+          <CustomLink to={`/create_post?tag=${tagName}`} sx={{ textDecoration: "none", color: "inherit" }}>
             <Box sx={{ display: "flex", alignItems: "center" }}>
               <Box
                 component="img"
@@ -97,7 +98,7 @@ export default function TagPage() {
                 </Typography>
               </Box>
             </Box>
-          </Link>
+          </CustomLink>
         </Box>
         {postsData.totalPageCount > 1 && (
           <Pagination
@@ -106,6 +107,7 @@ export default function TagPage() {
             showLastButton
             showFirstButton
             shape="rounded"
+            page={page}
             //@ts-expect-error i only need the second argument
             onChange={(e, v) => setPage(v)}
           />
@@ -113,4 +115,6 @@ export default function TagPage() {
       </Box>
     </AppLayout>
   );
-}
+})
+
+export default Tagpage

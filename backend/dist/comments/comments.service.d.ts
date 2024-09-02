@@ -21,5 +21,8 @@ export declare class CommentsService {
     likeComment(commentId: string, user_id: string): Promise<{
         message: string;
     }>;
-    getByPage(page: number, commentIds: string[]): Promise<any[]>;
+    getAnswers(page: number, commentId: string): Promise<(mongoose.Document<unknown, {}, Comment> & Comment & Required<{
+        _id: mongoose.Schema.Types.ObjectId;
+    }>)[]>;
+    getByPostId(page: number, postId: string): Promise<any>;
 }

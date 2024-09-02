@@ -17,6 +17,7 @@ export declare class User {
     posts: Post[];
     description: string;
     passwordLastUpdatedAt: Date;
+    followers: User[];
 }
 export declare const UserSchema: mongoose.Schema<User, mongoose.Model<User, any, any, any, mongoose.Document<unknown, any, User> & User & Required<{
     _id: mongoose.Schema.Types.ObjectId;

@@ -8,6 +8,7 @@ import {
   ActivationCodeSchema,
 } from 'src/schemes/activationCode.schema';
 import { ImageModule } from 'src/image/image.module';
+import { NotificationModule } from 'src/notification/notification.module';
 
 @Module({
   imports: [
@@ -15,7 +16,8 @@ import { ImageModule } from 'src/image/image.module';
       { name: User.name, schema: UserSchema },
       { name: ActivationCode.name, schema: ActivationCodeSchema },
     ]),
-    ImageModule
+    ImageModule,
+    NotificationModule,
   ],
   controllers: [UserModuleController],
   providers: [UsersService],

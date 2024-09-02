@@ -46,6 +46,7 @@ export class NotificationService {
   ) {}
 
   async createNotification(dto: CreateNotificationDTO) {
+    console.log('dto: ', dto);
     if (dto.createdBy === dto.createdFor) return;
 
     const filter = {
@@ -88,6 +89,7 @@ export class NotificationService {
       options,
     );
 
+    console.log('result: ', result);
     if (!result) {
       throw new InternalServerErrorException();
     }
@@ -174,15 +176,19 @@ export class NotificationService {
     }> = new Map();
 
     const followNotifications: {
-      firstname: string;
-      lastname: string;
-      username: string;
+      id: string;
+      lastPerson: {
+        firstname: string;
+        lastname: string;
+        profilePictureId?: string;
+      };
       profilePictureId?: string;
       notificationId: string;
       isLookedAt: boolean;
       isSeen: boolean;
       targetHref: string;
       passedTime: string;
+      type: 'follow';
     }[] = [];
 
     notifications.forEach((i) => {
@@ -199,13 +205,14 @@ export class NotificationService {
 
       if (type === 'follow') {
         followNotifications.push({
-          ...lastPerson,
-          username: i.createdBy.username,
+          id: String(i._id),
+          lastPerson,
           isLookedAt,
           notificationId,
           isSeen,
-          targetHref: `/user?id=${String(i.createdBy)}`,
+          targetHref: `/user?username=${String(i.createdBy.username)}`,
           passedTime,
+          type,
         });
         return;
       }

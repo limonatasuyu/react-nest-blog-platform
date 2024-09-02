@@ -48,6 +48,9 @@ export class User {
 
   @Prop()
   passwordLastUpdatedAt: Date;
+
+  @Prop({ required: true, type: [mongoose.Schema.Types.ObjectId], ref: 'User' })
+  followers: User[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

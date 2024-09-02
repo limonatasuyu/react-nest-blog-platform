@@ -1,4 +1,12 @@
-import { Paper, Box, Avatar, Link, Typography, Tooltip, IconButton, Chip } from "@mui/material";
+import {
+  Paper,
+  Box,
+  Avatar,
+  Typography,
+  Tooltip,
+  IconButton,
+  Chip,
+} from "@mui/material";
 import {
   AccountCircle as AccountCircleIcon,
   Favorite as FavoriteIcon,
@@ -6,6 +14,7 @@ import {
 } from "@mui/icons-material";
 import placeHolderThumbnail from "/placeholderThumbnail.jpg";
 import { PostData } from "../interfaces";
+import CustomLink from "./CustomLink";
 
 export default function PostCard({ post }: { post: PostData }) {
   return (
@@ -15,7 +24,7 @@ export default function PostCard({ post }: { post: PostData }) {
         padding: 3,
         borderRadius: 2,
         backgroundColor: "#fff",
-        width: "100%"
+        width: "100%",
       }}
     >
       {/* Post Header */}
@@ -31,23 +40,23 @@ export default function PostCard({ post }: { post: PostData }) {
         </Avatar>
 
         <Box>
-          <Link
-            href={`/user?username=${post.user.username}`}
+          <CustomLink
+            to={`/user?username=${post.user.username}`}
             underline="hover"
             color="text.primary"
             variant="subtitle1"
             fontWeight="bold"
           >
             {post.user.firstname + " " + post.user.lastname}
-          </Link>
+          </CustomLink>
           <Typography variant="body2" color="text.secondary">
             {post.user.description}
           </Typography>
         </Box>
       </Box>
       {/* Post Content */}
-      <Link
-        href={`/post?id=${post._id}`}
+      <CustomLink
+        to={`/post?id=${post._id}`}
         underline="none"
         color="inherit"
         sx={{
@@ -59,7 +68,11 @@ export default function PostCard({ post }: { post: PostData }) {
       >
         <Box
           component="img"
-          src={post.thumbnailId ? `http://localhost:5000/image/${post.thumbnailId}` : placeHolderThumbnail}
+          src={
+            post.thumbnailId
+              ? `http://localhost:5000/image/${post.thumbnailId}`
+              : placeHolderThumbnail
+          }
           alt={post.title}
           sx={{
             width: { xs: "100%", sm: "200px" },
@@ -86,7 +99,7 @@ export default function PostCard({ post }: { post: PostData }) {
             {post.content}
           </Typography>
         </Box>
-      </Link>
+      </CustomLink>
 
       {/* Post Footer */}
       <Box
@@ -106,28 +119,31 @@ export default function PostCard({ post }: { post: PostData }) {
               }}
             >
               <FavoriteIcon color="error" />
-              <Typography sx={{ fontSize: "1rem", mt: 0.1 }}>{" " + post.likedCount}</Typography>
+              <Typography sx={{ fontSize: "1rem", mt: 0.1 }}>
+                {" " + post.likedCount}
+              </Typography>
             </IconButton>
           </Tooltip>
           <Tooltip title={`${post.commentCount} comments`} arrow>
             <IconButton sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <ChatIcon color="primary" />{" "}
-              <Typography sx={{ fontSize: "1rem", mt: 0.1 }}>{" " + post.likedCount}</Typography>
+              <Typography sx={{ fontSize: "1rem", mt: 0.1 }}>
+                {" " + post.likedCount}
+              </Typography>
             </IconButton>
           </Tooltip>
         </Box>
         <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
           {post.tags.map((tag, idx) => (
-            <Chip
-              key={idx}
-              label={tag}
-              component="a"
-              href={`/tag?name=${tag}`}
-              clickable
-              variant="outlined"
-              color="primary"
-              size="small"
-            />
+            <CustomLink to={`/tag?name=${tag}`} key={idx}>
+              <Chip
+                label={tag}
+                clickable
+                variant="outlined"
+                color="primary"
+                size="small"
+              />
+            </CustomLink>
           ))}
         </Box>
       </Box>
@@ -146,11 +162,18 @@ export function PostCardMinimal({ post }: { post: PostData }) {
         boxShadow: 1,
       }}
     >
-      <Link href={`/post?id=${post._id}`} sx={{ textDecoration: "none", color: "inherit" }}>
+      <CustomLink
+        to={`/post?id=${post._id}`}
+        sx={{ textDecoration: "none", color: "inherit" }}
+      >
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <Box
             component="img"
-            src={post.thumbnailId ? `http://localhost:5000/image/${post.thumbnailId}` : placeHolderThumbnail}
+            src={
+              post.thumbnailId
+                ? `http://localhost:5000/image/${post.thumbnailId}`
+                : placeHolderThumbnail
+            }
             sx={{
               width: "100px",
               height: "100px",
@@ -177,7 +200,7 @@ export function PostCardMinimal({ post }: { post: PostData }) {
             </Typography>
           </Box>
         </Box>
-      </Link>
+      </CustomLink>
       <Box
         sx={{
           display: "flex",
@@ -202,16 +225,15 @@ export function PostCardMinimal({ post }: { post: PostData }) {
         </Box>
         <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
           {post.tags.map((tag, tagIndex) => (
-            <Chip
-              key={tagIndex}
-              label={tag}
-              component="a"
-              href={`/tag?name=${tag}`}
-              clickable
-              variant="outlined"
-              color="primary"
-              size="small"
-            />
+            <CustomLink to={`/tag?name=${tag}`} key={tagIndex}>
+              <Chip
+                label={tag}
+                clickable
+                variant="outlined"
+                color="primary"
+                size="small"
+              />
+            </CustomLink>
           ))}
         </Box>
       </Box>

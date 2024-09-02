@@ -11,6 +11,7 @@ export declare class Comment {
     createdAt: Date;
     likedBy: User[];
     post: Post;
+    answers: Comment[];
 }
 export declare const CommentSchema: mongoose.Schema<Comment, mongoose.Model<Comment, any, any, any, mongoose.Document<unknown, any, Comment> & Comment & Required<{
     _id: mongoose.Schema.Types.ObjectId;

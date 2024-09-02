@@ -8,7 +8,6 @@ import {
   OutlinedInput,
   IconButton,
   FormHelperText,
-  Link,
 } from "@mui/material";
 import logo_white from "/logo_white.png";
 import { Formik } from "formik";
@@ -17,6 +16,7 @@ import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { useState } from "react";
 import LoginLayout from "../Layouts/LoginLayout";
 import useSnackbar from "../hooks/useSnackbar";
+import CustomLink from "../components/CustomLink";
 
 export default function LoginPage() {
   const { setSnackBar } = useSnackbar();
@@ -152,7 +152,7 @@ export default function LoginPage() {
                 {touched.password && errors.password}
               </FormHelperText>
             </FormControl>
-            <Link href="/forget_password">Did you forget your password ?</Link>
+            <CustomLink to="/forget_password">Did you forget your password ?</CustomLink>
             <Box
               display="flex"
               sx={{ gap: 2, justifyContent: "center", mt: 2 }}
@@ -165,9 +165,11 @@ export default function LoginPage() {
               >
                 Login
               </Button>
-              <Button href="/signup" variant="contained">
-                Signup
-              </Button>
+              <CustomLink to="/signup">
+                <Button variant="contained">
+                  Signup
+                </Button>
+              </CustomLink>
             </Box>
           </form>
         )}

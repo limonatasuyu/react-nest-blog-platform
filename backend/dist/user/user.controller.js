@@ -20,10 +20,10 @@ let UserModuleController = class UserModuleController {
     constructor(usersService) {
         this.usersService = usersService;
     }
-    async getRecommendedUsers() {
-        return this.usersService.getRecommendedUsers();
+    async followUser(req, username) {
+        return await this.usersService.follow(username, req.user.sub);
     }
-    async getUser(username) {
+    async getUser(req, username) {
         const user = await this.usersService.findOne(username);
         return {
             username: user.username,
@@ -32,6 +32,7 @@ let UserModuleController = class UserModuleController {
             description: user.description,
             email: user.email,
             profilePictureId: user.profilePictureId,
+            isUserFollowing: Boolean(user.followers.find((i) => String(i._id) === req.user.sub)),
         };
     }
     async create(dto) {
@@ -52,16 +53,21 @@ let UserModuleController = class UserModuleController {
 };
 exports.UserModuleController = UserModuleController;
 __decorate([
-    (0, common_1.Get)('recommended'),
+    (0, common_1.UseGuards)(user_guard_1.UserGuard),
+    (0, common_1.Get)('follow/:username'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('username')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
-], UserModuleController.prototype, "getRecommendedUsers", null);
+], UserModuleController.prototype, "followUser", null);
 __decorate([
+    (0, common_1.UseGuards)(user_guard_1.UserGuard),
     (0, common_1.Get)('profile/:username'),
-    __param(0, (0, common_1.Param)('username')),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('username')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], UserModuleController.prototype, "getUser", null);
 __decorate([

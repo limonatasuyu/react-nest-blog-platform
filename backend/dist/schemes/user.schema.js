@@ -71,6 +71,10 @@ __decorate([
     (0, mongoose_1.Prop)(),
     __metadata("design:type", Date)
 ], User.prototype, "passwordLastUpdatedAt", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true, type: [mongoose.Schema.Types.ObjectId], ref: 'User' }),
+    __metadata("design:type", Array)
+], User.prototype, "followers", void 0);
 exports.User = User = __decorate([
     (0, mongoose_1.Schema)()
 ], User);

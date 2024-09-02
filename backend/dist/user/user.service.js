@@ -23,6 +23,7 @@ const promises_1 = require("node:fs/promises");
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
 const image_service_1 = require("../image/image.service");
+const notification_service_1 = require("../notification/notification.service");
 let blocklist;
 async function isDisposable(email) {
     if (!blocklist) {
@@ -63,10 +64,11 @@ async function sendActivationEmail(toEmail, activationCode) {
     });
 }
 let UsersService = class UsersService {
-    constructor(userModel, activationCodeModel, imageService) {
+    constructor(userModel, activationCodeModel, imageService, notificationService) {
         this.userModel = userModel;
         this.activationCodeModel = activationCodeModel;
         this.imageService = imageService;
+        this.notificationService = notificationService;
     }
     async activate(dto) {
         const user = await this.userModel.findOne({
@@ -129,6 +131,7 @@ let UsersService = class UsersService {
             isActivated: false,
             _id: new mongoose.Types.ObjectId(),
             posts: [],
+            followers: [],
         });
         const createdActivationCode = new this.activationCodeModel({
             user_id: createdUser._id,
@@ -229,6 +232,7 @@ let UsersService = class UsersService {
                     lastname: 1,
                     username: 1,
                     description: 1,
+                    profilePictureId: 1,
                 },
             },
         ]);
@@ -236,6 +240,44 @@ let UsersService = class UsersService {
             throw new common_1.InternalServerErrorException();
         }
         return tags;
+    }
+    async follow(userToFollowUsername, followingUserId) {
+        const updatedUser = await this.userModel.findOneAndUpdate({ username: userToFollowUsername }, [
+            {
+                $set: {
+                    followers: {
+                        $cond: {
+                            if: { $in: [followingUserId, '$followers'] },
+                            then: {
+                                $filter: {
+                                    input: '$followers',
+                                    as: 'follower',
+                                    cond: { $ne: ['$$follower', followingUserId] },
+                                },
+                            },
+                            else: { $concatArrays: ['$followers', [followingUserId]] },
+                        },
+                    },
+                },
+            },
+        ], {
+            projection: {
+                _id: 1,
+                isUserFollowing: { $in: [followingUserId, '$followers'] },
+            },
+            new: true,
+        });
+        if (!updatedUser) {
+            throw new common_1.InternalServerErrorException();
+        }
+        if (updatedUser.toObject().isUserFollowing) {
+            await this.notificationService.createNotification({
+                type: 'follow',
+                createdBy: followingUserId,
+                createdFor: String(updatedUser._id),
+            });
+        }
+        return { message: 'operation handled successfully' };
     }
 };
 exports.UsersService = UsersService;
@@ -245,6 +287,7 @@ exports.UsersService = UsersService = __decorate([
     __param(1, (0, mongoose_1.InjectModel)(activationCode_schema_1.ActivationCode.name)),
     __metadata("design:paramtypes", [mongoose_2.Model,
         mongoose_2.Model,
-        image_service_1.ImageService])
+        image_service_1.ImageService,
+        notification_service_1.NotificationService])
 ], UsersService);
 //# sourceMappingURL=user.service.js.map

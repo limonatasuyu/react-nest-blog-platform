@@ -28,7 +28,6 @@ export class Notification {
   updatedAt: Date;
 
   @Prop({
-    required: true,
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Post',
   })

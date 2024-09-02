@@ -20,13 +20,15 @@ import { UserGuard } from './user.guard';
 export class UserModuleController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Get('recommended')
-  async getRecommendedUsers() {
-    return this.usersService.getRecommendedUsers();
+  @UseGuards(UserGuard)
+  @Get('follow/:username')
+  async followUser(@Req() req, @Param('username') username) {
+    return await this.usersService.follow(username, req.user.sub);
   }
 
+  @UseGuards(UserGuard)
   @Get('profile/:username')
-  async getUser(@Param('username') username) {
+  async getUser(@Req() req, @Param('username') username) {
     const user = await this.usersService.findOne(username);
     return {
       username: user.username,
@@ -35,6 +37,9 @@ export class UserModuleController {
       description: user.description,
       email: user.email,
       profilePictureId: user.profilePictureId,
+      isUserFollowing: Boolean(
+        user.followers.find((i) => String(i._id) === req.user.sub),
+      ),
     };
   }
 

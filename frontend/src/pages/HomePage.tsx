@@ -1,38 +1,26 @@
-import { useState, useEffect, ChangeEvent } from "react";
-import { Box, Typography, Divider, Button, Link, Chip, Avatar, Paper, Pagination } from "@mui/material";
+import { useState, ChangeEvent, memo } from "react";
+import {
+  Box,
+  Typography,
+  Divider,
+  Button,
+  Chip,
+  Avatar,
+  Paper,
+  Pagination,
+} from "@mui/material";
 import AppLayout from "../Layouts/AppLayout";
 import PostCard from "../components/PostCard";
 import usePosts from "../hooks/usePosts";
+import CustomLink from "../components/CustomLink";
+import useRecommended from "../hooks/useRecommended";
 
-export default function HomePage() {
+const HomePage = memo(() => {
   const [activeTagTab, setActiveTagTab] = useState("All");
   const [page, setPage] = useState(1);
-  const [tags, setTags] = useState<{ name: string }[]>([]);
-  const [whoToFollow, setWhoToFollow] = useState<
-    {
-      username: string;
-      firstname: string;
-      lastname: string;
-      description?: string;
-      profilePictureId?: string;
-    }[]
-  >([]);
-  //const { setSnackBar } = useSnackbar();
-  const { postsData, loading, error } = usePosts({ page });
-
-  useEffect(() => {
-    fetch("http://localhost:5000/tag").then((res) => {
-      if (res.ok) {
-        res.json().then((result) => setTags(result));
-      }
-    });
-
-    fetch("http://localhost:5000/user/recommended").then((res) => {
-      if (res.ok) {
-        res.json().then((result) => setWhoToFollow(result));
-      }
-    });
-  }, [page, activeTagTab]);
+  const { postsData, loading, error } = usePosts({ page, tag: activeTagTab });
+  const { recommended } = useRecommended()
+  const { tags, users: whoToFollow } = recommended
 
   if (loading) {
     return (
@@ -68,7 +56,10 @@ export default function HomePage() {
             <Button
               variant={activeTagTab === "All" ? "contained" : "outlined"}
               color="primary"
-              onClick={() => setActiveTagTab("All")}
+              onClick={() => {
+                setActiveTagTab("All");
+                setPage(1);
+              }}
             >
               All
             </Button>
@@ -77,7 +68,10 @@ export default function HomePage() {
                 key={index}
                 variant={activeTagTab === tag.name ? "contained" : "outlined"}
                 color="primary"
-                onClick={() => setActiveTagTab(tag.name)}
+                onClick={() => {
+                  setActiveTagTab(tag.name);
+                  setPage(1);
+                }}
               >
                 {tag.name}
               </Button>
@@ -102,6 +96,7 @@ export default function HomePage() {
                 sx={{ alignSelf: "center" }}
                 showLastButton
                 showFirstButton
+                page={page}
                 //@ts-expect-error i only need the second argument
                 onChange={(e: ChangeEvent<unknown>, v: number) => setPage(v)}
               />
@@ -119,48 +114,60 @@ export default function HomePage() {
             mt: { xs: 4, md: 0 },
           }}
         >
-          <Paper elevation={3} sx={{ padding: 3, borderRadius: 2, backgroundColor: "#fff" }}>
+          <Paper
+            elevation={3}
+            sx={{ padding: 3, borderRadius: 2, backgroundColor: "#fff" }}
+          >
             <Typography variant="h6" gutterBottom>
               Recommended Topics
             </Typography>
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
               {tags.map((tag, index) => (
-                <Chip
-                  key={index}
-                  label={tag.name}
-                  component="a"
-                  href={`/tag?name=${tag.name}`}
-                  clickable
-                  variant="outlined"
-                  color="primary"
-                  size="small"
-                />
+                <CustomLink to={`/tag?name=${tag.name}`}>
+                  <Chip
+                    key={index}
+                    label={tag.name}
+                    clickable
+                    variant="outlined"
+                    color="primary"
+                    size="small"
+                  />
+                </CustomLink>
               ))}
             </Box>
           </Paper>
 
-          <Paper elevation={3} sx={{ padding: 3, borderRadius: 2, backgroundColor: "#fff" }}>
+          <Paper
+            elevation={3}
+            sx={{ padding: 3, borderRadius: 2, backgroundColor: "#fff" }}
+          >
             <Typography variant="h6" gutterBottom>
               Who to Follow
             </Typography>
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
               {whoToFollow.map((user, index) => (
-                <Box key={index} sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                <Box
+                  key={index}
+                  sx={{ display: "flex", alignItems: "center", gap: 2 }}
+                >
                   <Avatar
-                    src={user.profilePictureId && `http://localhost:5000/image/${user.profilePictureId}`}
+                    src={
+                      user.profilePictureId &&
+                      `http://localhost:5000/image/${user.profilePictureId}`
+                    }
                   >
                     {user.firstname.charAt(0)}
                   </Avatar>
                   <Box>
-                    <Link
-                      href={`/user?username=${user.username}`}
+                    <CustomLink
+                      to={`/user?username=${user.username}`}
                       underline="hover"
                       color="text.primary"
                       variant="subtitle1"
                       fontWeight="bold"
                     >
                       {user.firstname + " " + user.lastname}
-                    </Link>
+                    </CustomLink>
                     <Typography variant="body2" color="text.secondary">
                       {user.description}
                     </Typography>
@@ -173,4 +180,6 @@ export default function HomePage() {
       </Box>
     </AppLayout>
   );
-}
+});
+
+export default HomePage;

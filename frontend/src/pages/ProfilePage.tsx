@@ -9,6 +9,7 @@ import {
   Lock as LockIcon,
 } from "@mui/icons-material";
 import { styled } from "@mui/material/styles";
+import CustomLink from "../components/CustomLink";
 
 const VisuallyHiddenInput = styled("input")({
   clip: "rect(0 0 0 0)",
@@ -367,7 +368,9 @@ export default function ProfilePage({ currentUserName }: { currentUserName: stri
             }}
           >
             <Typography>You can change your password once a month</Typography>
-            <Button href="/change_password">Go change it</Button>
+            <CustomLink to="/change_password">
+              <Button>Go change it</Button>
+            </CustomLink>
           </Box>
         </Modal>
       </Box>

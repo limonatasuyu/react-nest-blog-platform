@@ -51,15 +51,19 @@ export declare class NotificationController {
         postTitle: string;
         thumbnailId?: string;
     }) | {
-        firstname: string;
-        lastname: string;
-        username: string;
+        id: string;
+        lastPerson: {
+            firstname: string;
+            lastname: string;
+            profilePictureId?: string;
+        };
         profilePictureId?: string;
         notificationId: string;
         isLookedAt: boolean;
         isSeen: boolean;
         targetHref: string;
         passedTime: string;
+        type: "follow";
     })[]>;
     seeNotification(req: any, { notificationIds }: {
         notificationIds: any;

@@ -8,7 +8,6 @@ import {
   OutlinedInput,
   IconButton,
   FormHelperText,
-  Link,
 } from "@mui/material";
 import logo_white from "/logo_white.png";
 import { Formik } from "formik";
@@ -19,11 +18,14 @@ import LoginLayout from "../Layouts/LoginLayout";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import useSnackbar from "../hooks/useSnackbar";
+import CustomLink from "../components/CustomLink";
+import { useRoute } from "../context/RouteProvider";
 
 export default function SignUpPage() {
   const { setSnackBar } = useSnackbar();
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordAgain, setShowPasswordAgain] = useState(false);
+  const { navigate } = useRoute();
 
   function handleClickShowPasswordAgain() {
     setShowPasswordAgain((show) => !show);
@@ -104,7 +106,7 @@ export default function SignUpPage() {
         );
 
         if (res.ok && jsonResponse.user_id) {
-          window.location.href = `/activate?user_id=${jsonResponse.user_id}`;
+          navigate(`/activate?user_id=${jsonResponse.user_id}`)
         }
       })
       .catch((err) => {
@@ -278,7 +280,7 @@ export default function SignUpPage() {
                 </FormHelperText>
               </FormControl>
             </Box>
-            <Link href="/login">Already have an account ?</Link>
+            <CustomLink to="/login">Already have an account ?</CustomLink>
             <Button
               variant="contained"
               type="submit"

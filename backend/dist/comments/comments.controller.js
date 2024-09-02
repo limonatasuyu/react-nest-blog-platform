@@ -20,19 +20,46 @@ let CommentsController = class CommentsController {
     constructor(commentsService) {
         this.commentsService = commentsService;
     }
+    async getComments({ page, postId }) {
+        return await this.commentsService.getByPostId(page, postId);
+    }
+    async getAnswers({ page, commentId }) {
+        return await this.commentsService.getAnswers(page, commentId);
+    }
+    async likeComment(req, commentId) {
+        return await this.commentsService.likeComment(commentId, req.user.sub);
+    }
     async addComment(req, dto) {
         return await this.commentsService.addComment(dto, req.user.sub);
     }
     async deleteComment(dto) {
         return await this.commentsService.deleteComment(dto);
     }
-    async likeComment(req, commentId) {
-        return await this.commentsService.likeComment(commentId, req.user.sub);
-    }
 };
 exports.CommentsController = CommentsController;
 __decorate([
-    (0, common_1.UseGuards)(comments_guard_1.CommentsGuard),
+    (0, common_1.Get)(),
+    __param(0, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], CommentsController.prototype, "getComments", null);
+__decorate([
+    (0, common_1.Get)('answers'),
+    __param(0, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], CommentsController.prototype, "getAnswers", null);
+__decorate([
+    (0, common_1.Get)('like/:id'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], CommentsController.prototype, "likeComment", null);
+__decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Body)()),
@@ -41,23 +68,14 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], CommentsController.prototype, "addComment", null);
 __decorate([
-    (0, common_1.UseGuards)(comments_guard_1.CommentsGuard),
     (0, common_1.Delete)(),
     __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], CommentsController.prototype, "deleteComment", null);
-__decorate([
-    (0, common_1.UseGuards)(comments_guard_1.CommentsGuard),
-    (0, common_1.Get)(':id/like'),
-    __param(0, (0, common_1.Req)()),
-    __param(1, (0, common_1.Param)('id')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String]),
-    __metadata("design:returntype", Promise)
-], CommentsController.prototype, "likeComment", null);
 exports.CommentsController = CommentsController = __decorate([
+    (0, common_1.UseGuards)(comments_guard_1.CommentsGuard),
     (0, common_1.Controller)('comments'),
     __metadata("design:paramtypes", [comments_service_1.CommentsService])
 ], CommentsController);

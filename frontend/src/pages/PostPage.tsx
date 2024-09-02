@@ -97,6 +97,9 @@ export default function PostPage() {
   const postId = params.get("id");
 
   const [post, setPost] = useState<postData | null>(null);
+  const [comments, setComments] = useState<any[]>([]);
+  const [commentsPage, setCommentsPage] = useState(1);
+  const [totalPageCount, setTotalPageCount] = useState(1);
   const [loaded, setLoaded] = useState(false);
   const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -113,6 +116,24 @@ export default function PostPage() {
   const handleMoreMenuClose = () => {
     setMoreAnchorEl(null);
   };
+
+  function fetchComments() {
+    const token = window.sessionStorage.getItem("access_token");
+    fetch(
+      `http://localhost:5000/comments?page=${commentsPage}&postId${postId}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    ).then((res) => {
+      if (!res.ok) return;
+      res.json().then((result) => {
+        if (totalPageCount !== result.totalPageCount)
+          setTotalPageCount(result.totalPageCount);
+        setComments([...comments, ...result.comments]);
+        setCommentsPage(commentsPage + 1);
+      });
+    });
+  }
 
   function handleSave() {
     const oldIsSaved = isUserSaved;
@@ -144,7 +165,7 @@ export default function PostPage() {
       });
   }
 
-  function fetchData() {
+  function fetchPost() {
     const token = window.sessionStorage.getItem("access_token");
     fetch(`http://localhost:5000/posts/${postId}`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -173,7 +194,8 @@ export default function PostPage() {
   }
 
   useEffect(() => {
-    fetchData();
+    fetchPost();
+    fetchComments();
   }, []);
 
   function handleSubmit() {
@@ -201,7 +223,7 @@ export default function PostPage() {
           jsonResponse.message ?? "Comment added successfully.",
           "success"
         );
-        fetchData();
+        //setComments([newComment, ...comments])
         setComment("");
       })
       .catch((err) =>
@@ -546,7 +568,7 @@ export default function PostPage() {
               </Button>
             </Box>
 
-            {post?.comments.map((i, x) => (
+            {comments.map((i, x) => (
               <CommentCard
                 commentData={i}
                 postId={postId as string}
@@ -554,6 +576,7 @@ export default function PostPage() {
                 key={x}
               />
             ))}
+            <Button onClick={fetchComments}>More Comments</Button>
           </Grid>
         </Grid>
       </Box>
@@ -605,7 +628,7 @@ function CommentCard({
           jsonResponse.message ?? "Comment added successfully.",
           "success"
         );
-        //fetchData();
+        //fetchPost();
         setReply("");
       })
       .catch((err) =>

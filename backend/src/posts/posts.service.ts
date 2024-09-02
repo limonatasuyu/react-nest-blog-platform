@@ -300,70 +300,30 @@ export class PostsService {
           as: 'user',
         },
       },
-      { $unwind: '$user' },
       {
         $lookup: {
-          from: 'comments',
-          let: { commentsIds: '$comments' },
-          pipeline: [
-            { $match: { $expr: { $in: ['$_id', '$$commentsIds'] } } },
-            {
-              $lookup: {
-                from: 'users',
-                localField: 'user',
-                foreignField: '_id',
-                as: 'user',
-              },
-            },
-            { $unwind: '$user' },
-          ],
-          as: 'comments',
+          from: 'tags',
+          localField: 'tags',
+          foreignField: '_id',
+          as: 'tags',
         },
       },
+      //{ $unwind: '$user' },
       {
         $project: {
           thumbnailId: 1,
           title: 1,
           content: 1,
-          tags: 1,
+          tags: { name: 1 },
           createdAt: 1,
-          likedBy: 1,
+          commentCount: { $size: '$comments' },
+          likedCount: { $size: '$likedBy' },
+          isUserLiked: { $in: [user_id, '$likedBy'] },
           user: {
             firstname: 1,
             lastname: 1,
             username: 1,
             profilePictureId: 1,
-          },
-          comments: {
-            $filter: {
-              input: {
-                $map: {
-                  input: '$comments',
-                  as: 'comment',
-                  in: {
-                    _id: '$$comment._id',
-                    content: '$$comment.content',
-                    createdAt: '$$comment.createdAt',
-                    answerTo: '$$comment.answerTo',
-                    user: {
-                      firstname: '$$comment.user.firstname',
-                      lastname: '$$comment.user.lastname',
-                      username: '$$comment.user.username',
-                      profilePictureId: '$$comment.user.profilePictureId',
-                    },
-                    likedCount: { $size: '$$comment.likedBy' },
-                    isUserLiked: {
-                      $in: [
-                        new mongoose.Types.ObjectId(user_id),
-                        '$$comment.likedBy',
-                      ],
-                    },
-                  },
-                },
-              },
-              as: 'comment',
-              cond: { $ne: ['$$comment._id', null] },
-            },
           },
         },
       },
@@ -378,20 +338,7 @@ export class PostsService {
     });
 
     post[0].isUserSaved = Boolean(user);
-    const commentCount = post[0].comments.length;
-    const likedCount = post[0].likedBy.length;
-    const isUserLiked = Boolean(post[0].likedBy.find((i) => i === user_id));
-    post[0].likedBy = undefined;
-    const answers = post[0].comments.filter((i) => Boolean(i.answerTo));
-    const commentsWithoutAnswers = post[0].comments.filter(
-      (i) => !Boolean(i.answerTo),
-    );
-    const formattedComments = commentsWithoutAnswers.map((i) => ({
-      ...i,
-      answers: answers.filter((i_) => String(i_.answerTo) === String(i._id)),
-    }));
-    post[0].comments = formattedComments;
 
-    return { ...post[0], commentCount, likedCount, isUserLiked };
+    return post[0];
   }
 }

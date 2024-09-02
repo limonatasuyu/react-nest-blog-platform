@@ -12,7 +12,6 @@ import {
   MenuItem,
   ListItemIcon,
   ListItemText,
-  Link,
   Avatar,
   Typography,
 } from "@mui/material";
@@ -25,10 +24,14 @@ import Logout from "@mui/icons-material/Logout";
 import logo_black from "/logo_black.png";
 import CircleIcon from "@mui/icons-material/Circle";
 import placeHolderThumbnail from "/placeholderThumbnail.jpg";
+import CustomLink from "../components/CustomLink";
+import { useRoute } from "../context/RouteProvider";
+import GroupsIcon from '@mui/icons-material/Groups';
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<
     {
+      id?: string;
       type: "like" | "comment" | "answer" | "follow";
       commentId: string;
       postId: string;
@@ -63,6 +66,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
+  const { navigate } = useRoute();
 
   async function handleSeeNotification(notificationIds: string[]) {
     console.log("i got a cal");
@@ -106,7 +110,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         res.json().then((result) => {
           setNotifications(result);
           setIsNewNotificationExists(
-            result.find((i: { isLookedAt: boolean }) => !i.isLookedAt)
+            result.find((i: { isSeen: boolean }) => !i.isSeen)
           );
         });
       }
@@ -130,14 +134,14 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         justifyContent="space-between"
         sx={{ padding: 2, backgroundColor: "#ffffff", boxShadow: 1 }}
       >
-        <Link href="/" sx={{ display: "flex", alignItems: "center" }}>
+        <CustomLink to="/" sx={{ display: "flex", alignItems: "center" }}>
           <img
             src={logo_black}
             height="50"
             alt="Logo"
             style={{ padding: "10px" }}
           />
-        </Link>
+        </CustomLink>
 
         <FormControl variant="outlined" sx={{ flex: 1, maxWidth: "500px" }}>
           <InputLabel htmlFor="search">Search</InputLabel>
@@ -160,9 +164,11 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         </FormControl>
         <Box display="flex" alignItems="center" sx={{ ml: 2 }}>
           <Tooltip title="Write" arrow>
-            <IconButton href="/create_post" sx={{ margin: 1 }}>
-              <HistoryEduIcon />
-            </IconButton>
+            <CustomLink to="/create_post">
+              <IconButton sx={{ margin: 1 }}>
+                <HistoryEduIcon />
+              </IconButton>
+            </CustomLink>
           </Tooltip>
           <Tooltip title="Notifications" arrow>
             <IconButton
@@ -205,22 +211,40 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         <Menu anchorEl={AnchorEl} open={menuOpen} onClose={handleMenuClose}>
           {menuType === "profile" ? (
             <div>
-              <MenuItem onClick={handleMenuClose} component="a" href="/profile">
-                <ListItemIcon>
-                  <AccountCircleIcon fontSize="small" />
-                </ListItemIcon>
-                <ListItemText primary="Profile" />
-              </MenuItem>
-              <MenuItem
-                onClick={handleMenuClose}
-                component="a"
-                href="/my_posts"
+              <CustomLink
+                to="/profile"
+                sx={{ textDecoration: "none", color: "inherit" }}
               >
+                <MenuItem onClick={handleMenuClose}>
+                  <ListItemIcon>
+                    <AccountCircleIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText primary="Profile" />
+                </MenuItem>
+              </CustomLink>
+              <CustomLink
+                to="/my_posts"
+                sx={{ textDecoration: "none", color: "inherit" }}
+              >
+                <MenuItem onClick={handleMenuClose}>
+                  <ListItemIcon>
+                    <DynamicFeedIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText primary="My Posts" />
+                </MenuItem>
+              </CustomLink>
+
+              <CustomLink
+                to="/followers"
+                sx={{ textDecoration: "none", color: "inherit" }}
+              >
+              <MenuItem>
                 <ListItemIcon>
-                  <DynamicFeedIcon fontSize="small" />
+                  <GroupsIcon fontSize="small" />
                 </ListItemIcon>
-                <ListItemText primary="My Posts" />
+                <ListItemText primary="Followers" />
               </MenuItem>
+              </CustomLink>
               <MenuItem onClick={handleLogout}>
                 <ListItemIcon>
                   <Logout fontSize="small" />
@@ -230,111 +254,136 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             </div>
           ) : (
             <div style={{ padding: 4 }}>
-              {notifications.map((notification, index) => (
-                <MenuItem
-                  onClick={() => {
-                    handleSeeNotification(notification.notificationIds);
-                    window.location.href = notification.targetHref;
-                  }}
-                  key={index}
+              {notifications.length ? (
+                notifications.map((notification, index) => (
+                  <MenuItem
+                    onClick={() => {
+                      handleSeeNotification(
+                        notification.id
+                          ? [notification.id]
+                          : notification.notificationIds
+                      );
+                      navigate(notification.targetHref);
+                    }}
+                    key={index}
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      padding: "12px",
+                      gap: 2,
+                      position: "relative",
+                      backgroundColor: notification.isSeen ? "#fff" : "#f5f5f5",
+                      "&:hover": {
+                        backgroundColor: "#e0e0e0",
+                      },
+                      borderRadius: 1,
+                      mt: 1,
+                      boxShadow: notification.isLookedAt
+                        ? "none"
+                        : "0px 2px 4px rgba(0,0,0,0.1)",
+                      width: 400,
+                    }}
+                  >
+                    <Avatar
+                      src={
+                        notification.lastPerson.profilePictureId &&
+                        `http://localhost:5000/image/${notification.lastPerson.profilePictureId}`
+                      }
+                      sx={{ width: 48, height: 48 }}
+                    >
+                      {notification.lastPerson.firstname.charAt(0)}
+                    </Avatar>
+
+                    <Box sx={{ flex: 1, ml: 1 }}>
+                      <Typography
+                        variant="body1"
+                        sx={{ fontWeight: "bold", mb: 0.5 }}
+                      >
+                        {notification.lastPerson.firstname}{" "}
+                        {notification.lastPerson.lastname}{" "}
+                        {notification.count > 1 &&
+                          `and ${notification.count - 1} others`}
+                      </Typography>
+
+                      <Typography
+                        variant="body2"
+                        sx={{ color: "text.secondary" }}
+                      >
+                        {notification.type === "like" &&
+                          `liked your ${
+                            notification.commentId ? "comment" : "post"
+                          }`}
+                        {notification.type === "comment" &&
+                          `commented on your post:`}
+                        {notification.type === "answer" &&
+                          `answered your comment:`}
+                        {notification.type === "follow" && `followed you`}
+                      </Typography>
+                      {notification.type !== "follow" &&
+                        notification.commentContent && (
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              color: "text.secondary",
+                              mt: 0.5,
+                              fontStyle: "italic",
+                            }}
+                          >
+                            {notification.commentContent}
+                          </Typography>
+                        )}
+
+                      <Typography
+                        variant="subtitle1"
+                        sx={{ color: "text.secondary", fontSize: 10 }}
+                      >
+                        {notification.passedTime}
+                      </Typography>
+                    </Box>
+
+                    {notification.thumbnailId && (
+                      <Box
+                        component="img"
+                        src={
+                          notification.thumbnailId
+                            ? `http://localhost:5000/image/${notification.thumbnailId}`
+                            : placeHolderThumbnail
+                        }
+                        sx={{
+                          width: 80,
+                          height: 80,
+                          borderRadius: 1,
+                          objectFit: "cover",
+                          ml: 2,
+                        }}
+                      />
+                    )}
+
+                    {!notification.isSeen && (
+                      <CircleIcon
+                        color="error"
+                        sx={{
+                          fontSize: ".7rem",
+                        }}
+                      />
+                    )}
+                  </MenuItem>
+                ))
+              ) : (
+                <Typography
                   sx={{
+                    width: 400,
+                    height: 50,
                     display: "flex",
                     alignItems: "center",
-                    padding: "12px",
-                    gap: 2,
-                    position: "relative",
-                    backgroundColor: notification.isSeen ? "#fff" : "#f5f5f5",
-                    "&:hover": {
-                      backgroundColor: "#e0e0e0",
-                    },
-                    borderRadius: 1,
-                    mt: 1,
-                    boxShadow: notification.isLookedAt
-                      ? "none"
-                      : "0px 2px 4px rgba(0,0,0,0.1)",
+                    justifyContent: "center",
+                    color: "gray",
+                    fontSize: 20,
                   }}
                 >
-                  <Avatar
-                    src={
-                      notification.lastPerson.profilePictureId &&
-                      `http://localhost:5000/image/${notification.lastPerson.profilePictureId}`
-                    }
-                    sx={{ width: 48, height: 48 }}
-                  >
-                    {notification.lastPerson.firstname.charAt(0)}
-                  </Avatar>
-
-                  <Box sx={{ flex: 1, ml: 1 }}>
-                    <Typography
-                      variant="body1"
-                      sx={{ fontWeight: "bold", mb: 0.5 }}
-                    >
-                      {notification.lastPerson.firstname}{" "}
-                      {notification.lastPerson.lastname}{" "}
-                      {notification.count > 1 &&
-                        `and ${notification.count - 1} others`}
-                    </Typography>
-
-                    <Typography
-                      variant="body2"
-                      sx={{ color: "text.secondary" }}
-                    >
-                      {notification.type === "like" &&
-                        `liked your ${
-                          notification.commentId ? "comment" : "post"
-                        }`}
-                      {notification.type === "comment" &&
-                        `commented on your post:`}
-                      {notification.type === "answer" &&
-                        `answered your comment:`}
-                      {notification.type === "follow" && `followed you`}
-                    </Typography>
-                    {notification.type !== "follow" &&
-                      notification.commentContent && (
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            color: "text.secondary",
-                            mt: 0.5,
-                            fontStyle: "italic",
-                          }}
-                        >
-                          {notification.commentContent}
-                        </Typography>
-                      )}
-
-                    <Typography
-                      variant="subtitle1"
-                      sx={{ color: "text.secondary", fontSize: 10 }}
-                    >
-                      {notification.passedTime}
-                    </Typography>
-                  </Box>
-
-                  {notification.thumbnailId && (
-                    <Box
-                      component="img"
-                      src={notification.thumbnailId ? `http://localhost:5000/image/${notification.thumbnailId}` : placeHolderThumbnail}
-                      sx={{
-                        width: 80,
-                        height: 80,
-                        borderRadius: 1,
-                        objectFit: "cover",
-                        ml: 2,
-                      }}
-                    />
-                  )}
-
-                  {!notification.isSeen && (
-                    <CircleIcon
-                      color="error"
-                      sx={{
-                        fontSize: ".7rem",
-                      }}
-                    />
-                  )}
-                </MenuItem>
-              ))}
+                  No new notifications.
+                </Typography>
+              )}
             </div>
           )}
         </Menu>

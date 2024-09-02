@@ -1,3 +1,11 @@
+interface userInfo {
+  profilePictureId?: string;
+  firstname: string;
+  lastname: string;
+  username: string;
+  description?: string;
+}
+
 export interface PostData {
   _id: string;
   title: string;
@@ -6,12 +14,26 @@ export interface PostData {
   likedCount: number;
   thumbnailId?: string;
   tags: string[];
-  user: {
-    firstname: string;
-    lastname: string;
-    username: string;
-    description?: string;
-    profilePictureId?: string;
-  };
+  user: userInfo;
   totalPageCount: number;
+}
+
+export interface RecommendedData {
+  tags: {
+    name: string;
+  }[];
+  users: userInfo[];
+}
+
+interface ReplyData {
+  user: userInfo;
+  content: string;
+  createdAt: string;
+  _id: string;
+  isUserLiked: boolean;
+  likedCount: number;
+}
+
+export interface CommentData extends ReplyData {
+  answers?: ReplyData[];
 }

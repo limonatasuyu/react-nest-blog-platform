@@ -1,11 +1,12 @@
 import { useState } from "react";
 import AppLayout from "../Layouts/AppLayout";
-import { Box, Link, Typography, Pagination } from "@mui/material";
+import { Box, Typography, Pagination } from "@mui/material";
 import placeholderThumbnail from "/placeholderThumbnail.jpg";
 import { SentimentDissatisfied } from "@mui/icons-material";
 import Loading from "../components/Loading";
 import { PostCardMinimal } from "../components/PostCard";
 import usePosts from "../hooks/usePosts";
+import CustomLink from "../components/CustomLink";
 
 export default function MyPostsPage({ currentUserName }: { currentUserName: string }) {
   
@@ -61,7 +62,7 @@ export default function MyPostsPage({ currentUserName }: { currentUserName: stri
             boxShadow: 1,
           }}
         >
-          <Link href="/create_post" sx={{ textDecoration: "none", color: "inherit" }}>
+          <CustomLink to="/create_post" sx={{ textDecoration: "none", color: "inherit" }}>
             <Box sx={{ display: "flex", alignItems: "center" }}>
               <Box
                 component="img"
@@ -92,7 +93,7 @@ export default function MyPostsPage({ currentUserName }: { currentUserName: stri
                 </Typography>
               </Box>
             </Box>
-          </Link>
+          </CustomLink>
         </Box>
 
         {postsData.totalPageCount > 1 && (
@@ -102,6 +103,7 @@ export default function MyPostsPage({ currentUserName }: { currentUserName: stri
             showLastButton
             showFirstButton
             shape="rounded"
+            page={page}
             //@ts-expect-error i only need the second argument
             onChange={(e, v) => setPage(v)}
           />

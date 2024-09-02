@@ -1,16 +1,18 @@
 import { useEffect, useState } from "react";
 import AppLayout from "../Layouts/AppLayout";
 import Loading from "../components/Loading";
-import { Box, Avatar, Typography, Pagination, Grid } from "@mui/material";
+import { Box, Avatar, Typography, Pagination, Grid, Button } from "@mui/material";
 import useSnackbar from "../hooks/useSnackbar";
 import { SentimentDissatisfied } from "@mui/icons-material";
 import PostCard from "../components/PostCard";
 import usePosts from "../hooks/usePosts";
+import { useRoute } from "../context/RouteProvider";
 
 export default function UserPage({ currentUserName }: { currentUserName: string }) {
   const params = new URL(document.location.toString()).searchParams;
   const userName = params.get("username");
 
+  
   const [isInfoSet, setIsInfoSet] = useState<boolean>(false);
   const [userInfo, setUserInfo] = useState<{
     firstname: string;
@@ -19,16 +21,20 @@ export default function UserPage({ currentUserName }: { currentUserName: string 
     description?: string;
     profilePictureId?: string;
   } | null>(null);
+  const [isFollowing, setIsFollowing] = useState(false);
   const { setSnackBar } = useSnackbar();
   const [page, setPage] = useState(1);
-  const { postsData, loading, error } = usePosts({ page, userName });
+  console.log("userName ith big N", userName)
+  const { postsData, loading, error } = usePosts({ page, username: userName });
+  const { navigate } = useRoute();
 
 
   useEffect(() => {
     if (userName === currentUserName) {
-      window.location.href = "/my_posts";
+      navigate("/my_posts");
       return;
     }
+    if (!userName) return;
     const token = window.sessionStorage.getItem("access_token");
     fetch(`http://localhost:5000/user/profile/${userName}`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -40,12 +46,28 @@ export default function UserPage({ currentUserName }: { currentUserName: string 
           return;
         }
         setUserInfo(jsonResponse);
+        setIsFollowing(jsonResponse.isUserFollowing)
         setIsInfoSet(true);
       })
       .catch((err) => {
         setSnackBar(err.message ?? "Unexpected error occured, please try again later", "error");
       });
   }, [userName, currentUserName]);
+
+  function handleFollow() {
+    const oldIsFollowing = isFollowing;
+    setIsFollowing(!isFollowing);
+    const token = window.sessionStorage.getItem("access_token")
+    fetch(`http://localhost:5000/user/follow/${userName}`, { headers: { Authorization: `Bearer ${token}` } }).then((res) => {
+      if (!res.ok) {
+        res.json().then((result) => setSnackBar(result.mesage ?? "An unexpected error occured, please try again later.", "error"))
+        setIsFollowing(oldIsFollowing);
+      }
+    }).catch((err) => {
+      setSnackBar(err.mesage ?? "An unexpected error occured, please try again later.", "error")
+      setIsFollowing(oldIsFollowing);
+    })
+  }
 
   if (!isInfoSet || loading) return <Loading />;
 
@@ -104,14 +126,12 @@ export default function UserPage({ currentUserName }: { currentUserName: string 
             <Typography variant="body2" sx={{ mt: 1 }}>
               {userInfo?.description}
             </Typography>
+            <Button variant="contained" sx={{ mt: 1, background: isFollowing ? "gray" : "" }} onClick={handleFollow} >{isFollowing ? "Unfollow" : "Follow"}</Button>
           </Box>
         </Box>
 
         {/* Main Content Area */}
-        <Box sx={{ flex: "1 1 600px" }}>
-          <Box sx={{ mb: 4 }}>
-            <Typography variant="h5">Posts</Typography>
-          </Box>
+        <Box sx={{ flex: "1 1 600px", mt: 4 }}>
           <Grid container spacing={4} sx={{ rowGap: 4 }}>
             {postsData.posts.length ? (
               postsData.posts.map((post, index) => <PostCard post={post} key={index} />)
@@ -140,6 +160,7 @@ export default function UserPage({ currentUserName }: { currentUserName: string 
                 showLastButton
                 showFirstButton
                 shape="rounded"
+                page={page}
                 //@ts-expect-error i only need the second argument
                 onChange={(e, v) => setPage(v)}
               />

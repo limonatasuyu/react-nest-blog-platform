@@ -16,17 +16,8 @@ let TagController = class TagController {
     constructor(tagservice) {
         this.tagservice = tagservice;
     }
-    async getPopularTags() {
-        return await this.tagservice.getPopularTags();
-    }
 };
 exports.TagController = TagController;
-__decorate([
-    (0, common_1.Get)(),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", Promise)
-], TagController.prototype, "getPopularTags", null);
 exports.TagController = TagController = __decorate([
     (0, common_1.Controller)('tag'),
     __metadata("design:paramtypes", [tag_service_1.TagService])

@@ -3,11 +3,13 @@ import { ActivationCode } from '../schemes/activationCode.schema';
 import { Model } from 'mongoose';
 import { ActivateUserDTO, CreateUserDTO, CreateActivationCodeDTO } from '../dto/user-dto';
 import { ImageService } from 'src/image/image.service';
+import { NotificationService } from 'src/notification/notification.service';
 export declare class UsersService {
     private userModel;
     private activationCodeModel;
     private imageService;
-    constructor(userModel: Model<User>, activationCodeModel: Model<ActivationCode>, imageService: ImageService);
+    private notificationService;
+    constructor(userModel: Model<User>, activationCodeModel: Model<ActivationCode>, imageService: ImageService, notificationService: NotificationService);
     activate(dto: ActivateUserDTO): Promise<{
         message: string;
     }>;
@@ -31,4 +33,7 @@ export declare class UsersService {
         message: string;
     }>;
     getRecommendedUsers(): Promise<any[]>;
+    follow(userToFollowUsername: string, followingUserId: string): Promise<{
+        message: string;
+    }>;
 }

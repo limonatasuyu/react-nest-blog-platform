@@ -45,6 +45,10 @@ __decorate([
     (0, mongoose_1.Prop)({ type: mongoose.Schema.Types.ObjectId, ref: 'Post' }),
     __metadata("design:type", post_schema_1.Post)
 ], Comment.prototype, "post", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: [mongoose.Schema.Types.ObjectId], ref: 'Comment' }),
+    __metadata("design:type", Array)
+], Comment.prototype, "answers", void 0);
 exports.Comment = Comment = __decorate([
     (0, mongoose_1.Schema)()
 ], Comment);

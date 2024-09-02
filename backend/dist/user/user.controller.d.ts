@@ -3,14 +3,17 @@ import { CreateUserDTO, ActivateUserDTO, CreateActivationCodeDTO } from 'src/dto
 export declare class UserModuleController {
     private readonly usersService;
     constructor(usersService: UsersService);
-    getRecommendedUsers(): Promise<any[]>;
-    getUser(username: any): Promise<{
+    followUser(req: any, username: any): Promise<{
+        message: string;
+    }>;
+    getUser(req: any, username: any): Promise<{
         username: string;
         firstname: string;
         lastname: string;
         description: string;
         email: string;
         profilePictureId: string;
+        isUserFollowing: boolean;
     }>;
     create(dto: CreateUserDTO): Promise<any>;
     activate(dto: ActivateUserDTO): Promise<any>;

@@ -44,7 +44,6 @@ __decorate([
 ], Notification.prototype, "updatedAt", void 0);
 __decorate([
     (0, mongoose_1.Prop)({
-        required: true,
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Post',
     }),

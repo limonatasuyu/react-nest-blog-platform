@@ -56,15 +56,19 @@ export declare class NotificationService {
         postTitle: string;
         thumbnailId?: string;
     }) | {
-        firstname: string;
-        lastname: string;
-        username: string;
+        id: string;
+        lastPerson: {
+            firstname: string;
+            lastname: string;
+            profilePictureId?: string;
+        };
         profilePictureId?: string;
         notificationId: string;
         isLookedAt: boolean;
         isSeen: boolean;
         targetHref: string;
         passedTime: string;
+        type: "follow";
     })[]>;
     lookToNotifications(notificationIds: string[], userId: string): Promise<{
         message: string;

@@ -5,7 +5,6 @@ import * as mongoose from 'mongoose';
 import { Post } from 'src/schemes/post.schema';
 import { Comment } from 'src/schemes/comment.schema';
 import { AddCommentDTO, DeleteCommentDTO } from 'src/dto/comment-dto';
-import { ObjectId } from 'bson';
 import { NotificationService } from 'src/notification/notification.service';
 
 @Injectable()
@@ -17,9 +16,8 @@ export class CommentsService {
   ) {}
 
   async addComment(dto: AddCommentDTO, userId: string) {
-    const commentId = new ObjectId();
     const createdComment = await this.commentsModel.create({
-      _id: commentId,
+      _id: new mongoose.Types.ObjectId(),
       content: dto.content,
       user: userId,
       answerTo: dto.answeredCommentId,
@@ -46,7 +44,6 @@ export class CommentsService {
     if (!updatedPost) {
       throw new InternalServerErrorException();
     }
-
     await this.notificationService.createNotification({
       type: 'comment',
       createdBy: userId,
@@ -55,14 +52,15 @@ export class CommentsService {
       relatedComment: createdComment._id as unknown as string,
     });
 
-    if (
-      dto.answeredCommentId &&
-      updatedPost.user._id !== createdComment.answerTo.user._id
-    ) {
+    const answeredComment = await this.commentsModel.findOne({
+      _id: dto.answeredCommentId,
+    });
+
+    if (dto.answeredCommentId && updatedPost.user !== answeredComment.user) {
       await this.notificationService.createNotification({
         type: 'answer',
         createdBy: userId,
-        createdFor: createdComment.answerTo.user._id as unknown as string,
+        createdFor: answeredComment.user as unknown as string,
         relatedPost: dto.postId,
         relatedComment: createdComment._id as unknown as string,
         answeredComment: dto.answeredCommentId,
@@ -146,54 +144,104 @@ export class CommentsService {
     return { message: 'Operation handled successfully' };
   }
 
-  async getByPage(page: number, commentIds: string[]) {
-    const comments = await this.commentsModel
-      .find({ _id: { $in: commentIds } }, 'content')
+  async getAnswers(page: number, commentId: string) {
+    const answers = await this.commentsModel
+      .find({
+        answerTo: commentId,
+      })
       .sort({ createdAt: -1 })
       .limit(10)
-      .skip((page - 1) * 10)
+      .skip(page * 10) // first page is going to be already received after comment fetch (look at the method below)
+      .populate('content answerTo createdAt')
       .populate({
         path: 'user',
-        select: 'username firstname lastname',
-      })
-      .exec();
+        select: 'firstname lastname username profilePictureId',
+      });
 
-    const answers = await this.commentsModel.aggregate([
-      {
-        $match: { answerTo: { $in: commentIds } },
-      },
-      {
-        $sort: { createdAt: 1 }, // Sort by createdAt in ascending order (oldest first)
-      },
-      {
-        $group: {
-          _id: '$answerTo',
-          answer: { $first: '$$ROOT' }, // Get the first document in each group (oldest due to sorting)
-        },
-      },
+    return answers;
+  }
+
+  async getByPostId(page: number, postId: string) {
+    const pageSize = 10;
+
+    const comments = await this.commentsModel.aggregate([
+      { $match: { post: postId, answerTo: undefined } },
+      //{ $unwind: '$answers' },
       {
         $lookup: {
-          from: 'users', // The collection to join with
-          localField: 'answer.user', // The field from the comments collection
-          foreignField: '_id', // The field from the users collection
-          as: 'userDetails', // The name of the field to add the joined data to
+          from: 'users',
+          localField: 'user',
+          foreignField: '_id',
+          as: 'user',
+        },
+      },
+      { $unwind: '$user' },
+      {
+        $facet: {
+          comments: [
+            {
+              $project: {
+                content: 1,
+                createdAt: 1,
+                user: {
+                  firstname: 1,
+                  lastname: 1,
+                  username: 1,
+                  profilePictureId: 1,
+                },
+                likedCount: { $size: '$likedBy' },
+                answers: {
+                  $slice: [
+                    {
+                      $map: {
+                        input: {
+                          $sortArray: {
+                            input: '$answers',
+                            sortBy: { createdAt: -1 },
+                          },
+                        },
+                        as: 'answer',
+                        in: {
+                          content: '$$answer.content',
+                          answerTo: '$$answer.answerTo',
+                          createdAt: '$$answer.createdAt',
+                          user: {
+                            firstname: '$$answer.user.firstname',
+                            lastname: '$$answer.user.lastname',
+                            username: '$$answer.user.username',
+                            profilePictureId: '$$answer.user.profilePictureId',
+                          },
+                          likedCount: { $size: '$$answer.likedBy' },
+                        },
+                      },
+                    },
+                    10,
+                  ],
+                },
+              },
+            },
+            {
+              $sort: { createdAt: -1 },
+            },
+            { $limit: pageSize },
+            { $skip: (page - 1) * pageSize },
+          ],
+          totalRecordCount: [{ $count: 'count' }],
         },
       },
       {
-        $unwind: '$userDetails', // Unwind the array to de-nest the user details
-      },
-      {
-        $project: {
-          'answer._id': 1,
-          'answer.content': 1,
-          'answer.createdAt': 1,
-          'userDetails.firstname': 1, // Select specific fields to include in the result
-          'userDetails.lastname': 1,
-          'userDetails.username': 1,
+        $addFields: {
+          totalPageCount: {
+            $ceil: {
+              $divide: [
+                { $arrayElemAt: ['$totalRecordCount.count', 0] },
+                pageSize,
+              ],
+            },
+          },
         },
       },
     ]);
-
-    return [...answers, ...comments];
+    return comments[0];
   }
 }

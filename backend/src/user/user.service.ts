@@ -4,7 +4,7 @@ import {
   InternalServerErrorException,
   RequestTimeoutException,
 } from '@nestjs/common';
-import { User } from '../schemes/user.schema';
+import { User, UserDocument } from '../schemes/user.schema';
 import { ActivationCode } from '../schemes/activationCode.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -19,8 +19,13 @@ import { readFile } from 'node:fs/promises';
 import * as bcrypt from 'bcrypt';
 import * as nodemailer from 'nodemailer';
 import { ImageService } from 'src/image/image.service';
+import { NotificationService } from 'src/notification/notification.service';
 
 let blocklist;
+
+interface UserWithFollowStatus extends UserDocument {
+  isUserFollowing: boolean;
+}
 
 async function isDisposable(email: string) {
   if (!blocklist) {
@@ -71,6 +76,7 @@ export class UsersService {
     @InjectModel(ActivationCode.name)
     private activationCodeModel: Model<ActivationCode>,
     private imageService: ImageService,
+    private notificationService: NotificationService,
   ) {}
 
   async activate(dto: ActivateUserDTO) {
@@ -163,6 +169,7 @@ export class UsersService {
       isActivated: false,
       _id: new mongoose.Types.ObjectId(),
       posts: [],
+      followers: [],
     });
 
     const createdActivationCode = new this.activationCodeModel({
@@ -298,6 +305,7 @@ export class UsersService {
           lastname: 1,
           username: 1,
           description: 1,
+          profilePictureId: 1,
         },
       },
     ]);
@@ -306,5 +314,52 @@ export class UsersService {
       throw new InternalServerErrorException();
     }
     return tags;
+  }
+
+  async follow(userToFollowUsername: string, followingUserId: string) {
+    const updatedUser =
+      await this.userModel.findOneAndUpdate<UserWithFollowStatus>(
+        { username: userToFollowUsername },
+        [
+          {
+            $set: {
+              followers: {
+                $cond: {
+                  if: { $in: [followingUserId, '$followers'] },
+                  then: {
+                    $filter: {
+                      input: '$followers',
+                      as: 'follower',
+                      cond: { $ne: ['$$follower', followingUserId] },
+                    },
+                  },
+                  else: { $concatArrays: ['$followers', [followingUserId]] },
+                },
+              },
+            },
+          },
+        ],
+        {
+          projection: {
+            _id: 1,
+            isUserFollowing: { $in: [followingUserId, '$followers'] },
+          },
+          new: true,
+        },
+      );
+
+    if (!updatedUser) {
+      throw new InternalServerErrorException();
+    }
+
+    if ((updatedUser.toObject() as any).isUserFollowing) {
+      await this.notificationService.createNotification({
+        type: 'follow',
+        createdBy: followingUserId,
+        createdFor: String(updatedUser._id),
+      });
+    }
+
+    return { message: 'operation handled successfully' };
   }
 }

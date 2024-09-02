@@ -1,7 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
-import { LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { SnackbarProvider } from "./hooks/useSnackbar";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import SignUpPage from "./pages/SignUpPage";
@@ -15,100 +12,110 @@ import ChangePasswordPage from "./pages/ChangePasswordPage";
 import TagPage from "./pages/TagPage";
 import UserPage from "./pages/UserPage";
 import { StateProvider } from "./context/StateProvider";
-
-const routes: { [key: string]: React.FC<{ currentUserName?: string }> } = {
-  "/": HomePage,
-  "/login": LoginPage,
-  "/activate": ActivateUserPage,
-  "/signup": SignUpPage,
-  "/create_post": CreatePostPage,
-  "/my_posts": MyPostsPage,
-  "/profile": ProfilePage,
-  "/post": PostPage,
-  "/change_password": ChangePasswordPage,
-  "/tag": TagPage,
-  "/user": UserPage,
-};
+import { LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { SnackbarProvider } from "./hooks/useSnackbar";
+import RoutesProvider, { useRoute } from "./context/RouteProvider";
+import FollowersPage from "./pages/FollowersPage";
+//import { Snackbar } from "@mui/material";
 
 interface UserInfo {
   username: string;
 }
 
 function App() {
-  const [route, setRoute] = useState(window.location.pathname);
+  const { currentPath, navigate } = useRoute();
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
 
   const checkAccessToken = useCallback(async () => {
+    const isAuthRoute = [
+      "/login",
+      "/signup",
+      "/forget_password",
+      "/activate",
+    ].includes(currentPath);
+
     const token = window.sessionStorage.getItem("access_token");
+
     if (!token) {
-      if (
-        ["/login", "/signup", "/forget_password", "/activate"].includes(route)
-      )
-        return;
-      setRoute("/login");
+      if (!isAuthRoute) {
+        navigate("/login");
+      }
       return;
     }
 
-    const response = await fetch("http://localhost:5000/auth/profile", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    try {
+      const response = await fetch("http://localhost:5000/auth/profile", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    if (!response.ok) {
-      if (
-        ["/login", "/signup", "/forget_password", "/activate"].includes(route)
-      )
+      if (!response.ok) {
+        if (!isAuthRoute) {
+          navigate("/login");
+        }
         return;
-      setRoute("/login");
-      return;
-    }
+      }
 
-    const jsonResponse = await response.json();
-    setUserInfo(jsonResponse);
+      const jsonResponse = await response.json();
+      setUserInfo(jsonResponse);
 
-    if (
-      ["/login", "/signup", "/forget_password", "/activate"].includes(route)
-    ) {
-      setRoute("/");
+      if (isAuthRoute) {
+        navigate("/");
+      }
+    } catch (error) {
+      console.error("Failed to fetch profile:", error);
+      if (!isAuthRoute) {
+        navigate("/login");
+      }
     }
-  }, [route]);
+  }, [currentPath, navigate]);
 
   useEffect(() => {
     checkAccessToken();
   }, [checkAccessToken]);
 
-  useEffect(() => {
-    const handlePopState = () => setRoute(window.location.pathname);
-    window.addEventListener("popstate", handlePopState);
-
-    return () => {
-      window.removeEventListener("popstate", handlePopState);
+  const renderPage = useMemo(() => {
+    const routes: { [key: string]: React.FC<{ currentUserName?: string }> } = {
+      "/": HomePage,
+      "/login": LoginPage,
+      "/activate": ActivateUserPage,
+      "/signup": SignUpPage,
+      "/create_post": CreatePostPage,
+      "/my_posts": MyPostsPage,
+      "/profile": ProfilePage,
+      "/post": PostPage,
+      "/change_password": ChangePasswordPage,
+      "/tag": TagPage,
+      "/user": UserPage,
+      "/followers": FollowersPage,
     };
-  }, []);
 
-  useEffect(() => {
-    if (route !== window.location.pathname) {
-      window.history.pushState(null, "", route);
-    }
-  }, [route]);
-
-  function renderPage() {
-    const PageComponent = routes[route] || NotFoundPage;
+    const PageComponent = routes[currentPath.split("?")[0]] || NotFoundPage;
 
     const props: { currentUserName?: string } = {};
-    if (["/profile", "/user", "/my_posts"].includes(route)) {
+    if (
+      ["/profile", "/user", "/my_posts"].includes(currentPath.split("?")[0])
+    ) {
       props.currentUserName = userInfo?.username;
     }
 
     return <PageComponent {...props} />;
-  }
+  }, [currentPath]);
 
+  return <>{renderPage}</>;
+}
+
+export default function Root() {
+  console.log("root render");
   return (
     <StateProvider>
       <LocalizationProvider dateAdapter={AdapterDayjs}>
-        <SnackbarProvider>{renderPage()}</SnackbarProvider>
+        <SnackbarProvider>
+          <RoutesProvider>
+            <App />
+          </RoutesProvider>
+        </SnackbarProvider>
       </LocalizationProvider>
     </StateProvider>
   );
 }
-
-export default App;

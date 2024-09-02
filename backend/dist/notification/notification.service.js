@@ -59,6 +59,7 @@ let NotificationService = class NotificationService {
         this.notificationModel = notificationModel;
     }
     async createNotification(dto) {
+        console.log('dto: ', dto);
         if (dto.createdBy === dto.createdFor)
             return;
         const filter = {
@@ -93,6 +94,7 @@ let NotificationService = class NotificationService {
             setDefaultsOnInsert: true,
         };
         const result = await this.notificationModel.findOneAndUpdate(filter, update, options);
+        console.log('result: ', result);
         if (!result) {
             throw new common_1.InternalServerErrorException();
         }
@@ -151,13 +153,14 @@ let NotificationService = class NotificationService {
             const passedTime = getPassedTime(i.createdAt);
             if (type === 'follow') {
                 followNotifications.push({
-                    ...lastPerson,
-                    username: i.createdBy.username,
+                    id: String(i._id),
+                    lastPerson,
                     isLookedAt,
                     notificationId,
                     isSeen,
-                    targetHref: `/user?id=${String(i.createdBy)}`,
+                    targetHref: `/user?username=${String(i.createdBy.username)}`,
                     passedTime,
+                    type,
                 });
                 return;
             }
