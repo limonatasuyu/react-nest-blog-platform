@@ -27,8 +27,10 @@ let CommentsService = class CommentsService {
         this.notificationService = notificationService;
     }
     async addComment(dto, userId) {
+        const commentId = new mongoose.Types.ObjectId();
+        console.log('dto from addComment: ', dto);
         const createdComment = await this.commentsModel.create({
-            _id: new mongoose.Types.ObjectId(),
+            _id: commentId,
             content: dto.content,
             user: userId,
             answerTo: dto.answeredCommentId,
@@ -37,6 +39,9 @@ let CommentsService = class CommentsService {
         });
         if (!createdComment) {
             throw new common_1.InternalServerErrorException();
+        }
+        if (dto.ownerCommentId) {
+            await this.commentsModel.updateOne({ _id: dto.ownerCommentId }, { $push: { answers: commentId } });
         }
         const updatedPost = await this.postsModel.findOneAndUpdate({ _id: dto.postId }, {
             $push: { comments: createdComment },
@@ -68,7 +73,7 @@ let CommentsService = class CommentsService {
                 answeredComment: dto.answeredCommentId,
             });
         }
-        return { message: 'comment created successfully' };
+        return { commentId };
     }
     async deleteComment(dto) {
         const updatePostResult = await this.postsModel.updateOne({ _id: dto.postId }, { $pull: { commentIds: dto.commentId } });
@@ -129,13 +134,14 @@ let CommentsService = class CommentsService {
         return { message: 'Operation handled successfully' };
     }
     async getAnswers(page, commentId) {
+        const answerPageSize = 2;
         const answers = await this.commentsModel
             .find({
             answerTo: commentId,
         })
-            .sort({ createdAt: -1 })
-            .limit(10)
-            .skip(page * 10)
+            .sort({ createdAt: 1 })
+            .skip(page * answerPageSize)
+            .limit(answerPageSize)
             .populate('content answerTo createdAt')
             .populate({
             path: 'user',
@@ -145,8 +151,14 @@ let CommentsService = class CommentsService {
     }
     async getByPostId(page, postId) {
         const pageSize = 10;
+        const answerPageSize = 2;
         const comments = await this.commentsModel.aggregate([
-            { $match: { post: postId, answerTo: undefined } },
+            {
+                $match: {
+                    post: new mongoose.Types.ObjectId(postId),
+                    answerTo: { $exists: false },
+                },
+            },
             {
                 $lookup: {
                     from: 'users',
@@ -157,54 +169,73 @@ let CommentsService = class CommentsService {
             },
             { $unwind: '$user' },
             {
-                $facet: {
-                    comments: [
-                        {
-                            $project: {
-                                content: 1,
-                                createdAt: 1,
+                $lookup: {
+                    from: 'comments',
+                    localField: '_id',
+                    foreignField: 'answerTo',
+                    as: 'answers',
+                },
+            },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'answers.user',
+                    foreignField: '_id',
+                    as: 'answerUsers',
+                },
+            },
+            {
+                $addFields: {
+                    answers: {
+                        $map: {
+                            input: { $ifNull: ['$answers', []] },
+                            as: 'answer',
+                            in: {
+                                _id: '$$answer._id',
+                                content: '$$answer.content',
+                                answerTo: '$$answer.answerTo',
+                                createdAt: '$$answer.createdAt',
                                 user: {
-                                    firstname: 1,
-                                    lastname: 1,
-                                    username: 1,
-                                    profilePictureId: 1,
-                                },
-                                likedCount: { $size: '$likedBy' },
-                                answers: {
-                                    $slice: [
+                                    $arrayElemAt: [
                                         {
-                                            $map: {
-                                                input: {
-                                                    $sortArray: {
-                                                        input: '$answers',
-                                                        sortBy: { createdAt: -1 },
-                                                    },
-                                                },
-                                                as: 'answer',
-                                                in: {
-                                                    content: '$$answer.content',
-                                                    answerTo: '$$answer.answerTo',
-                                                    createdAt: '$$answer.createdAt',
-                                                    user: {
-                                                        firstname: '$$answer.user.firstname',
-                                                        lastname: '$$answer.user.lastname',
-                                                        username: '$$answer.user.username',
-                                                        profilePictureId: '$$answer.user.profilePictureId',
-                                                    },
-                                                    likedCount: { $size: '$$answer.likedBy' },
-                                                },
+                                            $filter: {
+                                                input: '$answerUsers',
+                                                as: 'user',
+                                                cond: { $eq: ['$$user._id', '$$answer.user'] },
                                             },
                                         },
-                                        10,
+                                        0,
                                     ],
                                 },
+                                likedCount: { $size: { $ifNull: ['$$answer.likedBy', []] } },
                             },
                         },
-                        {
-                            $sort: { createdAt: -1 },
-                        },
-                        { $limit: pageSize },
+                    },
+                },
+            },
+            {
+                $project: {
+                    content: 1,
+                    createdAt: 1,
+                    user: {
+                        firstname: 1,
+                        lastname: 1,
+                        username: 1,
+                        profilePictureId: 1,
+                    },
+                    likedCount: { $size: { $ifNull: ['$likedBy', []] } },
+                    answerPageCount: {
+                        $ceil: { $divide: [{ $size: '$answers' }, answerPageSize] },
+                    },
+                    answers: { $slice: ['$answers', answerPageSize] },
+                },
+            },
+            {
+                $facet: {
+                    comments: [
+                        { $sort: { createdAt: -1 } },
                         { $skip: (page - 1) * pageSize },
+                        { $limit: pageSize },
                     ],
                     totalRecordCount: [{ $count: 'count' }],
                 },
@@ -222,7 +253,8 @@ let CommentsService = class CommentsService {
                 },
             },
         ]);
-        return comments[0];
+        console.log('comments: ', comments);
+        return comments[0] ?? [];
     }
 };
 exports.CommentsService = CommentsService;

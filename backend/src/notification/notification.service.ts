@@ -98,6 +98,7 @@ export class NotificationService {
   }
 
   async getNotifications(userId: string) {
+    return [];
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(today.getDate() - 1);

@@ -101,6 +101,10 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     window.location.pathname = "/login";
   }
 
+  function handleSearch() {
+    if (searchValue.length > 3) navigate(`/search?keyword=${searchValue}`)
+  }
+
   useEffect(() => {
     const token = window.sessionStorage.getItem("access_token");
     fetch("http://localhost:5000/notification", {
@@ -151,10 +155,13 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             onChange={(e: ChangeEvent<HTMLInputElement>) =>
               setSearchValue(e.target.value)
             }
+            onKeyPress={(e) => {
+              if (e.key === "Enter") handleSearch();
+            }}
             endAdornment={
               <InputAdornment position="end">
                 <IconButton aria-label="search">
-                  <SearchIcon />
+                  <SearchIcon onClick={handleSearch}/>
                 </IconButton>
               </InputAdornment>
             }

@@ -8,7 +8,6 @@ import {
   Chip,
 } from "@mui/material";
 import {
-  AccountCircle as AccountCircleIcon,
   Favorite as FavoriteIcon,
   Chat as ChatIcon,
 } from "@mui/icons-material";
@@ -35,8 +34,8 @@ export default function PostCard({ post }: { post: PostData }) {
           mb: 2,
         }}
       >
-        <Avatar sx={{ mr: 2 }}>
-          <AccountCircleIcon />
+        <Avatar sx={{ mr: 2 }} src={post.user.profilePictureId && `http://localhost:5000/image/${post.user.profilePictureId}`} >
+          {post.user.firstname.charAt(0)}
         </Avatar>
 
         <Box>

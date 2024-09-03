@@ -17,15 +17,13 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { SnackbarProvider } from "./hooks/useSnackbar";
 import RoutesProvider, { useRoute } from "./context/RouteProvider";
 import FollowersPage from "./pages/FollowersPage";
+import SearchPage from "./pages/SearchPage";
+import { userInfo } from "./interfaces";
 //import { Snackbar } from "@mui/material";
-
-interface UserInfo {
-  username: string;
-}
 
 function App() {
   const { currentPath, navigate } = useRoute();
-  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [userInfo, setUserInfo] = useState<userInfo | null>(null);
 
   const checkAccessToken = useCallback(async () => {
     const isAuthRoute = [
@@ -63,7 +61,6 @@ function App() {
         navigate("/");
       }
     } catch (error) {
-      console.error("Failed to fetch profile:", error);
       if (!isAuthRoute) {
         navigate("/login");
       }
@@ -88,25 +85,27 @@ function App() {
       "/tag": TagPage,
       "/user": UserPage,
       "/followers": FollowersPage,
+      "/search": SearchPage,
     };
 
     const PageComponent = routes[currentPath.split("?")[0]] || NotFoundPage;
 
-    const props: { currentUserName?: string } = {};
+    const props: { currentUserName?: string; userInfo?: userInfo } = {};
     if (
       ["/profile", "/user", "/my_posts"].includes(currentPath.split("?")[0])
     ) {
       props.currentUserName = userInfo?.username;
+    } else if (currentPath.split("?")[0] === "/post" && userInfo) {
+      props.userInfo = userInfo
     }
 
     return <PageComponent {...props} />;
-  }, [currentPath]);
+  }, [currentPath, userInfo]);
 
   return <>{renderPage}</>;
 }
 
 export default function Root() {
-  console.log("root render");
   return (
     <StateProvider>
       <LocalizationProvider dateAdapter={AdapterDayjs}>

@@ -17,7 +17,7 @@ export declare class CommentsController {
         message: string;
     }>;
     addComment(req: any, dto: AddCommentDTO): Promise<{
-        message: string;
+        commentId: import("mongoose").Types.ObjectId;
     }>;
     deleteComment(dto: DeleteCommentDTO): Promise<{
         message: string;

@@ -10,7 +10,7 @@ export declare class CommentsService {
     private notificationService;
     constructor(commentsModel: Model<Comment>, postsModel: Model<Post>, notificationService: NotificationService);
     addComment(dto: AddCommentDTO, userId: string): Promise<{
-        message: string;
+        commentId: mongoose.Types.ObjectId;
     }>;
     deleteComment(dto: DeleteCommentDTO): Promise<{
         message: string;

@@ -1,4 +1,4 @@
 # Global ignores
 node_modules/
 *.env
-
+backend/dist/

@@ -1,4 +1,4 @@
-interface userInfo {
+export interface userInfo {
   profilePictureId?: string;
   firstname: string;
   lastname: string;
@@ -25,7 +25,7 @@ export interface RecommendedData {
   users: userInfo[];
 }
 
-interface ReplyData {
+export interface ReplyData {
   user: userInfo;
   content: string;
   createdAt: string;

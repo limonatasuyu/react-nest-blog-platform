@@ -147,6 +147,7 @@ let PostsService = class PostsService {
                                     firstname: 1,
                                     lastname: 1,
                                     description: 1,
+                                    profilePictureId: 1,
                                 },
                             },
                         },
@@ -268,6 +269,7 @@ let PostsService = class PostsService {
                     as: 'tags',
                 },
             },
+            { $unwind: '$user' },
             {
                 $project: {
                     thumbnailId: 1,

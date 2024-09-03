@@ -362,4 +362,52 @@ export class UsersService {
 
     return { message: 'operation handled successfully' };
   }
+
+  async getSearchResults(page: number, keyword: string) {
+    const pageSize = 10;
+    return (
+      (await this.userModel.aggregate([
+        { $match: { $text: { $search: keyword } } },
+
+        {
+          $facet: {
+            posts: [
+              {
+                $project: {
+                  _id: 0,
+                  firstname: 1,
+                  lastname: 1,
+                  username: 1,
+                  description: 1,
+                  profilePictureId: 1,
+                },
+              },
+              {
+                $sort: { createdAt: -1 },
+              },
+              {
+                $skip: (page - 1) * pageSize,
+              },
+              {
+                $limit: pageSize,
+              },
+            ],
+            totalRecordCount: [{ $count: 'count' }],
+          },
+        },
+        {
+          $addFields: {
+            totalPageCount: {
+              $ceil: {
+                $divide: [
+                  { $arrayElemAt: ['$totalRecordCount.count', 0] },
+                  pageSize,
+                ],
+              },
+            },
+          },
+        },
+      ])[0]) ?? []
+    );
+  }
 }

@@ -5,7 +5,6 @@ import {
   Button,
   Avatar,
   Grid,
-  Card,
   AlertColor,
   Tooltip,
   IconButton,
@@ -41,6 +40,7 @@ import XIcon from "@mui/icons-material/X";
 import LinkedInIcon from "@mui/icons-material/LinkedIn";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import ReportGmailerrorredIcon from "@mui/icons-material/ReportGmailerrorred";
+import { CommentData, PostData, ReplyData, userInfo } from "../interfaces";
 
 function calculateReadingTime(text: string) {
   const wordsPerMinute = 225; // You can adjust this value based on your preference
@@ -52,52 +52,12 @@ function calculateReadingTime(text: string) {
   return Math.ceil(readingTimeMinutes);
 }
 
-interface userInfo {
-  profilePictureId?: string;
-  firstname: string;
-  lastname: string;
-  username: string;
-  description?: string;
-}
-
-interface commentData {
-  user: userInfo;
-  content: string;
-  createdAt: string;
-  _id: string;
-  isUserLiked: boolean;
-  likedCount: number;
-  answers?: ReplyData[];
-}
-
-interface ReplyData {
-  user: userInfo;
-  content: string;
-  createdAt: string;
-  _id: string;
-  isUserLiked: boolean;
-  likedCount: number;
-}
-
-interface postData {
-  title: string;
-  thumbnailId?: string;
-  content: string;
-  comments: commentData[];
-  user: userInfo;
-  commentCount: number;
-  likedCount: number;
-  isUserLiked: boolean;
-  createdAt: string;
-  isUserSaved: boolean;
-}
-
-export default function PostPage() {
+export default function PostPage({ userInfo }: { userInfo: userInfo }) {
   const params = new URL(document.location.toString()).searchParams;
   const postId = params.get("id");
 
-  const [post, setPost] = useState<postData | null>(null);
-  const [comments, setComments] = useState<any[]>([]);
+  const [post, setPost] = useState<PostData | null>(null);
+  const [comments, setComments] = useState<CommentData[]>([]);
   const [commentsPage, setCommentsPage] = useState(1);
   const [totalPageCount, setTotalPageCount] = useState(1);
   const [loaded, setLoaded] = useState(false);
@@ -120,13 +80,14 @@ export default function PostPage() {
   function fetchComments() {
     const token = window.sessionStorage.getItem("access_token");
     fetch(
-      `http://localhost:5000/comments?page=${commentsPage}&postId${postId}`,
+      `http://localhost:5000/comments?page=${commentsPage}&postId=${postId}`,
       {
         headers: { Authorization: `Bearer ${token}` },
       }
     ).then((res) => {
       if (!res.ok) return;
       res.json().then((result) => {
+        console.log("result: ", result)
         if (totalPageCount !== result.totalPageCount)
           setTotalPageCount(result.totalPageCount);
         setComments([...comments, ...result.comments]);
@@ -199,6 +160,23 @@ export default function PostPage() {
   }, []);
 
   function handleSubmit() {
+    const oldComments = [...comments];
+    const commentId = Date.now();
+
+    const newComments = [
+      {
+        _id: String(commentId),
+        content: comment,
+        user: userInfo,
+        createdAt: new Date().toISOString(),
+        likedCount: 0,
+        answers: [],
+        isUserLiked: false,
+      },
+      ...comments,
+    ];
+
+    setComments(newComments);
     const token = window.sessionStorage.getItem("access_token");
     setIsSubmitting(true);
     fetch(`http://localhost:5000/comments`, {
@@ -218,20 +196,23 @@ export default function PostPage() {
             "error"
           );
           return;
+          setComments(oldComments);
         }
         setSnackBar(
           jsonResponse.message ?? "Comment added successfully.",
           "success"
         );
-        //setComments([newComment, ...comments])
+        newComments[0]._id = jsonResponse.commentId;
+        setComments(newComments);
         setComment("");
       })
-      .catch((err) =>
+      .catch((err) => {
         setSnackBar(
           err.message ?? "Unexpected error occured, please try again later",
           "error"
-        )
-      )
+        );
+        setComments(oldComments);
+      })
       .finally(() => setIsSubmitting(false));
   }
 
@@ -574,9 +555,10 @@ export default function PostPage() {
                 postId={postId as string}
                 setSnackBar={setSnackBar}
                 key={x}
+                userInfo={userInfo}
               />
             ))}
-            <Button onClick={fetchComments}>More Comments</Button>
+            {commentsPage <= totalPageCount && <Button onClick={fetchComments}>More Comments</Button>}
           </Grid>
         </Grid>
       </Box>
@@ -588,18 +570,47 @@ function CommentCard({
   commentData,
   setSnackBar,
   postId,
+  userInfo,
 }: {
-  commentData: commentData;
+  commentData: CommentData;
   setSnackBar: (message: string, status: AlertColor) => void;
   postId: string;
+  userInfo: userInfo;
 }) {
   const [isReplyInputVisible, setIsReplyInputVisible] = useState(false);
   const [reply, setReply] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [likeCount, setLikeCount] = useState(commentData.likedCount);
   const [isUserLiked, setIsUserLiked] = useState(commentData.isUserLiked);
+  const [answeredCommentId, setAnsweredCommentId] = useState(commentData._id);
+  const [answers, setAnswers] = useState(commentData?.answers ?? []);
+  const [showReplies, setShowReplies] = useState(false);
+  const [answerPage, setAnswerPage] = useState(1);
 
   function handleSubmit() {
+    const commentId = String(Date.now());
+    const payload = {
+      ownerCommentId: commentData._id,
+      answeredCommentId,
+      postId,
+      content: reply,
+    };
+
+    const oldAnswers = [...answers];
+    const newAnswers = [
+      {
+        _id: String(commentId),
+        content: reply,
+        user: userInfo,
+        createdAt: new Date().toISOString(),
+        answerTo: answeredCommentId,
+        likedCount: 0,
+        isUserLiked: false,
+      },
+      ...answers,
+    ];
+    setAnswers(newAnswers);
+    setShowReplies(true);
     const token = window.sessionStorage.getItem("access_token");
     setIsSubmitting(true);
     fetch(`http://localhost:5000/comments`, {
@@ -608,11 +619,7 @@ function CommentCard({
         Authorization: `Bearer ${token}`,
         "Content-type": "application/json",
       },
-      body: JSON.stringify({
-        answeredCommentId: commentData._id,
-        postId,
-        content: reply,
-      }),
+      body: JSON.stringify(payload),
     })
       .then(async (res) => {
         const jsonResponse = await res.json();
@@ -622,23 +629,38 @@ function CommentCard({
               "Unexpected error occured, please try again later",
             "error"
           );
+          setAnswers(oldAnswers);
           return;
         }
         setSnackBar(
           jsonResponse.message ?? "Comment added successfully.",
           "success"
         );
-        //fetchPost();
+        newAnswers[0]._id = jsonResponse.commentId;
+        setAnswers(newAnswers);
         setReply("");
       })
-      .catch((err) =>
+      .catch((err) => {
         setSnackBar(
           err.message ?? "Unexpected error occured, please try again later",
           "error"
-        )
-      )
+        );
+        setAnswers(oldAnswers);
+      })
       .finally(() => setIsSubmitting(false));
   }
+
+  function handleAnswerFetch() {
+    const token = window.sessionStorage.getItem('access_token');
+    fetch(`http://localhost:5000/comments/answers?commentId=${commentData._id}&page=${answerPage}`, { headers: { Authorization: `Bearer ${token}` } }).then((res) => {
+      if (!res.ok) return;
+      res.json().then((result) => {
+        setAnswerPage(answerPage + 1)
+        setAnswers([...answers, ...result])
+      })
+    })
+  }
+
 
   function handleLike() {
     const oldIsUserLiked = isUserLiked;
@@ -688,123 +710,131 @@ function CommentCard({
   }
   return (
     <Box
-      display="flex"
-      flexDirection="column"
-      alignItems="flex-end"
-      sx={{ width: "100%" }}
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        width: "100%",
+        mb: 1,
+        p: 1,
+        borderRadius: "4px",
+        backgroundColor: "#fafafa",
+        boxShadow: 1,
+      }}
     >
-      <Card
+      <Box display="flex" alignItems="center" gap={1}>
+        <Avatar
+          sx={{
+            height: "2rem",
+            width: "2rem",
+            bgcolor: "primary.main",
+            borderRadius: "50%",
+          }}
+        >
+          {commentData.user?.profilePictureId ? (
+            <Box
+              component="img"
+              src={`http://localhost:5000/image/${commentData.user?.profilePictureId}`}
+              sx={{ width: "100%", height: "100%", borderRadius: "50%" }}
+            />
+          ) : (
+            <AccountCircleIcon sx={{ fontSize: "1.5rem" }} />
+          )}
+        </Avatar>
+        <Box sx={{ flex: 1 }}>
+          <Typography variant="body2" sx={{ fontWeight: "bold" }}>
+            {commentData.user?.firstname} {commentData.user?.lastname}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {new Date(commentData.createdAt).toLocaleDateString()}
+          </Typography>
+        </Box>
+        <Button
+          size="small"
+          sx={{ textTransform: "none" }}
+          color={isUserLiked ? "error" : "primary"}
+          onClick={handleLike}
+        >
+          <FavoriteIcon sx={{ fontSize: "1rem", mr: 0.5 }} /> {likeCount}
+        </Button>
+      </Box>
+      <Typography
+        variant="body2"
         sx={{
-          mb: 3,
-          p: 2,
-          boxShadow: 2,
-          "&:hover": {
-            boxShadow: 4,
-          },
-          width: "100%",
-          borderRadius: "8px",
+          mt: 1,
+          backgroundColor: "#ffffff",
+          borderRadius: "4px",
+          padding: "0.5rem",
+          lineHeight: 1.4,
         }}
       >
-        <Box display="flex" alignItems="center" gap={2} mb={1}>
-          <Avatar
-            sx={{
-              height: "3rem",
-              width: "3rem",
-              bgcolor: "primary.main",
-              boxShadow: 3,
-            }}
-          >
-            {commentData.user?.profilePictureId ? (
-              <Box
-                component="img"
-                src={`http://localhost:5000/image/${commentData.user?.profilePictureId}`}
-                sx={{ borderRadius: "50%", width: "100%", height: "100%" }}
-              />
-            ) : (
-              <AccountCircleIcon sx={{ fontSize: "2rem" }} />
-            )}
-          </Avatar>
-          <Box>
-            <Typography variant="body1" sx={{ fontWeight: "bold" }}>
-              {commentData.user?.firstname + " " + commentData.user?.lastname}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {new Date(commentData.createdAt).toLocaleDateString()}
-            </Typography>
-          </Box>
-        </Box>
-        <Typography
-          sx={{
-            backgroundColor: "#f5f5f5",
-            borderRadius: "8px",
-            padding: "1rem",
-            lineHeight: 1.6,
-            mb: 2,
+        {commentData.content}
+      </Typography>
+      <Box display="flex" justifyContent="flex-end" mt={1}>
+        <Button
+          size="small"
+          sx={{ textTransform: "none" }}
+          onClick={() => {
+            if (answeredCommentId === commentData._id) {
+              setIsReplyInputVisible(!isReplyInputVisible);
+            }
+            setAnsweredCommentId(commentData._id);
           }}
         >
-          {commentData.content}
-        </Typography>
-        <Box display="flex" justifyContent="flex-end" alignItems="center">
-          <Button
-            size="small"
-            sx={{ textTransform: "none" }}
-            onClick={() => setIsReplyInputVisible(!isReplyInputVisible)}
-          >
-            <ChatIcon sx={{ mr: 1 }} /> Reply
-          </Button>
-          <Button
-            size="small"
-            sx={{ textTransform: "none" }}
-            color={isUserLiked ? "error" : "primary"}
-            onClick={handleLike}
-          >
-            <FavoriteIcon sx={{ mr: 1 }} /> Like ({likeCount})
-          </Button>
-        </Box>
-      </Card>
-      {commentData.answers?.map((i, x) => (
-        <ReplyComment key={x} setSnackBar={setSnackBar} reply={i} />
-      ))}
+          Reply
+        </Button>
+      </Box>
       {isReplyInputVisible && (
-        <Card
-          sx={{
-            mb: 3,
-            p: 2,
-            boxShadow: 2,
-            "&:hover": {
-              boxShadow: 4,
-            },
-            width: "90%",
-            justifySelf: "flex-end",
-            borderRadius: "8px",
-          }}
-        >
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 2,
+        <Box display="flex" alignItems="center" mt={1}>
+          <TextField
+            fullWidth
+            size="small"
+            value={reply}
+            onChange={(e) => {
+              if (isSubmitting) return;
+              setReply(e.target.value);
             }}
+            placeholder="Write a reply..."
+          />
+          <Button
+            variant="contained"
+            disabled={!reply.length || isSubmitting}
+            sx={{ ml: 1 }}
+            onClick={handleSubmit}
           >
-            <TextField
-              fullWidth
-              value={reply}
-              onChange={(e) => {
-                if (isSubmitting) return;
-                setReply(e.target.value);
-              }}
-              placeholder="Write a reply..."
-            />
-            <Button
-              variant="contained"
-              disabled={!reply.length || isSubmitting}
-              onClick={handleSubmit}
-            >
-              Submit
-            </Button>
-          </Box>
-        </Card>
+            Submit
+          </Button>
+        </Box>
       )}
+      {answers && answers.length > 0 && (
+        <Button
+          size="small"
+          onClick={() => setShowReplies(!showReplies)}
+          sx={{ mt: 1, textTransform: "none" }}
+        >
+          {showReplies
+            ? "Hide Replies"
+            : `Show ${answers.length} Repl${answers.length > 1 ? "ies" : "y"}`}
+        </Button>
+      )}
+      {showReplies &&
+        <>
+        {answers?.map((i, x) => (
+          <ReplyComment
+            key={x}
+            reply={i}
+            setAnswer={setAnsweredCommentId}
+            setIsReplyInputVisible={setIsReplyInputVisible}
+            setSnackBar={setSnackBar}
+          />
+        ))}
+          {commentData.answerPageCount > answerPage && <Button
+            size="small"
+            onClick={handleAnswerFetch}
+            sx={{ mt: 1, textTransform: "none" }}
+          >
+            More replies
+          </Button>}
+        </>}
     </Box>
   );
 }
@@ -812,9 +842,13 @@ function CommentCard({
 function ReplyComment({
   reply,
   setSnackBar,
+  setAnswer,
+  setIsReplyInputVisible,
 }: {
   reply: ReplyData;
   setSnackBar: (msg: string, status: AlertColor) => void;
+  setAnswer: (id: string) => void;
+  setIsReplyInputVisible: (is: boolean) => void;
 }) {
   const [likeCount, setLikeCount] = useState(reply.likedCount);
   const [isUserLiked, setIsUserLiked] = useState(reply.isUserLiked);
@@ -867,69 +901,68 @@ function ReplyComment({
       });
   }
   return (
-    <Card
+    <Box
       sx={{
-        mb: 3,
-        p: 2,
-        boxShadow: 2,
-        "&:hover": {
-          boxShadow: 4,
-        },
-        width: "90%",
-        justifySelf: "flex-end",
-        borderRadius: "8px",
+        display: "flex",
+        flexDirection: "column",
+        width: "98.7%",
+        mb: 1,
+        p: 1,
+        borderRadius: "4px",
+        backgroundColor: "#f1f1f1",
       }}
     >
-      <Box display="flex" alignItems="center" gap={2} mb={1}>
+      <Box display="flex" alignItems="center" gap={1}>
         <Avatar
           sx={{
-            height: "3rem",
-            width: "3rem",
+            height: "1.5rem",
+            width: "1.5rem",
             bgcolor: "primary.main",
-            boxShadow: 3,
+            borderRadius: "50%",
           }}
         >
           {reply.user?.profilePictureId ? (
             <Box
               component="img"
               src={`http://localhost:5000/image/${reply.user?.profilePictureId}`}
-              sx={{ borderRadius: "50%", width: "100%", height: "100%" }}
+              sx={{ width: "100%", height: "100%", borderRadius: "50%" }}
             />
           ) : (
-            <AccountCircleIcon sx={{ fontSize: "2rem" }} />
+            <AccountCircleIcon sx={{ fontSize: "1.25rem" }} />
           )}
         </Avatar>
-        <Box>
-          <Typography variant="body1" sx={{ fontWeight: "bold" }}>
-            {reply.user?.firstname + " " + reply.user?.lastname}
+        <Box sx={{ flex: 1 }}>
+          <Typography variant="body2" sx={{ fontWeight: "bold" }}>
+            {reply.user?.firstname} {reply.user?.lastname}
           </Typography>
           <Typography variant="caption" color="text.secondary">
             {new Date(reply.createdAt).toLocaleDateString()}
           </Typography>
         </Box>
+        <Button
+          size="small"
+          sx={{ textTransform: "none" }}
+          onClick={() => {
+            setIsReplyInputVisible(true);
+            setAnswer(reply._id);
+          }}
+        >
+          Reply
+        </Button>
       </Box>
       <Typography
+        variant="body2"
         sx={{
-          backgroundColor: "#f5f5f5",
-          borderRadius: "8px",
-          padding: "1rem",
-          lineHeight: 1.6,
-          mb: 2,
+          mt: 1,
+          backgroundColor: "#ffffff",
+          borderRadius: "4px",
+          padding: "0.5rem",
+          lineHeight: 1.4,
         }}
       >
         {reply.content}
       </Typography>
-      <Box display="flex" justifyContent="flex-end" alignItems="center">
-        <Button
-          size="small"
-          sx={{ textTransform: "none" }}
-          color={isUserLiked ? "error" : "primary"}
-          onClick={handleLike}
-        >
-          <FavoriteIcon sx={{ mr: 1 }} /> Like ({likeCount})
-        </Button>
-      </Box>
-    </Card>
+    </Box>
   );
 }
 
