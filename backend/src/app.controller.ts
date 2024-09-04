@@ -11,7 +11,7 @@ export class AppController {
   }
 
   @Get('search')
-  async getResults(@Query() { keyword }) {
-    return this.appService.getSearchResults(keyword);
+  async getResults(@Query() { page, keyword }) {
+    return this.appService.getSearchResults(page, keyword);
   }
 }

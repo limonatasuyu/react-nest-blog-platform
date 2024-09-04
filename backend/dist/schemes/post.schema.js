@@ -21,7 +21,7 @@ __decorate([
     __metadata("design:type", String)
 ], Post.prototype, "_id", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ required: true }),
+    (0, mongoose_1.Prop)({ required: true, index: 'text' }),
     __metadata("design:type", String)
 ], Post.prototype, "title", void 0);
 __decorate([

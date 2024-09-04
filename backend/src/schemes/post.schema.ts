@@ -12,7 +12,7 @@ export class Post {
   @Prop({ required: true })
   _id: string;
 
-  @Prop({ required: true })
+  @Prop({ required: true, index: 'text' })
   title: string;
 
   @Prop({ required: true })

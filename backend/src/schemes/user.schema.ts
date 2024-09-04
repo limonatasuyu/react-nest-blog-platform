@@ -10,13 +10,13 @@ export class User {
   @Prop({ required: true })
   _id: mongoose.Schema.Types.ObjectId;
 
-  @Prop({ required: true, unique: true })
+  @Prop({ required: true, unique: true, index: 'text' })
   username: string;
 
-  @Prop({ required: true })
+  @Prop({ required: true, index: 'text' })
   firstname: string;
 
-  @Prop({ required: true })
+  @Prop({ required: true, index: 'text' })
   lastname: string;
 
   @Prop({ required: true, unique: true })

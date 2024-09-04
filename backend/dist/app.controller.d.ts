@@ -8,4 +8,11 @@ export declare class AppController {
         }>)[];
         users: any[];
     }>;
+    getResults({ page, keyword }: {
+        page: any;
+        keyword: any;
+    }): Promise<{
+        postsData: any;
+        usersData: any;
+    }>;
 }

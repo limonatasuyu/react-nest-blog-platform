@@ -298,6 +298,78 @@ let PostsService = class PostsService {
         post[0].isUserSaved = Boolean(user);
         return post[0];
     }
+    async getSearchResults(page, keyword) {
+        const pageSize = 10;
+        const posts = await this.postsModel.aggregate([
+            {
+                $match: { $text: { $search: keyword } },
+            },
+            {
+                $lookup: {
+                    from: 'tags',
+                    localField: 'tags',
+                    foreignField: '_id',
+                    as: 'tagDetails',
+                },
+            },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'user',
+                    foreignField: '_id',
+                    as: 'user',
+                },
+            },
+            { $unwind: '$user' },
+            {
+                $facet: {
+                    posts: [
+                        {
+                            $project: {
+                                id: 1,
+                                title: 1,
+                                content: 1,
+                                thumbnailId: 1,
+                                likedCount: { $size: '$likedBy' },
+                                commentCount: { $size: '$comments' },
+                                tags: {
+                                    $map: { input: '$tagDetails', as: 'tag', in: '$$tag.name' },
+                                },
+                                user: {
+                                    username: 1,
+                                    firstname: 1,
+                                    lastname: 1,
+                                    description: 1,
+                                    profilePictureId: 1,
+                                },
+                            },
+                        },
+                        { $sort: { score: { $meta: 'textScore' } } },
+                        {
+                            $skip: (page - 1) * pageSize,
+                        },
+                        {
+                            $limit: pageSize,
+                        },
+                    ],
+                    totalRecordCount: [{ $count: 'count' }],
+                },
+            },
+            {
+                $addFields: {
+                    totalPageCount: {
+                        $ceil: {
+                            $divide: [
+                                { $arrayElemAt: ['$totalRecordCount.count', 0] },
+                                pageSize,
+                            ],
+                        },
+                    },
+                },
+            },
+        ]);
+        return posts[0] ?? [];
+    }
 };
 exports.PostsService = PostsService;
 exports.PostsService = PostsService = __decorate([

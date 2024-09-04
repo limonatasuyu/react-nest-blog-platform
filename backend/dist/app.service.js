@@ -13,10 +13,12 @@ exports.AppService = void 0;
 const common_1 = require("@nestjs/common");
 const tag_service_1 = require("./tag/tag.service");
 const user_service_1 = require("./user/user.service");
+const posts_service_1 = require("./posts/posts.service");
 let AppService = class AppService {
-    constructor(tagService, userService) {
+    constructor(tagService, userService, postService) {
         this.tagService = tagService;
         this.userService = userService;
+        this.postService = postService;
     }
     async getRecommended() {
         const tags = await this.tagService.getPopularTags();
@@ -26,11 +28,17 @@ let AppService = class AppService {
         }
         return { tags, users };
     }
+    async getSearchResults(page, keyword) {
+        const postsData = await this.postService.getSearchResults(page, keyword);
+        const usersData = await this.userService.getSearchResults(page, keyword);
+        return { postsData, usersData };
+    }
 };
 exports.AppService = AppService;
 exports.AppService = AppService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [tag_service_1.TagService,
-        user_service_1.UsersService])
+        user_service_1.UsersService,
+        posts_service_1.PostsService])
 ], AppService);
 //# sourceMappingURL=app.service.js.map

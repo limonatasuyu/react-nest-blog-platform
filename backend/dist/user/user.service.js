@@ -279,6 +279,49 @@ let UsersService = class UsersService {
         }
         return { message: 'operation handled successfully' };
     }
+    async getSearchResults(page, keyword) {
+        const pageSize = 10;
+        const users = await this.userModel.aggregate([
+            { $match: { $text: { $search: keyword } } },
+            {
+                $facet: {
+                    users: [
+                        {
+                            $project: {
+                                _id: 0,
+                                firstname: 1,
+                                lastname: 1,
+                                username: 1,
+                                description: 1,
+                                profilePictureId: 1,
+                            },
+                        },
+                        { $sort: { score: { $meta: 'textScore' } } },
+                        {
+                            $skip: (page - 1) * pageSize,
+                        },
+                        {
+                            $limit: pageSize,
+                        },
+                    ],
+                    totalRecordCount: [{ $count: 'count' }],
+                },
+            },
+            {
+                $addFields: {
+                    totalPageCount: {
+                        $ceil: {
+                            $divide: [
+                                { $arrayElemAt: ['$totalRecordCount.count', 0] },
+                                pageSize,
+                            ],
+                        },
+                    },
+                },
+            },
+        ]);
+        return users[0] ?? [];
+    }
 };
 exports.UsersService = UsersService;
 exports.UsersService = UsersService = __decorate([

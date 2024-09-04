@@ -20,15 +20,15 @@ __decorate([
     __metadata("design:type", mongoose.Schema.Types.ObjectId)
 ], User.prototype, "_id", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ required: true, unique: true }),
+    (0, mongoose_1.Prop)({ required: true, unique: true, index: 'text' }),
     __metadata("design:type", String)
 ], User.prototype, "username", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ required: true }),
+    (0, mongoose_1.Prop)({ required: true, index: 'text' }),
     __metadata("design:type", String)
 ], User.prototype, "firstname", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ required: true }),
+    (0, mongoose_1.Prop)({ required: true, index: 'text' }),
     __metadata("design:type", String)
 ], User.prototype, "lastname", void 0);
 __decorate([

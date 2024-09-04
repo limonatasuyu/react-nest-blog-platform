@@ -35,4 +35,5 @@ export declare class PostsService {
         message: string;
     }>;
     getPostById(postId: string, user_id: string): Promise<any>;
+    getSearchResults(page: number, keyword: string): Promise<any>;
 }

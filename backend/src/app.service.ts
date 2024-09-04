@@ -23,9 +23,9 @@ export class AppService {
   }
 
   async getSearchResults(page: number, keyword: string) {
-    const posts = await this.postService.getSearchResults(page, keyword);
-    const users = await this.userService.getSearchResults(page, keyword);
+    const postsData = await this.postService.getSearchResults(page, keyword);
+    const usersData = await this.userService.getSearchResults(page, keyword);
 
-    return { posts, users };
+    return { postsData, usersData };
   }
 }

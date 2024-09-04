@@ -36,4 +36,5 @@ export declare class UsersService {
     follow(userToFollowUsername: string, followingUserId: string): Promise<{
         message: string;
     }>;
+    getSearchResults(page: number, keyword: string): Promise<any>;
 }

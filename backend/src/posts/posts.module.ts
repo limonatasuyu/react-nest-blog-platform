@@ -22,5 +22,6 @@ import { NotificationModule } from 'src/notification/notification.module';
   ],
   providers: [PostsService],
   controllers: [PostsController],
+  exports: [PostsService],
 })
 export class PostsModule {}

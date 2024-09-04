@@ -1,4 +1,12 @@
-import { Box, TextField, Button, Avatar, Paper, Modal, Typography } from "@mui/material";
+import {
+  Box,
+  TextField,
+  Button,
+  Avatar,
+  Paper,
+  Modal,
+  Typography,
+} from "@mui/material";
 import AppLayout from "../Layouts/AppLayout";
 import { ChangeEvent, useCallback, useEffect, useState } from "react";
 import useSnackbar from "../hooks/useSnackbar";
@@ -32,7 +40,11 @@ function fileToDataUri(file: File) {
   });
 }
 
-export default function ProfilePage({ currentUserName }: { currentUserName: string }) {
+export default function ProfilePage({
+  currentUserName,
+}: {
+  currentUserName: string;
+}) {
   const [userInfo, setUserInfo] = useState<{
     email: string;
     firstname: string;
@@ -217,25 +229,13 @@ export default function ProfilePage({ currentUserName }: { currentUserName: stri
         <Paper elevation={4} sx={{ p: 6, maxWidth: 500, width: "100%" }}>
           <Box display="flex" sx={{ justifyContent: "center", mb: 4 }}>
             <Avatar
-              sx={{
-                height: "8rem",
-                width: "8rem",
-                bgcolor: "primary.main",
-                boxShadow: 3,
-              }}
+              src={
+                imageDataUri ??
+                `http://localhost:5000/image/${userInfo?.profilePictureId}`
+              }
+              sx={{ width: "8rem", height: "8rem" }}
             >
-              {userInfo?.profilePictureId || imageDataUri ? (
-                <Box
-                  component="img"
-                  src={
-                    imageDataUri ??
-                    `http://localhost:5000/image/${userInfo?.profilePictureId}`
-                  }
-                  sx={{ borderRadius: "50%" }}
-                />
-              ) : (
-                <AccountCircleIcon sx={{ fontSize: "6rem" }} />
-              )}
+              {userInfo?.firstname.charAt(0)}
             </Avatar>
           </Box>
           <Box display="flex" sx={{ flexDirection: "column", gap: 3 }}>
