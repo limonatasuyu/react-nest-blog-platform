@@ -58,8 +58,7 @@ let NotificationService = class NotificationService {
     constructor(notificationModel) {
         this.notificationModel = notificationModel;
     }
-    async createNotification(dto) {
-        console.log('dto: ', dto);
+    async createNotification(dto, session) {
         if (dto.createdBy === dto.createdFor)
             return;
         const filter = {
@@ -92,9 +91,9 @@ let NotificationService = class NotificationService {
             upsert: true,
             new: true,
             setDefaultsOnInsert: true,
+            session,
         };
         const result = await this.notificationModel.findOneAndUpdate(filter, update, options);
-        console.log('result: ', result);
         if (!result) {
             throw new common_1.InternalServerErrorException();
         }

@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ImageController } from './image.controller';
 import { ImageService } from './image.service';
-import { Image, ImageSchema } from 'src/schemes/images.schema';
+import { Image, ImageSchema } from '../schemes/images.schema';
 import { MongooseModule } from '@nestjs/mongoose';
 
 @Module({

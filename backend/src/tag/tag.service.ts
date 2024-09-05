@@ -1,7 +1,7 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
-import { Tag } from 'src/schemes/tag.schema';
+import { Tag } from '../schemes/tag.schema';
 
 @Injectable()
 export class TagService {

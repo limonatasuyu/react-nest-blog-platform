@@ -2,10 +2,11 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as mongoose from 'mongoose';
-import { Post } from 'src/schemes/post.schema';
-import { Comment } from 'src/schemes/comment.schema';
+import { Post } from '../schemes/post.schema';
+import { Comment } from '../schemes/comment.schema';
 import { AddCommentDTO, DeleteCommentDTO } from 'src/dto/comment-dto';
-import { NotificationService } from 'src/notification/notification.service';
+import { NotificationService } from '../notification/notification.service';
+import { UsersService } from '../user/user.service';
 
 @Injectable()
 export class CommentsService {
@@ -13,12 +14,12 @@ export class CommentsService {
     @InjectModel(Comment.name) private commentsModel: Model<Comment>,
     @InjectModel(Post.name) private postsModel: Model<Post>,
     private notificationService: NotificationService,
+    private usersService: UsersService,
   ) {}
 
   async addComment(dto: AddCommentDTO, userId: string) {
     const commentId = new mongoose.Types.ObjectId();
 
-    console.log('dto from addComment: ', dto);
     const createdComment = await this.commentsModel.create({
       _id: commentId,
       content: dto.content,
@@ -40,20 +41,20 @@ export class CommentsService {
     }
 
     const updatedPost = await this.postsModel.findOneAndUpdate(
-      { _id: dto.postId },
+      { _id: new mongoose.Types.ObjectId(dto.postId) },
       {
-        $push: { comments: createdComment },
+        $push: { comments: commentId },
       },
       {
-        projection: {
-          user: 1,
-        },
+        new: true,
+        select: 'user',
       },
     );
 
     if (!updatedPost) {
       throw new InternalServerErrorException();
     }
+
     await this.notificationService.createNotification({
       type: 'comment',
       createdBy: userId,
@@ -106,6 +107,8 @@ export class CommentsService {
   }
 
   async likeComment(commentId: string, user_id: string) {
+    const user = await this.usersService.getById(user_id);
+    if (!user) throw new InternalServerErrorException();
     const updatedComment = await this.commentsModel.findOneAndUpdate(
       { _id: new mongoose.Types.ObjectId(commentId) },
       [
@@ -160,7 +163,7 @@ export class CommentsService {
       .find({
         answerTo: commentId,
       })
-      .sort({ createdAt: 1 })
+      .sort({ createdAt: -1 })
       .skip(page * answerPageSize) // first page is going to be already received after comment fetch (look at the method below)
       .limit(answerPageSize)
       .populate('content answerTo createdAt')
@@ -175,11 +178,12 @@ export class CommentsService {
   async getByPostId(page: number, postId: string) {
     const pageSize = 10;
     const answerPageSize = 2;
+
     const comments = await this.commentsModel.aggregate([
       {
         $match: {
           post: new mongoose.Types.ObjectId(postId),
-          answerTo: { $exists: false }, // Changed from `undefined` to `$exists: false`
+          answerTo: undefined,
         },
       },
       {
@@ -266,18 +270,22 @@ export class CommentsService {
       {
         $addFields: {
           totalPageCount: {
-            $ceil: {
-              $divide: [
-                { $arrayElemAt: ['$totalRecordCount.count', 0] },
-                pageSize,
-              ],
-            },
+            $ifNull: [
+              {
+                $ceil: {
+                  $divide: [
+                    { $arrayElemAt: ['$totalRecordCount.count', 0] },
+                    pageSize,
+                  ],
+                },
+              },
+              1,
+            ],
           },
         },
       },
     ]);
 
-    console.log('comments: ', comments);
-    return comments[0] ?? [];
+    return comments[0] ?? { comments: [], totalPageCount: 1 };
   }
 }

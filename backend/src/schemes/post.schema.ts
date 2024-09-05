@@ -10,7 +10,7 @@ export type PostDocument = HydratedDocument<Post>;
 @Schema()
 export class Post {
   @Prop({ required: true })
-  _id: string;
+  _id: mongoose.Schema.Types.ObjectId;
 
   @Prop({ required: true, index: 'text' })
   title: string;

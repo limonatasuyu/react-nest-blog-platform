@@ -45,8 +45,8 @@ export class NotificationService {
     private notificationModel: Model<Notification>,
   ) {}
 
-  async createNotification(dto: CreateNotificationDTO) {
-    console.log('dto: ', dto);
+  async createNotification(dto: CreateNotificationDTO, session?: any) {
+    //console.log('dto: ', dto);
     if (dto.createdBy === dto.createdFor) return;
 
     const filter = {
@@ -81,6 +81,7 @@ export class NotificationService {
       upsert: true, // Create the document if it does not exist
       new: true, // Return the updated document
       setDefaultsOnInsert: true, // Apply default values if a new document is created
+      session,
     };
 
     const result = await this.notificationModel.findOneAndUpdate(
@@ -89,7 +90,7 @@ export class NotificationService {
       options,
     );
 
-    console.log('result: ', result);
+    //console.log('result: ', result);
     if (!result) {
       throw new InternalServerErrorException();
     }

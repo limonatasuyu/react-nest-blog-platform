@@ -37,11 +37,11 @@ let CommentsGuard = class CommentsGuard {
             return true;
         const commentId = this.getCommentIdFromQuery(request);
         if (!commentId) {
-            throw new common_1.UnauthorizedException();
+            throw new common_1.InternalServerErrorException('Could not find the comment.');
         }
         const comment = await this.commentsService.findCommentByCommentIdAndUserId(commentId, request.user.payload.sub);
         if (!comment) {
-            throw new common_1.InternalServerErrorException('Could not find the post');
+            throw new common_1.UnauthorizedException();
         }
         return true;
     }

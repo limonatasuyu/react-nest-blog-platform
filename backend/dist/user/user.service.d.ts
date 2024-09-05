@@ -2,8 +2,8 @@ import { User } from '../schemes/user.schema';
 import { ActivationCode } from '../schemes/activationCode.schema';
 import { Model } from 'mongoose';
 import { ActivateUserDTO, CreateUserDTO, CreateActivationCodeDTO } from '../dto/user-dto';
-import { ImageService } from 'src/image/image.service';
-import { NotificationService } from 'src/notification/notification.service';
+import { ImageService } from '../image/image.service';
+import { NotificationService } from '../notification/notification.service';
 export declare class UsersService {
     private userModel;
     private activationCodeModel;

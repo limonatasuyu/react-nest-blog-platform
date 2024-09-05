@@ -5,7 +5,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import {
   Notification,
   NotificationSchema,
-} from 'src/schemes/notification.scheme';
+} from '../schemes/notification.scheme';
 
 @Module({
   imports: [

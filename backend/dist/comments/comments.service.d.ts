@@ -1,14 +1,16 @@
 import { Model } from 'mongoose';
 import * as mongoose from 'mongoose';
-import { Post } from 'src/schemes/post.schema';
-import { Comment } from 'src/schemes/comment.schema';
+import { Post } from '../schemes/post.schema';
+import { Comment } from '../schemes/comment.schema';
 import { AddCommentDTO, DeleteCommentDTO } from 'src/dto/comment-dto';
-import { NotificationService } from 'src/notification/notification.service';
+import { NotificationService } from '../notification/notification.service';
+import { UsersService } from '../user/user.service';
 export declare class CommentsService {
     private commentsModel;
     private postsModel;
     private notificationService;
-    constructor(commentsModel: Model<Comment>, postsModel: Model<Post>, notificationService: NotificationService);
+    private usersService;
+    constructor(commentsModel: Model<Comment>, postsModel: Model<Post>, notificationService: NotificationService, usersService: UsersService);
     addComment(dto: AddCommentDTO, userId: string): Promise<{
         commentId: mongoose.Types.ObjectId;
     }>;

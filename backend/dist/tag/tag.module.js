@@ -9,7 +9,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.TagModule = void 0;
 const common_1 = require("@nestjs/common");
 const tag_service_1 = require("./tag.service");
-const tag_controller_1 = require("./tag.controller");
 const mongoose_1 = require("@nestjs/mongoose");
 const tag_schema_1 = require("../schemes/tag.schema");
 let TagModule = class TagModule {
@@ -19,8 +18,7 @@ exports.TagModule = TagModule = __decorate([
     (0, common_1.Module)({
         imports: [mongoose_1.MongooseModule.forFeature([{ name: tag_schema_1.Tag.name, schema: tag_schema_1.TagSchema }])],
         providers: [tag_service_1.TagService],
-        controllers: [tag_controller_1.TagController],
-        exports: [tag_service_1.TagService]
+        exports: [tag_service_1.TagService],
     })
 ], TagModule);
 //# sourceMappingURL=tag.module.js.map

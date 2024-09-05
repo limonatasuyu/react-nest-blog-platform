@@ -36,7 +36,7 @@ export class CommentsGuard implements CanActivate {
 
     const commentId = this.getCommentIdFromQuery(request);
     if (!commentId) {
-      throw new UnauthorizedException();
+      throw new InternalServerErrorException('Could not find the comment.');
     }
 
     const comment = await this.commentsService.findCommentByCommentIdAndUserId(
@@ -45,7 +45,7 @@ export class CommentsGuard implements CanActivate {
     );
 
     if (!comment) {
-      throw new InternalServerErrorException('Could not find the post');
+      throw new UnauthorizedException();
     }
 
     return true;

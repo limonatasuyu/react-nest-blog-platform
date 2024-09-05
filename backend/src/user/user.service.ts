@@ -18,8 +18,8 @@ import {
 import { readFile } from 'node:fs/promises';
 import * as bcrypt from 'bcrypt';
 import * as nodemailer from 'nodemailer';
-import { ImageService } from 'src/image/image.service';
-import { NotificationService } from 'src/notification/notification.service';
+import { ImageService } from '../image/image.service';
+import { NotificationService } from '../notification/notification.service';
 
 let blocklist;
 

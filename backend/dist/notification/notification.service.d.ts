@@ -4,7 +4,7 @@ import { CreateNotificationDTO } from 'src/dto/notification-dto';
 export declare class NotificationService {
     private notificationModel;
     constructor(notificationModel: Model<Notification>);
-    createNotification(dto: CreateNotificationDTO): Promise<{
+    createNotification(dto: CreateNotificationDTO, session?: any): Promise<{
         message: string;
     }>;
     getNotifications(userId: string): Promise<(({

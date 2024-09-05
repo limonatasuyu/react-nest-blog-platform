@@ -1,5 +1,5 @@
 import mongoose, { Model } from 'mongoose';
-import { Tag } from 'src/schemes/tag.schema';
+import { Tag } from '../schemes/tag.schema';
 export declare class TagService {
     private tagModel;
     constructor(tagModel: Model<Tag>);

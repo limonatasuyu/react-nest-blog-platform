@@ -6,9 +6,9 @@ import { User, UserSchema } from '../schemes/user.schema';
 import {
   ActivationCode,
   ActivationCodeSchema,
-} from 'src/schemes/activationCode.schema';
-import { ImageModule } from 'src/image/image.module';
-import { NotificationModule } from 'src/notification/notification.module';
+} from '../schemes/activationCode.schema';
+import { ImageModule } from '../image/image.module';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
   imports: [

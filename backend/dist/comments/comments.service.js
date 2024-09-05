@@ -20,15 +20,16 @@ const mongoose = require("mongoose");
 const post_schema_1 = require("../schemes/post.schema");
 const comment_schema_1 = require("../schemes/comment.schema");
 const notification_service_1 = require("../notification/notification.service");
+const user_service_1 = require("../user/user.service");
 let CommentsService = class CommentsService {
-    constructor(commentsModel, postsModel, notificationService) {
+    constructor(commentsModel, postsModel, notificationService, usersService) {
         this.commentsModel = commentsModel;
         this.postsModel = postsModel;
         this.notificationService = notificationService;
+        this.usersService = usersService;
     }
     async addComment(dto, userId) {
         const commentId = new mongoose.Types.ObjectId();
-        console.log('dto from addComment: ', dto);
         const createdComment = await this.commentsModel.create({
             _id: commentId,
             content: dto.content,
@@ -43,15 +44,12 @@ let CommentsService = class CommentsService {
         if (dto.ownerCommentId) {
             await this.commentsModel.updateOne({ _id: dto.ownerCommentId }, { $push: { answers: commentId } });
         }
-        const updatedPost = await this.postsModel.findOneAndUpdate({ _id: dto.postId }, {
-            $push: { comments: createdComment },
-        }, {
-            projection: {
-                user: 1,
-            },
+        const updatedPost = await this.postsModel.findOne({
+            _id: new mongoose.Types.ObjectId(dto.postId),
         });
-        if (!updatedPost) {
-            throw new common_1.InternalServerErrorException();
+        if (updatedPost) {
+            updatedPost.comments.push(createdComment);
+            await updatedPost.save();
         }
         await this.notificationService.createNotification({
             type: 'comment',
@@ -92,6 +90,9 @@ let CommentsService = class CommentsService {
         return await this.commentsModel.findOne({ _id: commentId, user: userId });
     }
     async likeComment(commentId, user_id) {
+        const user = await this.usersService.getById(user_id);
+        if (!user)
+            throw new common_1.InternalServerErrorException();
         const updatedComment = await this.commentsModel.findOneAndUpdate({ _id: new mongoose.Types.ObjectId(commentId) }, [
             {
                 $set: {
@@ -139,7 +140,7 @@ let CommentsService = class CommentsService {
             .find({
             answerTo: commentId,
         })
-            .sort({ createdAt: 1 })
+            .sort({ createdAt: -1 })
             .skip(page * answerPageSize)
             .limit(answerPageSize)
             .populate('content answerTo createdAt')
@@ -156,7 +157,7 @@ let CommentsService = class CommentsService {
             {
                 $match: {
                     post: new mongoose.Types.ObjectId(postId),
-                    answerTo: { $exists: false },
+                    answerTo: undefined,
                 },
             },
             {
@@ -243,18 +244,22 @@ let CommentsService = class CommentsService {
             {
                 $addFields: {
                     totalPageCount: {
-                        $ceil: {
-                            $divide: [
-                                { $arrayElemAt: ['$totalRecordCount.count', 0] },
-                                pageSize,
-                            ],
-                        },
+                        $ifNull: [
+                            {
+                                $ceil: {
+                                    $divide: [
+                                        { $arrayElemAt: ['$totalRecordCount.count', 0] },
+                                        pageSize,
+                                    ],
+                                },
+                            },
+                            1,
+                        ],
                     },
                 },
             },
         ]);
-        console.log('comments: ', comments);
-        return comments[0] ?? [];
+        return comments[0] ?? { comments: [], totalPageCount: 1 };
     }
 };
 exports.CommentsService = CommentsService;
@@ -264,6 +269,7 @@ exports.CommentsService = CommentsService = __decorate([
     __param(1, (0, mongoose_1.InjectModel)(post_schema_1.Post.name)),
     __metadata("design:paramtypes", [mongoose_2.Model,
         mongoose_2.Model,
-        notification_service_1.NotificationService])
+        notification_service_1.NotificationService,
+        user_service_1.UsersService])
 ], CommentsService);
 //# sourceMappingURL=comments.service.js.map
