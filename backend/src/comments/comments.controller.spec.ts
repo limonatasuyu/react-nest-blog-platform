@@ -69,6 +69,10 @@ describe('CommentsController', () => {
     }
   });
 
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   describe('getComments method', () => {
     it('should return max 10 comments with postId, max 2 answers of the comments, also totalPageCount for comments as a whole and answerPageCount for individual comments', async () => {
       const { users, posts, comments } = generateRandomComments({
@@ -215,7 +219,7 @@ describe('CommentsController', () => {
   });
 
   describe('likeComment method', () => {
-    it('should update the comment, if the update caused the comment to be liked, it should trigger the createNotification method of the notification service', async () => {
+    it('should update the comment, if the update caused the comment to be liked, also should trigger the createNotification method of the notification service', async () => {
       const createNotification = jest.spyOn(
         NotificationService.prototype,
         'createNotification',
@@ -262,7 +266,6 @@ describe('CommentsController', () => {
         );
       }
     });
-
     it('should throw an internalServerError if a user id that is not corresponds to a user in the db is given', async () => {
       const { users, posts, comments } = generateRandomComments({
         userCount: 10,
@@ -289,7 +292,11 @@ describe('CommentsController', () => {
   });
 
   describe('addComment method', () => {
-    it('should add a comment to the db', async () => {
+    it("should add a comment to the db, also trigger the createNotification method if post's user and comment's user is not same", async () => {
+      const createNotification = jest.spyOn(
+        NotificationService.prototype,
+        'createNotification',
+      );
       const initialCommentCount = 100;
       const { users, posts, comments } = generateRandomComments({
         userCount: 10,
@@ -297,7 +304,8 @@ describe('CommentsController', () => {
         commentCount: initialCommentCount,
       });
       const userId = users[0]._id;
-      const postId = posts[0]._id;
+      const post = posts[0];
+      const postId = post._id;
       const content = 'A comment, probably about the post';
 
       //@ts-expect-error i did not understand the error
@@ -319,9 +327,16 @@ describe('CommentsController', () => {
       expect((await commentsInDB.toArray()).length).toEqual(
         initialCommentCount + 1,
       );
-    });
 
-    it("should add as an answer if answeredCommentId and ownerCommentId exists, meaning should update the answered comment's answers array", async () => {
+      if (String(userId) !== String(post.user._id)) {
+        expect(createNotification).toHaveBeenCalled();
+      }
+    });
+    it("should add the comment as an answer if answeredCommentId and ownerCommentId exists, meaning should update the answered comment's answers array, also create notification for both post's user and ownerComment's user", async () => {
+      const createNotification = jest.spyOn(
+        NotificationService.prototype,
+        'createNotification',
+      );
       const initialCommentCount = 100;
       const { users, posts, comments } = generateRandomComments({
         userCount: 10,
@@ -329,7 +344,8 @@ describe('CommentsController', () => {
         commentCount: initialCommentCount,
       });
       const userId = users[0]._id;
-      const postId = posts[0]._id;
+      const post = posts[0];
+      const postId = post._id;
       const answeredCommentBeforeUpdate = posts[0].comments[0];
       const answeredCommentId = String(answeredCommentBeforeUpdate._id);
       const content = 'A comment, probably about the post';
@@ -356,7 +372,184 @@ describe('CommentsController', () => {
         .find({ _id: new mongoose.Types.ObjectId(answeredCommentId) })
         .toArray();
 
-      expect(ownerCommentInDB[0].answers.length).toEqual(answeredCommentBeforeUpdate.answers.length + 1);
+      expect(ownerCommentInDB[0].answers.length).toEqual(
+        answeredCommentBeforeUpdate.answers.length + 1,
+      );
+
+      expect(createNotification).toBeCalledTimes(2);
+    });
+
+    it("should throw an error if ownerCommentId exists in dto but answeredCommentId isn't", async () => {
+      const { users, posts, comments } = generateRandomComments({
+        userCount: 10,
+        postCount: 20,
+        commentCount: 100,
+      });
+      const userId = users[0]._id;
+      const postId = posts[0]._id;
+      const answeredCommentBeforeUpdate = posts[0].comments[0];
+      const answeredCommentId = String(answeredCommentBeforeUpdate._id);
+      const content = 'A comment, probably about the post';
+
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('users').insertMany(users);
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('posts').insertMany(posts);
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('comments').insertMany(comments);
+
+      expect(
+        commentsController.addComment(
+          { user: { sub: userId } },
+          {
+            postId: String(postId),
+            content,
+            ownerCommentId: answeredCommentId,
+          },
+        ),
+      ).rejects.toThrow(InternalServerErrorException);
+    });
+
+    it("should throw an error if answeredCommentId exists in dto but ownerCommentId isn't", async () => {
+      const { users, posts, comments } = generateRandomComments({
+        userCount: 10,
+        postCount: 20,
+        commentCount: 100,
+      });
+      const userId = users[0]._id;
+      const postId = posts[0]._id;
+      const answeredCommentBeforeUpdate = posts[0].comments[0];
+      const answeredCommentId = String(answeredCommentBeforeUpdate._id);
+      const content = 'A comment, probably about the post';
+
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('users').insertMany(users);
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('posts').insertMany(posts);
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('comments').insertMany(comments);
+
+      expect(
+        commentsController.addComment(
+          { user: { sub: userId } },
+          {
+            postId: String(postId),
+            content,
+            answeredCommentId,
+          },
+        ),
+      ).rejects.toThrow(InternalServerErrorException);
+    });
+  });
+
+  describe('deleteComment method', () => {
+    it("should delete existing comment from db, as well as the related post's comments array", async () => {
+      const { users, posts, comments } = generateRandomComments({
+        userCount: 10,
+        postCount: 20,
+        commentCount: 100,
+      });
+      const commentToDelete = comments[0];
+      const post = posts.find((i) => i.comments.includes(commentToDelete));
+      const postCommentsBeforeUpdate = post.comments;
+
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('users').insertMany(users);
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('posts').insertMany(posts);
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('comments').insertMany(comments);
+
+      await commentsController.deleteComment({
+        postId: String(post._id),
+        commentId: String(commentToDelete._id),
+      });
+
+      const deletedComment = await mongoConnection
+        .collection('comments')
+        .findOne({ _id: commentToDelete._id });
+
+      const postAfterUpdate = await mongoConnection
+        .collection('posts')
+        .findOne({ _id: post._id });
+
+      expect(deletedComment).toBeNull();
+
+      expect(postAfterUpdate.comments.length).toBe(
+        postCommentsBeforeUpdate.length - 1,
+      );
+    });
+
+    it('should throw error if given postId is not corrensponds to any post in db', async () => {
+      const { users, posts, comments } = generateRandomComments({
+        userCount: 10,
+        postCount: 20,
+        commentCount: 100,
+      });
+      const commentToDelete = comments[0];
+      const postId = new mongoose.Types.ObjectId();
+
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('users').insertMany(users);
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('posts').insertMany(posts);
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('comments').insertMany(comments);
+
+      expect(
+        commentsController.deleteComment({
+          postId: String(postId),
+          commentId: String(commentToDelete._id),
+        }),
+      ).rejects.toThrow(InternalServerErrorException);
+    });
+
+    it('should throw error if given commentId is not corrensponds to any post in db', async () => {
+      const { users, posts, comments } = generateRandomComments({
+        userCount: 10,
+        postCount: 20,
+        commentCount: 100,
+      });
+      const postId = posts[0]._id;
+      const commentId = new mongoose.Types.ObjectId();
+
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('users').insertMany(users);
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('posts').insertMany(posts);
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('comments').insertMany(comments);
+
+      expect(
+        commentsController.deleteComment({
+          postId: String(postId),
+          commentId: String(commentId),
+        }),
+      ).rejects.toThrow(InternalServerErrorException);
+    });
+
+    it('should throw error if given commentId is not corrensponds to the given postId', async () => {
+      const { users, posts, comments } = generateRandomComments({
+        userCount: 10,
+        postCount: 20,
+        commentCount: 100,
+      });
+      const postId = posts[0]._id;
+      const commentId = posts.slice(1).find((i) => i.comments.length).comments[0]._id;
+
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('users').insertMany(users);
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('posts').insertMany(posts);
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('comments').insertMany(comments);
+
+      expect(
+        commentsController.deleteComment({
+          postId: String(postId),
+          commentId: String(commentId),
+        }),
+      ).rejects.toThrow(InternalServerErrorException);
     });
   });
 });

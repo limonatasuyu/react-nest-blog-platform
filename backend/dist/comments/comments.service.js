@@ -44,12 +44,14 @@ let CommentsService = class CommentsService {
         if (dto.ownerCommentId) {
             await this.commentsModel.updateOne({ _id: dto.ownerCommentId }, { $push: { answers: commentId } });
         }
-        const updatedPost = await this.postsModel.findOne({
-            _id: new mongoose.Types.ObjectId(dto.postId),
+        const updatedPost = await this.postsModel.findOneAndUpdate({ _id: new mongoose.Types.ObjectId(dto.postId) }, {
+            $push: { comments: commentId },
+        }, {
+            new: true,
+            select: 'user',
         });
-        if (updatedPost) {
-            updatedPost.comments.push(createdComment);
-            await updatedPost.save();
+        if (!updatedPost) {
+            throw new common_1.InternalServerErrorException();
         }
         await this.notificationService.createNotification({
             type: 'comment',
@@ -74,8 +76,12 @@ let CommentsService = class CommentsService {
         return { commentId };
     }
     async deleteComment(dto) {
-        const updatePostResult = await this.postsModel.updateOne({ _id: dto.postId }, { $pull: { commentIds: dto.commentId } });
-        if (!updatePostResult) {
+        const updatePostResult = await this.postsModel.updateOne({ _id: new mongoose.Types.ObjectId(dto.postId) }, {
+            $pull: {
+                comments: { _id: new mongoose.Types.ObjectId(dto.commentId) },
+            },
+        });
+        if (!updatePostResult || !updatePostResult.modifiedCount) {
             throw new common_1.InternalServerErrorException();
         }
         const deleteResult = await this.commentsModel.deleteOne({

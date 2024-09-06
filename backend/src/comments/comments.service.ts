@@ -83,11 +83,15 @@ export class CommentsService {
 
   async deleteComment(dto: DeleteCommentDTO) {
     const updatePostResult = await this.postsModel.updateOne(
-      { _id: dto.postId },
-      { $pull: { commentIds: dto.commentId } },
+      { _id: new mongoose.Types.ObjectId(dto.postId) },
+      {
+        $pull: {
+          comments: { _id: new mongoose.Types.ObjectId(dto.commentId) },
+        },
+      },
     );
 
-    if (!updatePostResult) {
+    if (!updatePostResult || !updatePostResult.modifiedCount) {
       throw new InternalServerErrorException();
     }
 

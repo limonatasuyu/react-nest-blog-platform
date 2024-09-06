@@ -47,9 +47,13 @@ export const generateRandomComments = ({
       content: faker.lorem.sentences(),
       user: user._id,
       createdAt: faker.date.recent(),
-      likedBy: [...new Set(Array.from({
-        length: faker.number.int({ min: 0, max: userCount }),
-      }).map(() => faker.helpers.arrayElement(users)._id))],
+      likedBy: [
+        ...new Set(
+          Array.from({
+            length: faker.number.int({ min: 0, max: userCount }),
+          }).map(() => faker.helpers.arrayElement(users)._id),
+        ),
+      ],
       post: post._id,
       answerTo: answerTo,
       answers: [],

@@ -16,7 +16,7 @@ export declare class PostsService {
     private notificationService;
     constructor(postsModel: Model<Post>, usersModel: Model<User>, usersService: UsersService, imageService: ImageService, tagService: TagService, notificationService: NotificationService);
     getPostByIdAndUser(postId: string, user_id: string): Promise<mongoose.Document<unknown, {}, Post> & Post & Required<{
-        _id: string;
+        _id: mongoose.Schema.Types.ObjectId;
     }>>;
     savePost(postId: string, user_id: string): Promise<{
         message: string;

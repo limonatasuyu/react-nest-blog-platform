@@ -5,7 +5,7 @@ import { Comment } from './comment.schema';
 import { Tag } from './tag.schema';
 export type PostDocument = HydratedDocument<Post>;
 export declare class Post {
-    _id: string;
+    _id: mongoose.Schema.Types.ObjectId;
     title: string;
     content: string;
     user: User;
@@ -17,7 +17,7 @@ export declare class Post {
     tags: Tag[];
 }
 export declare const PostSchema: mongoose.Schema<Post, mongoose.Model<Post, any, any, any, mongoose.Document<unknown, any, Post> & Post & Required<{
-    _id: string;
+    _id: mongoose.Schema.Types.ObjectId;
 }>, any>, {}, {}, {}, {}, mongoose.DefaultSchemaOptions, Post, mongoose.Document<unknown, {}, mongoose.FlatRecord<Post>> & mongoose.FlatRecord<Post> & Required<{
-    _id: string;
+    _id: mongoose.Schema.Types.ObjectId;
 }>>;
