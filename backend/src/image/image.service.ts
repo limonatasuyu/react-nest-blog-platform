@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Image } from '../schemes/images.schema';
 import { Model } from 'mongoose';
 import { ObjectId } from 'bson';
+import { Cron, CronExpression } from '@nestjs/schedule';
 //import { CreateImageDTO } from 'src/dto/image-dto';
 
 @Injectable()
@@ -10,6 +11,15 @@ export class ImageService {
   constructor(@InjectModel(Image.name) private imagesModel: Model<Image>) {}
 
   async createImage(file: Express.Multer.File, user_id: string) {
+    if (
+      file.mimetype !== 'image/apng' &&
+      file.mimetype !== 'image/avif' &&
+      file.mimetype !== 'image/jpeg' &&
+      file.mimetype !== 'image/png' &&
+      file.mimetype !== 'image/webp'
+    )
+      throw new InternalServerErrorException();
+
     const createdImage = await this.imagesModel.create({
       _id: new ObjectId(),
       imageData: file.buffer,
@@ -42,5 +52,10 @@ export class ImageService {
       throw new InternalServerErrorException();
     }
     return image.imageData;
+  }
+
+  @Cron(CronExpression.EVERY_1ST_DAY_OF_MONTH_AT_NOON)
+  async deleteUnUsedImages() {
+    await this.imagesModel.deleteMany({ isRelated: false });
   }
 }
