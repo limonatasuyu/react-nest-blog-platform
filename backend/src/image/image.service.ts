@@ -41,7 +41,7 @@ export class ImageService {
       { _id: imageId },
       { isRelated: true },
     );
-    if (!updatedImage) {
+    if (!updatedImage || !updatedImage.modifiedCount) {
       throw new InternalServerErrorException();
     }
   }

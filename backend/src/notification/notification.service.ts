@@ -46,7 +46,6 @@ export class NotificationService {
   ) {}
 
   async createNotification(dto: CreateNotificationDTO, session?: any) {
-    //console.log('dto: ', dto);
     if (dto.createdBy === dto.createdFor) return;
 
     const filter = {
@@ -56,6 +55,7 @@ export class NotificationService {
       relatedComment: dto.relatedComment
         ? new mongoose.Types.ObjectId(dto.relatedComment)
         : null,
+      isSeen: false,
     };
 
     const update = {
@@ -90,7 +90,6 @@ export class NotificationService {
       options,
     );
 
-    //console.log('result: ', result);
     if (!result) {
       throw new InternalServerErrorException();
     }
@@ -99,7 +98,6 @@ export class NotificationService {
   }
 
   async getNotifications(userId: string) {
-    return [];
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(today.getDate() - 1);
@@ -247,7 +245,7 @@ export class NotificationService {
           count = notifications.count + 1;
           notificationIds = [...notifications.notificationIds, notificationId];
         }
-        commentLikeNotifications.set(relatedComment, {
+        commentLikeNotifications.set(`${relatedComment}_${relatedPost}`, {
           count,
           lastPerson,
           targetHref: `/post?id=${relatedPost}&comment=${relatedComment}`,
@@ -259,12 +257,12 @@ export class NotificationService {
         });
       } else if (relatedPost && type === 'comment' && i.relatedComment) {
         const relatedComment = String(i.relatedComment._id);
-        if (commentNotifications.has(relatedComment)) {
-          const notifications = commentNotifications.get(relatedComment);
+        if (commentNotifications.has(relatedPost)) {
+          const notifications = commentNotifications.get(relatedPost);
           count = notifications.count + 1;
           notificationIds = [...notifications.notificationIds, notificationId];
         }
-        commentNotifications.set(relatedComment, {
+        commentNotifications.set(relatedPost, {
           count,
           lastPerson,
           targetHref: `/post?id=${relatedPost}&comment=${relatedComment}`,

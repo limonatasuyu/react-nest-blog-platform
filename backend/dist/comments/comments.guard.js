@@ -21,15 +21,13 @@ let CommentsGuard = class CommentsGuard {
     async canActivate(context) {
         const request = context.switchToHttp().getRequest();
         const token = this.extractTokenFromHeader(request);
-        console.log('2');
-        console.log(await this.jwtService.verifyAsync('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c', {
-            secret: process.env.JWT_SECRET,
-        }));
+        if (!token) {
+            throw new common_1.UnauthorizedException();
+        }
         try {
             const payload = await this.jwtService.verifyAsync(token, {
                 secret: process.env.JWT_SECRET,
             });
-            console.log('payload: ', payload);
             request['user'] = payload;
         }
         catch {

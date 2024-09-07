@@ -18,11 +18,18 @@ const mongoose_1 = require("@nestjs/mongoose");
 const images_schema_1 = require("../schemes/images.schema");
 const mongoose_2 = require("mongoose");
 const bson_1 = require("bson");
+const schedule_1 = require("@nestjs/schedule");
 let ImageService = class ImageService {
     constructor(imagesModel) {
         this.imagesModel = imagesModel;
     }
     async createImage(file, user_id) {
+        if (file.mimetype !== 'image/apng' &&
+            file.mimetype !== 'image/avif' &&
+            file.mimetype !== 'image/jpeg' &&
+            file.mimetype !== 'image/png' &&
+            file.mimetype !== 'image/webp')
+            throw new common_1.InternalServerErrorException();
         const createdImage = await this.imagesModel.create({
             _id: new bson_1.ObjectId(),
             imageData: file.buffer,
@@ -38,7 +45,7 @@ let ImageService = class ImageService {
     }
     async relateImage(imageId) {
         const updatedImage = await this.imagesModel.updateOne({ _id: imageId }, { isRelated: true });
-        if (!updatedImage) {
+        if (!updatedImage || !updatedImage.modifiedCount) {
             throw new common_1.InternalServerErrorException();
         }
     }
@@ -49,8 +56,17 @@ let ImageService = class ImageService {
         }
         return image.imageData;
     }
+    async deleteUnUsedImages() {
+        await this.imagesModel.deleteMany({ isRelated: false });
+    }
 };
 exports.ImageService = ImageService;
+__decorate([
+    (0, schedule_1.Cron)(schedule_1.CronExpression.EVERY_1ST_DAY_OF_MONTH_AT_NOON),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], ImageService.prototype, "deleteUnUsedImages", null);
 exports.ImageService = ImageService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(images_schema_1.Image.name)),

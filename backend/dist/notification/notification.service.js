@@ -68,6 +68,7 @@ let NotificationService = class NotificationService {
             relatedComment: dto.relatedComment
                 ? new mongoose_2.default.Types.ObjectId(dto.relatedComment)
                 : null,
+            isSeen: false,
         };
         const update = {
             $setOnInsert: {

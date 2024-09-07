@@ -19,7 +19,7 @@ function generateRandomImages({
   const users = generateRandomUsers(userCount);
 
   const mockImages: Image[] = Array.from({ length: imageCount }, () => ({
-    _id: new mongoose.Types.ObjectId().toString(),
+    _id: new mongoose.Types.ObjectId(),
     imageData: Buffer.from(faker.lorem.text()),
     user: faker.helpers.arrayElement(users)._id,
     createdAt: faker.date.recent(),

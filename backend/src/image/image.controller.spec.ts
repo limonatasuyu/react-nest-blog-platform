@@ -148,7 +148,7 @@ describe('ImageController', () => {
         send: jest.fn(),
       } as unknown as Response;
 
-      await imageController.getImage(imageId, res);
+      await imageController.getImage(String(imageId), res);
       expect(res.set).toHaveBeenCalledWith('Content-Type', 'image/jpeg');
       //expect(res.send).toHaveBeenCalledWith(Buffer.from(image.imageData));
       //@ts-expect-error its a mock
