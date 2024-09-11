@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { MongoMemoryServer } from 'mongodb-memory-server';
+import { MongoMemoryReplSet, MongoMemoryServer } from 'mongodb-memory-server';
 import { NotificationController } from './notification.controller';
 import { NotificationService } from './notification.service';
 import { MongooseModule /*, getModelToken*/ } from '@nestjs/mongoose';
@@ -24,12 +24,12 @@ function isWithinOneDay(date: Date) {
 
 describe('NotificationController', () => {
   let notificationController: NotificationController;
-  let mongod: MongoMemoryServer;
+  let mongod: MongoMemoryReplSet;
   let mongoConnection: Connection;
   let notificationModule: TestingModule;
 
   beforeAll(async () => {
-    mongod = await MongoMemoryServer.create();
+    mongod = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
     const uri = mongod.getUri();
     mongoConnection = (await connect(uri)).connection;
 
@@ -67,6 +67,7 @@ describe('NotificationController', () => {
     await mongoConnection.dropDatabase();
     await mongoConnection.close();
     await mongod.stop();
+    await notificationModule.close();
   });
 
   afterEach(async () => {
@@ -277,26 +278,312 @@ describe('NotificationController', () => {
         Array.from(notificationMap.keys()).length,
       );
     });
+
+    it('should return an empty array if there are no notifications', async () => {
+      const { users, posts, comments } = generateRandomNotifications({
+        userCount: 15,
+        notificationCount: 200,
+        postCount: 20,
+        commentCount: 10,
+      });
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('users').insertMany(users);
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('posts').insertMany(posts);
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('comments').insertMany(comments);
+
+      const result = await notificationController.getNotifications({
+        user: { sub: users[0]._id },
+      });
+
+      expect(result).toEqual([]);
+    });
   });
 
-  it('should return an empty array if there are no notifications', async () => {
-    const { users, posts, comments } = generateRandomNotifications({
-      userCount: 15,
-      notificationCount: 200,
-      postCount: 20,
-      commentCount: 10,
-    });
-    //@ts-expect-error i did not understand the error
-    await mongoConnection.collection('users').insertMany(users);
-    //@ts-expect-error i did not understand the error
-    await mongoConnection.collection('posts').insertMany(posts);
-    //@ts-expect-error i did not understand the error
-    await mongoConnection.collection('comments').insertMany(comments);
+  describe('seeNotification method', () => {
+    it('should mark given notifications as seen, isSeen is true,', async () => {
+      const { users, posts, comments, notifications } =
+        generateRandomNotifications({
+          userCount: 15,
+          notificationCount: 200,
+          postCount: 20,
+          commentCount: 10,
+        });
 
-    const result = await notificationController.getNotifications({
-      user: { sub: users[0]._id },
+      const userId = users[0]._id;
+      const notificationIds = notifications
+        .filter(
+          //@ts-expect-error i.createdFor is an objectId
+          (i) => !i.isSeen && i.createdFor === userId,
+        )
+        .map((i) => String(i._id));
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('users').insertMany(users);
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('posts').insertMany(posts);
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('comments').insertMany(comments);
+      await mongoConnection
+        .collection('notifications')
+        //@ts-expect-error i did not understand the error
+        .insertMany(notifications);
+
+      await notificationController.seeNotification(
+        { user: { sub: String(userId) } },
+        { notificationIds },
+      );
+
+      const notificationsAfterUpdate = await mongoConnection
+        .collection('notifications')
+        .find({ createdFor: userId })
+        .toArray();
+
+      expect(notificationsAfterUpdate.find((i) => !i.isSeen)).toBeUndefined();
     });
 
-    expect(result).toEqual([]);
+    it('should throw error if given notificationIds does not correlate with the given userId', async () => {
+      const { users, posts, comments, notifications } =
+        generateRandomNotifications({
+          userCount: 15,
+          notificationCount: 200,
+          postCount: 20,
+          commentCount: 10,
+        });
+
+      const userId = users[0]._id;
+      const notificationIds = notifications
+        .filter(
+          //@ts-expect-error i.createdFor is an objectId
+          (i) => !i.isSeen && i.createdFor !== userId,
+        )
+        .map((i) => String(i._id));
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('users').insertMany(users);
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('posts').insertMany(posts);
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('comments').insertMany(comments);
+      await mongoConnection
+        .collection('notifications')
+        //@ts-expect-error i did not understand the error
+        .insertMany(notifications);
+
+      expect(
+        notificationController.seeNotification(
+          { user: { sub: String(userId) } },
+          { notificationIds },
+        ),
+      ).rejects.toThrow(InternalServerErrorException);
+    });
+
+    it('should throw error, if given notificationIds does not exist in db', async () => {
+      const { users, posts, comments, notifications } =
+        generateRandomNotifications({
+          userCount: 15,
+          notificationCount: 200,
+          postCount: 20,
+          commentCount: 10,
+        });
+
+      const userId = users[0]._id;
+      const notificationIds = notifications.map(() =>
+        String(new mongoose.Types.ObjectId()),
+      );
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('users').insertMany(users);
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('posts').insertMany(posts);
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('comments').insertMany(comments);
+      await mongoConnection
+        .collection('notifications')
+        //@ts-expect-error i did not understand the error
+        .insertMany(notifications);
+
+      expect(
+        notificationController.seeNotification(
+          { user: { sub: String(userId) } },
+          { notificationIds },
+        ),
+      ).rejects.toThrow(InternalServerErrorException);
+    });
+
+    it('should give the client appropriate message if no notificationIds sent', async () => {
+      const { users, posts, comments, notifications } =
+        generateRandomNotifications({
+          userCount: 15,
+          notificationCount: 200,
+          postCount: 20,
+          commentCount: 10,
+        });
+
+      const userId = users[0]._id;
+      const notificationIds = [];
+
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('users').insertMany(users);
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('posts').insertMany(posts);
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('comments').insertMany(comments);
+      await mongoConnection
+        .collection('notifications')
+        //@ts-expect-error i did not understand the error
+        .insertMany(notifications);
+
+      const result = await notificationController.seeNotification(
+        { user: { sub: String(userId) } },
+        { notificationIds },
+      );
+
+      expect(result).toStrictEqual({
+        message: 'No data provided. No operations were performed.',
+      });
+    });
+  });
+
+  describe('lookAtNotifications method', () => {
+    it('should mark notifications as looked at, isLookedAt value is true', async () => {
+      const { users, posts, comments, notifications } =
+        generateRandomNotifications({
+          userCount: 15,
+          notificationCount: 200,
+          postCount: 20,
+          commentCount: 10,
+        });
+
+      const userId = users[0]._id;
+      const notificationIds = notifications
+        .filter(
+          //@ts-expect-error i.createdFor is an objectId
+          (i) => !i.isLookedAt && i.createdFor === userId,
+        )
+        .map((i) => String(i._id));
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('users').insertMany(users);
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('posts').insertMany(posts);
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('comments').insertMany(comments);
+      await mongoConnection
+        .collection('notifications')
+        //@ts-expect-error i did not understand the error
+        .insertMany(notifications);
+
+      await notificationController.lookAtNotifications(
+        { user: { sub: String(userId) } },
+        { notificationIds },
+      );
+
+      const notificationsAfterUpdate = await mongoConnection
+        .collection('notifications')
+        .find({ createdFor: userId })
+        .toArray();
+
+      expect(
+        notificationsAfterUpdate.find((i) => !i.isLookedAt),
+      ).toBeUndefined();
+    });
+
+    it('should throw error if given notificationIds does not correlate with the given userId', async () => {
+      const { users, posts, comments, notifications } =
+        generateRandomNotifications({
+          userCount: 15,
+          notificationCount: 200,
+          postCount: 20,
+          commentCount: 10,
+        });
+
+      const userId = users[0]._id;
+      const notificationIds = notifications
+        .filter(
+          //@ts-expect-error i.createdFor is an objectId
+          (i) => !i.isLookedAt && i.createdFor !== userId,
+        )
+        .map((i) => String(i._id));
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('users').insertMany(users);
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('posts').insertMany(posts);
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('comments').insertMany(comments);
+      await mongoConnection
+        .collection('notifications')
+        //@ts-expect-error i did not understand the error
+        .insertMany(notifications);
+
+      expect(
+        notificationController.lookAtNotifications(
+          { user: { sub: String(userId) } },
+          { notificationIds },
+        ),
+      ).rejects.toThrow(InternalServerErrorException);
+    });
+
+    it('should throw error, if given notificationIds does not exist in db', async () => {
+      const { users, posts, comments, notifications } =
+        generateRandomNotifications({
+          userCount: 15,
+          notificationCount: 200,
+          postCount: 20,
+          commentCount: 10,
+        });
+
+      const userId = users[0]._id;
+      const notificationIds = notifications.map(() =>
+        String(new mongoose.Types.ObjectId()),
+      );
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('users').insertMany(users);
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('posts').insertMany(posts);
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('comments').insertMany(comments);
+      await mongoConnection
+        .collection('notifications')
+        //@ts-expect-error i did not understand the error
+        .insertMany(notifications);
+
+      expect(
+        notificationController.lookAtNotifications(
+          { user: { sub: String(userId) } },
+          { notificationIds },
+        ),
+      ).rejects.toThrow(InternalServerErrorException);
+    });
+
+    it('should give the client appropriate message if no notificationIds sent', async () => {
+      const { users, posts, comments, notifications } =
+        generateRandomNotifications({
+          userCount: 15,
+          notificationCount: 200,
+          postCount: 20,
+          commentCount: 10,
+        });
+
+      const userId = users[0]._id;
+      const notificationIds = [];
+
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('users').insertMany(users);
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('posts').insertMany(posts);
+      //@ts-expect-error i did not understand the error
+      await mongoConnection.collection('comments').insertMany(comments);
+      await mongoConnection
+        .collection('notifications')
+        //@ts-expect-error i did not understand the error
+        .insertMany(notifications);
+
+      const result = await notificationController.lookAtNotifications(
+        { user: { sub: String(userId) } },
+        { notificationIds },
+      );
+
+      expect(result).toStrictEqual({
+        message: 'No data provided. No operations were performed.',
+      });
+    });
   });
 });

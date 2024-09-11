@@ -8,9 +8,10 @@ import { ExecutionContext } from '@nestjs/common';
 describe('ImageGuard', () => {
   let guard: ImageGuard;
   let jwtService: JwtService;
+  let module: TestingModule;
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       providers: [
         ImageGuard,
         {
@@ -31,6 +32,10 @@ describe('ImageGuard', () => {
     guard = module.get<ImageGuard>(ImageGuard);
     jwtService = module.get<JwtService>(JwtService);
   });
+
+  afterEach(async () => {
+    await module.close()
+  })
 
   it('should allow requests with valid token', async () => {
     (jwtService.verifyAsync as jest.Mock).mockResolvedValue({

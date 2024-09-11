@@ -17,7 +17,7 @@ import { NotificationModule } from './notification/notification.module';
     UserModule,
     PostsModule,
     AuthModule,
-    MongooseModule.forRoot('mongodb://127.0.0.1:27017/blog'),
+    MongooseModule.forRoot('mongodb://127.0.0.1:27017/blog?replicaSet=rs0'),
     CommentsModule,
     ImageModule,
     TagModule,

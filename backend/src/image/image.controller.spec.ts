@@ -49,6 +49,7 @@ describe('ImageController', () => {
     await mongoConnection.dropDatabase();
     await mongoConnection.close();
     await mongod.stop();
+    await imageModule.close();
   });
 
   afterEach(async () => {

@@ -56,6 +56,7 @@ describe('CommentsService', () => {
     await mongoConnection.dropDatabase();
     await mongoConnection.close();
     await mongod.stop();
+    await commentsModule.close();
   });
 
   afterEach(async () => {

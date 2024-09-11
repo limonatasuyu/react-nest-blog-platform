@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { PostsController } from './posts.controller';
-import { Post, PostSchema } from 'src/schemes/post.schema';
-import { User, UserSchema } from 'src/schemes/user.schema';
+import { Post, PostSchema } from '../schemes/post.schema';
+import { User, UserSchema } from '../schemes/user.schema';
 import { MongooseModule } from '@nestjs/mongoose';
-import { UserModule } from 'src/user/user.module';
-import { ImageModule } from 'src/image/image.module';
-import { TagModule } from 'src/tag/tag.module';
-import { NotificationModule } from 'src/notification/notification.module';
+import { UserModule } from '../user/user.module';
+import { ImageModule } from '../image/image.module';
+import { TagModule } from '../tag/tag.module';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
   imports: [

@@ -23,20 +23,11 @@ export class TagService {
     return tags;
   }
 
-  async createTag(tagName: string) {
-    const createdTag = this.tagModel.create({
-      _id: new mongoose.Types.ObjectId(),
-      name: tagName.toLowerCase(),
-      postCount: 0,
-    });
-    if (!createdTag) {
-      throw new InternalServerErrorException();
-    }
-
-    return { message: 'Tag created successfully.' };
-  }
-
   async createTagsForPost(tags: string[]) {
+    if (!tags || !tags.length)
+      throw new InternalServerErrorException(
+        'tags should be an array containing the names as strings',
+      );
     const tagNames = tags.map((tag) => tag.toLowerCase());
 
     // Perform bulkWrite to handle both upsert and increment postCount
@@ -63,4 +54,23 @@ export class TagService {
 
     return allTags;
   }
+
+  /*
+   *
+   *
+   *this thing does not used on anywhere in the app
+  async createTag(tagName: string) {
+    const createdTag = this.tagModel.create({
+      _id: new mongoose.Types.ObjectId(),
+      name: tagName.toLowerCase(),
+      postCount: 0,
+    });
+    if (!createdTag) {
+      throw new InternalServerErrorException();
+    }
+
+    return { message: 'Tag created successfully.' };
+  }
+
+   * */
 }

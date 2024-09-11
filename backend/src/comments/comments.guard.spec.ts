@@ -12,9 +12,10 @@ describe('CommentsGuard', () => {
   let guard: CommentsGuard;
   let jwtService: JwtService;
   let commentsService: CommentsService;
+  let module: TestingModule;
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       providers: [
         CommentsGuard,
         {
@@ -36,6 +37,10 @@ describe('CommentsGuard', () => {
     jwtService = module.get<JwtService>(JwtService);
     commentsService = module.get<CommentsService>(CommentsService);
   });
+
+  afterEach(async () => {
+    await module.close();
+  })
 
   it('should allow requests with valid token and comment', async () => {
     (jwtService.verifyAsync as jest.Mock).mockResolvedValue({

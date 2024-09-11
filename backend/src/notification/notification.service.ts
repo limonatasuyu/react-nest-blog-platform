@@ -38,6 +38,24 @@ function getPassedTime(time: Date): string {
   }
 }
 
+function arraysEqual(arr1: any[], arr2: any[]) {
+  if (arr1.length !== arr2.length) {
+    return false;
+  }
+
+  // Sort both arrays
+  const sortedArr1 = [...arr1].sort();
+  const sortedArr2 = [...arr2].sort();
+
+  for (let i = 0; i < sortedArr1.length; i++) {
+    if (sortedArr1[i] !== sortedArr2[i]) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 @Injectable()
 export class NotificationService {
   constructor(
@@ -46,8 +64,80 @@ export class NotificationService {
   ) {}
 
   async createNotification(dto: CreateNotificationDTO, session?: any) {
-    if (dto.createdBy === dto.createdFor) return;
-
+    if (dto.createdBy === dto.createdFor) {
+      return {
+        message:
+          'createdBy and createdFor values cannot be the same, no operations were performed.',
+      };
+    }
+    if (
+      dto.type === 'follow' &&
+      //I don't want someone to give a very long object and consume the memory for no reason
+      (Object.keys(dto).length !== 3 ||
+        !arraysEqual(Object.keys(dto), ['createdBy', 'createdFor', 'type']))
+    ) {
+      throw new InternalServerErrorException(
+        'notifications of type "follow" does not need, and must not have values other than createdFor, createdBy and type.',
+      );
+    } else if (
+      dto.type === 'comment' &&
+      (Object.keys(dto).length !== 5 ||
+        !arraysEqual(Object.keys(dto), [
+          'createdBy',
+          'createdFor',
+          'relatedPost',
+          'relatedComment',
+          'type',
+        ]))
+    ) {
+      throw new InternalServerErrorException(
+        'notifications of type "comment" does not need, and must not have values other than createdFor, createdBy, relatedPost, relatedComment and type.',
+      );
+    } else if (
+      dto.type === 'answer' &&
+      (Object.keys(dto).length !== 6 ||
+        !arraysEqual(Object.keys(dto), [
+          'type',
+          'createdBy',
+          'createdFor',
+          'relatedPost',
+          'relatedComment',
+          'answeredComment',
+        ]))
+    ) {
+      throw new InternalServerErrorException(
+        'notifications of type "answer" does not need, and must not have values other than createdFor, createdBy, relatedPost, relatedComment, answeredComment and type.',
+      );
+    } else if (
+      dto.type === 'like' &&
+      ((Object.keys(dto).length !== 5 && Object.keys(dto).length !== 4) ||
+        !(
+          arraysEqual(Object.keys(dto), [
+            'type',
+            'createdBy',
+            'createdFor',
+            'relatedPost',
+            'relatedComment',
+          ]) ||
+          arraysEqual(Object.keys(dto), [
+            'type',
+            'createdBy',
+            'createdFor',
+            'relatedPost',
+          ])
+        ))
+    ) {
+      throw new InternalServerErrorException(
+        'notifications of type "like" only need, createdFor, createdBy, relatedPost, relatedComment and type. relatedComment is optional',
+      );
+    } else if (
+      !dto.type ||
+      !['follow', 'like', 'comment', 'answer'].includes(dto.type)
+    ) {
+      throw new InternalServerErrorException(
+        'notifications should have a type, which is either of "follow", "like", "comment", or "answer"',
+      );
+    }
     const filter = {
       createdBy: new mongoose.Types.ObjectId(dto.createdBy),
       createdFor: new mongoose.Types.ObjectId(dto.createdFor),
@@ -309,39 +399,80 @@ export class NotificationService {
   }
 
   async lookToNotifications(notificationIds: string[], userId: string) {
-    const ops = notificationIds.map((i) => ({
-      updateOne: {
-        filter: {
-          createdFor: new mongoose.Types.ObjectId(userId),
-          _id: new mongoose.Types.ObjectId(i),
-        },
-        update: { isLookedAt: true },
-      },
-    }));
-
-    const updatedNotifications = await this.notificationModel.bulkWrite(ops);
-    if (!updatedNotifications) {
-      throw new InternalServerErrorException();
+    if (!notificationIds.length) {
+      return { message: 'No data provided. No operations were performed.' };
     }
 
+    const session = await this.notificationModel.startSession();
+    session.startTransaction();
+
+    try {
+      const ops = notificationIds.map((i) => ({
+        updateOne: {
+          filter: {
+            createdFor: new mongoose.Types.ObjectId(userId),
+            _id: new mongoose.Types.ObjectId(i),
+          },
+          update: { isLookedAt: true },
+        },
+      }));
+
+      const updatedNotifications = await this.notificationModel.bulkWrite(ops);
+      if (
+        !updatedNotifications ||
+        updatedNotifications.modifiedCount !== notificationIds.length
+      ) {
+        throw new InternalServerErrorException();
+      }
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      throw error;
+    } finally {
+      session.endSession();
+    }
     return { message: 'Notifications marked succesfully' };
   }
 
   async seeNotifications(notificationIds: string[], userId: string) {
-    const ops = notificationIds.map((i) => ({
-      updateOne: {
-        filter: {
-          createdFor: new mongoose.Types.ObjectId(userId),
-          _id: new mongoose.Types.ObjectId(i),
+    if (!notificationIds.length) {
+      return { message: 'No data provided. No operations were performed.' };
+    }
+
+    const session = await this.notificationModel.startSession();
+    session.startTransaction();
+
+    try {
+      const ops = notificationIds.map((i) => ({
+        updateOne: {
+          filter: {
+            createdFor: new mongoose.Types.ObjectId(userId),
+            _id: new mongoose.Types.ObjectId(i),
+          },
+          update: { isSeen: true },
         },
-        update: { isSeen: true },
-      },
-    }));
+      }));
 
-    const updatedNotifications = await this.notificationModel.bulkWrite(ops);
+      const updatedNotifications = await this.notificationModel.bulkWrite(ops, {
+        session,
+      });
 
-    if (!updatedNotifications) {
-      throw new InternalServerErrorException();
+      if (
+        !updatedNotifications ||
+        updatedNotifications.modifiedCount !== notificationIds.length
+      ) {
+        //await session.abortTransaction();
+        //session.endSession();
+        throw new InternalServerErrorException();
+      }
+
+      await session.commitTransaction();
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      throw error;
+    } finally {
+      session.endSession();
     }
 
     return { message: 'Notifications marked succesfully' };

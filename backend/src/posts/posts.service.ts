@@ -2,18 +2,18 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as mongoose from 'mongoose';
-import { Post, PostDocument } from 'src/schemes/post.schema';
-import { UsersService } from 'src/user/user.service';
+import { Post, PostDocument } from '../schemes/post.schema';
+import { UsersService } from '../user/user.service';
 import {
   GetPostsDTO,
   CreatePostDTO,
   DeletePostDTO,
   UpdatePostDTO,
 } from '../dto/post-dto';
-import { ImageService } from 'src/image/image.service';
-import { User } from 'src/schemes/user.schema';
-import { TagService } from 'src/tag/tag.service';
-import { NotificationService } from 'src/notification/notification.service';
+import { ImageService } from '../image/image.service';
+import { User } from '../schemes/user.schema';
+import { TagService } from '../tag/tag.service';
+import { NotificationService } from '../notification/notification.service';
 
 interface PostWithLikeStatus extends PostDocument {
   isUserLiked: boolean;
@@ -35,6 +35,10 @@ export class PostsService {
   }
 
   async savePost(postId: string, user_id: string) {
+    const post = await this.postsModel.findOne({ _id: postId });
+    if (!post) {
+      throw new InternalServerErrorException("Can't find the post");
+    }
     const updatedUser = await this.usersModel.updateOne(
       { _id: new mongoose.Types.ObjectId(user_id) },
       [
@@ -73,44 +77,42 @@ export class PostsService {
 
     return { message: 'Operation handled successfully.' };
   }
-
   async likePost(postId: string, user_id: string) {
-    const updatedPost =
-      await this.postsModel.findOneAndUpdate<PostWithLikeStatus>(
-        { _id: postId },
-        [
-          {
-            $set: {
-              likedBy: {
-                $cond: {
-                  if: { $in: [user_id, '$likedBy'] },
-                  then: {
-                    $filter: {
-                      input: '$likedBy',
-                      as: 'user',
-                      cond: { $ne: ['$$user', user_id] },
-                    },
+    // Perform the update and return the updated document
+    const updatedPost = await this.postsModel.findOneAndUpdate(
+      { _id: new mongoose.Types.ObjectId(postId) },
+      [
+        {
+          $set: {
+            likedBy: {
+              $cond: {
+                if: { $in: [user_id, '$likedBy'] },
+                then: {
+                  $filter: {
+                    input: '$likedBy',
+                    as: 'user',
+                    cond: { $ne: ['$$user', user_id] },
                   },
-                  else: { $concatArrays: ['$likedBy', [user_id]] },
                 },
+                else: { $concatArrays: ['$likedBy', [user_id]] },
               },
             },
           },
-        ],
-        {
-          projection: {
-            user: 1,
-            isUserLiked: { $in: [user_id, '$likedBy'] },
-          },
-          new: true,
         },
-      );
+      ],
+      {
+        new: true, // Ensure the returned document is the updated one
+      },
+    );
 
     if (!updatedPost) {
       throw new InternalServerErrorException();
     }
 
-    if (updatedPost.isUserLiked) {
+    // Compute isUserLiked after the update
+    const isUserLiked = updatedPost.likedBy.includes(user_id as any);
+
+    if (isUserLiked) {
       await this.notificationService.createNotification({
         type: 'like',
         createdBy: user_id,
@@ -182,12 +184,17 @@ export class PostsService {
       {
         $addFields: {
           totalPageCount: {
-            $ceil: {
-              $divide: [
-                { $arrayElemAt: ['$totalRecordCount.count', 0] },
-                pageSize,
-              ],
-            },
+            $ifNull: [
+              {
+                $ceil: {
+                  $divide: [
+                    { $arrayElemAt: ['$totalRecordCount.count', 0] },
+                    pageSize,
+                  ],
+                },
+              },
+              1,
+            ],
           },
         },
       },

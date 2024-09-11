@@ -80,6 +80,10 @@ export function generateRandomNotifications({
   const comments = generateRandomComments(users, posts, commentCount);
   const types = ['comment', 'follow', 'like', 'answer'];
 
+  posts.forEach((i) => {
+    i.comments = comments.filter((x) => x.post._id === i._id);
+  });
+
   const notifications = Array.from({ length: notificationCount }, () => {
     const createdBy = faker.helpers.arrayElement(users)._id;
     let createdFor: mongoose.Schema.Types.ObjectId;
