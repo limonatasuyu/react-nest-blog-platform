@@ -58,7 +58,7 @@ export class PostsController {
   @UseGuards(PostsGuard)
   @Delete()
   deletePost(@Req() req, @Query('post_id') postId) {
-    return this.postsService.deletePost({ postId }, req.user.username);
+    return this.postsService.deletePost({ postId }, req.user.sub);
   }
 
   @UseGuards(PostsGuard)
@@ -70,7 +70,7 @@ export class PostsController {
   ) {
     return this.postsService.updatePost(
       { ...(body as any), postId },
-      req.user.username,
+      req.user.sub,
     );
   }
 }

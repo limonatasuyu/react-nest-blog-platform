@@ -36,7 +36,7 @@ async function isDisposable(email: string) {
   }
   return blocklist.includes(email.split('@')[1]);
 }
-
+/*
 async function sendActivationEmail(toEmail, activationCode) {
   const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
@@ -49,7 +49,7 @@ async function sendActivationEmail(toEmail, activationCode) {
     },
   });
 
-  return new Promise(async (resolve) => {
+  return await new Promise(async (resolve) => {
     const mailOptions = {
       from: 'emredilek6@gmail.com',
       to: toEmail,
@@ -68,6 +68,7 @@ async function sendActivationEmail(toEmail, activationCode) {
     });
   });
 }
+*/
 
 @Injectable()
 export class UsersService {
@@ -79,6 +80,154 @@ export class UsersService {
     private notificationService: NotificationService,
   ) {}
 
+  async follow(userToFollowUsername: string, followingUserId: string) {
+    const followingUser = await this.userModel.findOne({
+      _id: new mongoose.Types.ObjectId(followingUserId),
+    });
+    if (!followingUser)
+      throw new InternalServerErrorException('User not found.');
+    const updatedUser =
+      await this.userModel.findOneAndUpdate<UserWithFollowStatus>(
+        {
+          username: userToFollowUsername,
+          _id: { $ne: followingUserId },
+        },
+        [
+          {
+            $set: {
+              followers: {
+                $cond: {
+                  if: { $in: [followingUserId, '$followers'] },
+                  then: {
+                    $filter: {
+                      input: '$followers',
+                      as: 'follower',
+                      cond: { $ne: ['$$follower', followingUserId] },
+                    },
+                  },
+                  else: { $concatArrays: ['$followers', [followingUserId]] },
+                },
+              },
+            },
+          },
+        ],
+        {
+          projection: {
+            _id: 1,
+            isUserFollowing: { $in: [followingUserId, '$followers'] },
+          },
+          new: true,
+        },
+      );
+
+    if (!updatedUser) {
+      throw new InternalServerErrorException();
+    }
+
+    if ((updatedUser.toObject() as any).isUserFollowing) {
+      await this.notificationService.createNotification({
+        type: 'follow',
+        createdBy: followingUserId,
+        createdFor: String(updatedUser._id),
+      });
+    }
+
+    return { message: 'Operation handled successfully.' };
+  }
+
+  async getUserInfo(searchingUserId: string, queriedUsername: string) {
+    const searchingUser = await this.findById(searchingUserId);
+    if (!searchingUser)
+      throw new InternalServerErrorException(
+        'Something went wrong. Please try again later.',
+      );
+
+    const user = await this.findOne(queriedUsername);
+    if (!user) throw new InternalServerErrorException('User not found.');
+
+    return {
+      username: user.username,
+      firstname: user.firstname,
+      lastname: user.lastname,
+      description: user.description,
+      email: user.email,
+      profilePictureId: user.profilePictureId,
+      isUserFollowing: Boolean(
+        user.followers.find((i) => String(i.toString()) === searchingUserId),
+      ),
+    };
+  }
+
+  async create(dto: CreateUserDTO): Promise<any> {
+    const { firstname, lastname, username, email, password, dateOfBirth } = dto;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email) || (await isDisposable(email))) {
+      throw new BadRequestException('Email address is not valid.');
+    }
+    if (
+      !firstname ||
+      !lastname ||
+      !username ||
+      !password ||
+      !dateOfBirth ||
+      firstname.length < 4 ||
+      lastname.length < 4 ||
+      username.length < 4 ||
+      password.length < 8
+    ) {
+      throw new BadRequestException('Not valid credentials');
+    }
+
+    const existingEmail = await this.userModel.findOne({ email }).exec();
+
+    if (existingEmail) {
+      throw new BadRequestException('Email address already in use');
+    }
+
+    const existingUsername = await this.userModel.findOne({ username }).exec();
+
+    if (existingUsername) {
+      throw new BadRequestException('Username is already in use');
+    }
+
+    const saltRounds = 10;
+    const encryptedPassword = await bcrypt.hash(password, saltRounds);
+
+    let activationCode;
+    do {
+      activationCode = Math.floor(Math.random() * 1000000);
+    } while (String(activationCode).length !== 6);
+
+    const isActivationSent = await this.sendActivationEmail(
+      email,
+      activationCode,
+    );
+    if (!isActivationSent) {
+      throw new InternalServerErrorException();
+    }
+
+    const createdUser = new this.userModel({
+      ...dto,
+      firstname: dto.firstname[0].toUpperCase() + dto.firstname.slice(1),
+      lastname: dto.lastname[0].toUpperCase() + dto.lastname.slice(1),
+      password: encryptedPassword,
+      isActivated: false,
+      _id: new mongoose.Types.ObjectId(),
+      posts: [],
+      followers: [],
+    });
+
+    const createdActivationCode = new this.activationCodeModel({
+      user_id: createdUser._id,
+      code: activationCode,
+      tryCount: 0,
+      createdAt: new Date(),
+    });
+
+    await createdUser.save();
+    await createdActivationCode.save();
+    return { message: 'User created successfully.', user_id: createdUser._id };
+  }
   async activate(dto: ActivateUserDTO) {
     const user = await this.userModel.findOne({
       _id: dto.user_id,
@@ -120,68 +269,15 @@ export class UsersService {
 
     if (Number(dto.activationCode) !== Number(codeToCheck.code)) {
       await this.activationCodeModel.updateOne(
-        { user_id: dto.user_id },
+        { user_id: new mongoose.Types.ObjectId(dto.user_id) },
         { tryCount: codeToCheck.tryCount + 1 },
       );
-
       throw new BadRequestException('Code is incorrect.');
     }
 
     await this.userModel.updateOne({ _id: dto.user_id }, { isActivated: true });
 
     return { message: 'User activated successfully' };
-  }
-
-  async create(dto: CreateUserDTO): Promise<any> {
-    const { username, email, password } = dto;
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email) || (await isDisposable(email))) {
-      throw new BadRequestException('Email address is not valid.');
-    }
-
-    const existingEmail = await this.userModel.findOne({ email }).exec();
-
-    if (existingEmail) {
-      throw new BadRequestException('Email address already in use');
-    }
-
-    const existingUsername = await this.userModel.findOne({ username }).exec();
-
-    if (existingUsername) {
-      throw new BadRequestException('Username is already in use');
-    }
-
-    const saltRounds = 10;
-    const encryptedPassword = await bcrypt.hash(password, saltRounds);
-
-    const activationCode = Math.floor(Math.random() * 1000000);
-
-    const isActivationSent = await sendActivationEmail(email, activationCode);
-    if (!isActivationSent) {
-      throw new InternalServerErrorException();
-    }
-
-    const createdUser = new this.userModel({
-      ...dto,
-      firstname: dto.firstname[0].toUpperCase() + dto.firstname.slice(1),
-      lastname: dto.lastname[0].toUpperCase() + dto.lastname.slice(1),
-      password: encryptedPassword,
-      isActivated: false,
-      _id: new mongoose.Types.ObjectId(),
-      posts: [],
-      followers: [],
-    });
-
-    const createdActivationCode = new this.activationCodeModel({
-      user_id: createdUser._id,
-      code: activationCode,
-      tryCount: 0,
-      createdAt: new Date(),
-    });
-
-    await createdUser.save();
-    await createdActivationCode.save();
-    return { message: 'User created sucessfully.', user_id: createdUser._id };
   }
 
   async createActivationCode(dto: CreateActivationCodeDTO) {
@@ -191,17 +287,20 @@ export class UsersService {
     }
 
     const activationCodes = await this.activationCodeModel.find({
-      user_id: dto.user_id,
+      user_id: new mongoose.Types.ObjectId(dto.user_id),
     });
-    if (!activationCodes) {
+    if (!activationCodes.length) {
       throw new InternalServerErrorException();
     }
 
-    const codeToCheck = activationCodes.reduce((latest, obj) => {
-      return new Date(obj.createdAt) > new Date(latest.createdAt)
-        ? obj
-        : latest;
-    });
+    const codeToCheck =
+      activationCodes.length > 1
+        ? activationCodes.reduce((latest, obj) => {
+            return new Date(obj.createdAt) > new Date(latest.createdAt)
+              ? obj
+              : latest;
+          })
+        : activationCodes[0];
 
     const fiveMinutesInMs = 5 * 60 * 1000;
     if (
@@ -219,7 +318,7 @@ export class UsersService {
       activationCode = Math.floor(Math.random() * 1000000);
     } while (String(activationCode).length !== 6);
 
-    const isActivationSent = await sendActivationEmail(
+    const isActivationSent = await this.sendActivationEmail(
       user.email,
       activationCode,
     );
@@ -240,32 +339,6 @@ export class UsersService {
     };
   }
 
-  async findOne(usernameOrEmail: string): Promise<User | undefined> {
-    return await this.userModel.findOne({
-      $or: [{ username: usernameOrEmail }, { email: usernameOrEmail }],
-    });
-  }
-
-  async findById(userId: string): Promise<User | undefined> {
-    return await this.userModel.findById(new mongoose.Types.ObjectId(userId));
-  }
-
-  async getById(user_id: string) {
-    const user = await this.userModel.findById(
-      new mongoose.Types.ObjectId(user_id),
-    );
-    if (!user) {
-      throw new InternalServerErrorException();
-    }
-    return {
-      firstname: user.firstname,
-      lastname: user.lastname,
-      username: user.username,
-      email: user.email,
-      profilePictureId: user.profilePictureId,
-    };
-  }
-
   async changeProfilePicture(pictureId: string, userId: string) {
     const image = await this.imageService.getImageWithId(pictureId);
     if (!image) throw new InternalServerErrorException();
@@ -273,7 +346,7 @@ export class UsersService {
       { _id: new mongoose.Types.ObjectId(userId) },
       { profilePictureId: pictureId },
     );
-    if (!updatedUser) throw new InternalServerErrorException();
+    if (!updatedUser || !updatedUser.modifiedCount) throw new InternalServerErrorException();
 
     await this.imageService.relateImage(pictureId);
 
@@ -286,11 +359,29 @@ export class UsersService {
       { $set: { description } },
     );
 
-    if (!updatedUser || !updatedUser.acknowledged) {
+    if (
+      !updatedUser ||
+      !updatedUser.acknowledged ||
+      !updatedUser.modifiedCount
+    ) {
       throw new InternalServerErrorException();
     }
 
     return { message: 'Description changed successully.' };
+  }
+
+  async findOne(usernameOrEmail: string): Promise<User | null> {
+    const user = await this.userModel.findOne({
+      $or: [{ username: usernameOrEmail }, { email: usernameOrEmail }],
+    });
+    return user?.toObject() ?? null;
+  }
+
+  async findById(userId: string): Promise<User | undefined> {
+    const user = await this.userModel.findById(
+      new mongoose.Types.ObjectId(userId),
+    );
+    return user?.toObject() ?? null;
   }
 
   async getRecommendedUsers() {
@@ -316,57 +407,18 @@ export class UsersService {
     return tags;
   }
 
-  async follow(userToFollowUsername: string, followingUserId: string) {
-    const updatedUser =
-      await this.userModel.findOneAndUpdate<UserWithFollowStatus>(
-        { username: userToFollowUsername },
-        [
-          {
-            $set: {
-              followers: {
-                $cond: {
-                  if: { $in: [followingUserId, '$followers'] },
-                  then: {
-                    $filter: {
-                      input: '$followers',
-                      as: 'follower',
-                      cond: { $ne: ['$$follower', followingUserId] },
-                    },
-                  },
-                  else: { $concatArrays: ['$followers', [followingUserId]] },
-                },
-              },
-            },
-          },
-        ],
-        {
-          projection: {
-            _id: 1,
-            isUserFollowing: { $in: [followingUserId, '$followers'] },
-          },
-          new: true,
-        },
-      );
-
-    if (!updatedUser) {
-      throw new InternalServerErrorException();
-    }
-
-    if ((updatedUser.toObject() as any).isUserFollowing) {
-      await this.notificationService.createNotification({
-        type: 'follow',
-        createdBy: followingUserId,
-        createdFor: String(updatedUser._id),
-      });
-    }
-
-    return { message: 'operation handled successfully' };
-  }
-
   async getSearchResults(page: number, keyword: string) {
     const pageSize = 10;
     const users = await this.userModel.aggregate([
-      { $match: { $text: { $search: keyword } } },
+      {
+        $match: {
+          $or: [
+            { firstname: { $regex: keyword, $options: 'i' } },
+            { lastname: { $regex: keyword, $options: 'i' } },
+            { username: { $regex: keyword, $options: 'i' } },
+          ],
+        },
+      },
       {
         $facet: {
           users: [
@@ -380,7 +432,7 @@ export class UsersService {
                 profilePictureId: 1,
               },
             },
-            { $sort: { score: { $meta: 'textScore' } } },
+            //{ $sort: { score: { $meta: 'textScore' } } },
             {
               $skip: (page - 1) * pageSize,
             },
@@ -394,17 +446,61 @@ export class UsersService {
       {
         $addFields: {
           totalPageCount: {
-            $ceil: {
+            $ifNull: [
+              {
+                $ceil: {
+                  $divide: [
+                    { $arrayElemAt: ['$totalRecordCount.count', 0] },
+                    pageSize,
+                  ],
+                },
+              },
+              1,
+            ],
+
+            /*$ceil: {
               $divide: [
                 { $arrayElemAt: ['$totalRecordCount.count', 0] },
                 pageSize,
               ],
-            },
+            },*/
           },
         },
       },
     ]);
 
-    return users[0] ?? [];
+    return users[0];
+  }
+
+  private async sendActivationEmail(toEmail, activationCode) {
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true, // Use `true` for port 465, `false` for all other ports
+      service: 'Gmail',
+      auth: {
+        user: 'emredilek6@gmail.com',
+        pass: process.env.EMAILPASS,
+      },
+    });
+
+    const mailOptions = {
+      from: 'emredilek6@gmail.com',
+      to: toEmail,
+      subject: 'Your Activation Code',
+      text: `Your activation code is: ${activationCode}`,
+      html: `<p>Your activation code is: <strong>${activationCode}</strong></p>`,
+    };
+
+    return await new Promise((resolve) => {
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          console.log(error);
+          return resolve(false); // Resolve false in case of error
+        }
+        console.log('Email sent: ' + info.response);
+        resolve(true); // Resolve true if email was sent successfully
+      });
+    });
   }
 }

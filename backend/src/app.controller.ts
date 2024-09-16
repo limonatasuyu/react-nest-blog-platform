@@ -6,12 +6,12 @@ export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Get('recommended')
-  async getHello() {
+  async getRecommended() {
     return await this.appService.getRecommended();
   }
 
   @Get('search')
-  async getResults(@Query() { page, keyword }) {
+  async getSearchResults(@Query() { page, keyword }) {
     return this.appService.getSearchResults(page, keyword);
   }
 }

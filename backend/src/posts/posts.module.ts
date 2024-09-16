@@ -18,7 +18,7 @@ import { NotificationModule } from '../notification/notification.module';
     UserModule,
     ImageModule,
     TagModule,
-    NotificationModule
+    NotificationModule,
   ],
   providers: [PostsService],
   controllers: [PostsController],

@@ -17,6 +17,7 @@ import { InternalServerErrorException, ValidationError } from '@nestjs/common';
 import { Tag } from '../schemes/tag.schema';
 import { Comment } from '../schemes/comment.schema';
 import { Image } from '../schemes/images.schema';
+import { UpdatePostDTO } from 'src/dto/post-dto';
 
 describe('PostsController', () => {
   let postsController: PostsController;
@@ -501,7 +502,7 @@ describe('PostsController', () => {
       const user = users[0];
       const username = user.username;
       const imageId = images.find(
-        (i) => String(i.user) === String(user._id),
+        (i) => String(i.user) === String(user._id) && !i.isRelated,
       )._id;
 
       await mongoConnection.collection<User>('users').insertMany(users);
@@ -540,7 +541,9 @@ describe('PostsController', () => {
         tagCount: 10,
       });
       const images = generateRandomImages({ users, imageCount: 30 });
-      const user = users[0];
+      const user = users.find((i) =>
+        images.find((x) => String(x.user) === String(i._id)),
+      );
       const username = user.username;
       const imageId = images.find(
         (i) => String(i.user) === String(user._id),
@@ -655,7 +658,339 @@ describe('PostsController', () => {
   });
 
   describe('deletePost method', () => {
-  
-  
-  })
+    it('should delete the post if given user id corresponds with the given post', async () => {
+      const initialPostCount = 50;
+      const { users, comments, tags, posts } = generateRandomPosts({
+        userCount: 10,
+        postCount: initialPostCount,
+        commentCount: 100,
+        tagCount: 10,
+      });
+      const post = posts[0];
+      const postId = post._id;
+      const userId = post.user;
+
+      await mongoConnection.collection<User>('users').insertMany(users);
+      await mongoConnection
+        .collection<Comment>('comments')
+        .insertMany(comments);
+      await mongoConnection.collection<Tag>('tags').insertMany(tags);
+      await mongoConnection.collection<Post>('posts').insertMany(posts);
+
+      await postsController.deletePost({ user: { sub: userId } }, postId);
+
+      const postsAfterMethodCall = await mongoConnection
+        .collection('posts')
+        .find()
+        .toArray();
+
+      expect(postsAfterMethodCall.length).toBe(initialPostCount - 1);
+    });
+
+    it('should throw error if given post id does not corresponds with given user id', async () => {
+      const initialPostCount = 50;
+      const { users, comments, tags, posts } = generateRandomPosts({
+        userCount: 10,
+        postCount: initialPostCount,
+        commentCount: 100,
+        tagCount: 10,
+      });
+      const post = posts[0];
+      const postId = post._id;
+      const userId = users.find((i) => String(i._id) !== String(post.user))._id;
+
+      await mongoConnection.collection<User>('users').insertMany(users);
+      await mongoConnection
+        .collection<Comment>('comments')
+        .insertMany(comments);
+      await mongoConnection.collection<Tag>('tags').insertMany(tags);
+      await mongoConnection.collection<Post>('posts').insertMany(posts);
+
+      expect(
+        postsController.deletePost({ user: { sub: userId } }, postId),
+      ).rejects.toThrow(InternalServerErrorException);
+
+      const postsAfterMethodCall = await mongoConnection
+        .collection('posts')
+        .find()
+        .toArray();
+
+      expect(postsAfterMethodCall.length).toBe(initialPostCount);
+    });
+
+    it('should throw error if no user id or post id given', async () => {
+      const initialPostCount = 50;
+      const { users, comments, tags, posts } = generateRandomPosts({
+        userCount: 10,
+        postCount: initialPostCount,
+        commentCount: 100,
+        tagCount: 10,
+      });
+      const post = posts[0];
+      const postId = post._id;
+      const userId = users.find((i) => String(i._id) !== String(post.user))._id;
+
+      await mongoConnection.collection<User>('users').insertMany(users);
+      await mongoConnection
+        .collection<Comment>('comments')
+        .insertMany(comments);
+      await mongoConnection.collection<Tag>('tags').insertMany(tags);
+      await mongoConnection.collection<Post>('posts').insertMany(posts);
+
+      expect(postsController.deletePost({ user: {} }, postId)).rejects.toThrow(
+        InternalServerErrorException,
+      );
+
+      let postsAfterMethodCall = await mongoConnection
+        .collection('posts')
+        .find()
+        .toArray();
+
+      expect(postsAfterMethodCall.length).toBe(initialPostCount);
+
+      expect(
+        //@ts-expect-error testing the behaviour on no postId
+        postsController.deletePost({ user: { sub: userId } }),
+      ).rejects.toThrow(InternalServerErrorException);
+
+      postsAfterMethodCall = await mongoConnection
+        .collection('posts')
+        .find()
+        .toArray();
+
+      expect(postsAfterMethodCall.length).toBe(initialPostCount);
+    });
+
+    it('should throw error if given post id does not exists in the db', async () => {
+      const initialPostCount = 50;
+      const { users, comments, tags, posts } = generateRandomPosts({
+        userCount: 10,
+        postCount: initialPostCount,
+        commentCount: 100,
+        tagCount: 10,
+      });
+      const postId = new mongoose.Types.ObjectId();
+      const userId = users[0]._id;
+
+      await mongoConnection.collection<User>('users').insertMany(users);
+      await mongoConnection
+        .collection<Comment>('comments')
+        .insertMany(comments);
+      await mongoConnection.collection<Tag>('tags').insertMany(tags);
+      await mongoConnection.collection<Post>('posts').insertMany(posts);
+
+      expect(
+        postsController.deletePost({ user: { sub: userId } }, postId),
+      ).rejects.toThrow(InternalServerErrorException);
+
+      const postsAfterMethodCall = await mongoConnection
+        .collection('posts')
+        .find()
+        .toArray();
+
+      expect(postsAfterMethodCall.length).toBe(initialPostCount);
+    });
+
+    it('should throw error if given user id does not exists in the db', async () => {
+      const initialPostCount = 50;
+      const { users, comments, tags, posts } = generateRandomPosts({
+        userCount: 10,
+        postCount: initialPostCount,
+        commentCount: 100,
+        tagCount: 10,
+      });
+      const postId = posts[0]._id;
+      const userId = new mongoose.Types.ObjectId();
+
+      await mongoConnection.collection<User>('users').insertMany(users);
+      await mongoConnection
+        .collection<Comment>('comments')
+        .insertMany(comments);
+      await mongoConnection.collection<Tag>('tags').insertMany(tags);
+      await mongoConnection.collection<Post>('posts').insertMany(posts);
+
+      expect(
+        postsController.deletePost({ user: { sub: userId } }, postId),
+      ).rejects.toThrow(InternalServerErrorException);
+
+      const postsAfterMethodCall = await mongoConnection
+        .collection('posts')
+        .find()
+        .toArray();
+
+      expect(postsAfterMethodCall.length).toBe(initialPostCount);
+    });
+  });
+
+  describe('updatePost method', () => {
+    it('should update the post', async () => {
+      const { users, comments, tags, posts } = generateRandomPosts({
+        userCount: 10,
+        postCount: 50,
+        commentCount: 100,
+        tagCount: 10,
+      });
+      const images = generateRandomImages({ users, imageCount: 30 });
+
+      const userId = users.find((i) => i.posts.length)._id;
+      const postId = posts.find((i) => String(i.user) === String(userId))._id;
+
+      await mongoConnection.collection<User>('users').insertMany(users);
+      await mongoConnection
+        .collection<Comment>('comments')
+        .insertMany(comments);
+      await mongoConnection.collection<Tag>('tags').insertMany(tags);
+      await mongoConnection.collection<Post>('posts').insertMany(posts);
+      await mongoConnection.collection<Image>('images').insertMany(images);
+
+      const newTitle = 'some new title';
+      const newContent = 'some new content';
+      const newThumbnailId = images[0]._id;
+      const newTags = tags.slice(0, 5).map((i) => i._id);
+      await postsController.updatePost({ user: { sub: userId } }, postId, {
+        title: newTitle,
+        content: newContent,
+        thumbnailId: newThumbnailId,
+        tags: newTags,
+      } as unknown as UpdatePostDTO & { postId: undefined });
+
+      const postAfterMethodCall = await mongoConnection
+        .collection('posts')
+        .findOne({ _id: postId });
+
+      expect(postAfterMethodCall.title).toBe(newTitle);
+      expect(postAfterMethodCall.content).toBe(newContent);
+      expect(String(postAfterMethodCall.thumbnailId)).toStrictEqual(
+        String(newThumbnailId),
+      );
+      expect(postAfterMethodCall.tags).toStrictEqual(newTags);
+    });
+
+    it('should throw error if given postId does not corresponds with any post in the db', async () => {
+      const initialPostCount = 50;
+      const { users, comments, tags, posts } = generateRandomPosts({
+        userCount: 10,
+        postCount: initialPostCount,
+        commentCount: 100,
+        tagCount: 10,
+      });
+      const images = generateRandomImages({ users, imageCount: 30 });
+
+      const userId = users[0]._id;
+      const postId = new mongoose.Types.ObjectId();
+
+      await mongoConnection.collection<User>('users').insertMany(users);
+      await mongoConnection
+        .collection<Comment>('comments')
+        .insertMany(comments);
+      await mongoConnection.collection<Tag>('tags').insertMany(tags);
+      await mongoConnection.collection<Post>('posts').insertMany(posts);
+      await mongoConnection.collection<Image>('images').insertMany(images);
+
+      expect(
+        postsController.updatePost({ user: { sub: userId } }, postId, {
+          title: 'some new title',
+          content: 'some new content',
+          thumbnailId: images[0]._id,
+          tags: tags.slice(0, 5).map((i) => i._id),
+        } as unknown as UpdatePostDTO & { postId: undefined }),
+      ).rejects.toThrow(InternalServerErrorException);
+
+      const postsAfterMethodCall = await mongoConnection
+        .collection('posts')
+        .find();
+
+      expect((await postsAfterMethodCall.toArray()).length).toBe(
+        initialPostCount,
+      );
+    });
+
+    it('should throw error if given userId not corresponds with given postId in the db', async () => {
+      const { users, comments, tags, posts } = generateRandomPosts({
+        userCount: 10,
+        postCount: 50,
+        commentCount: 100,
+        tagCount: 10,
+      });
+      const images = generateRandomImages({ users, imageCount: 30 });
+
+      const userId = new mongoose.Types.ObjectId();
+      const post = posts.find((i) => String(i.user) !== String(userId));
+      const postId = post._id;
+
+      await mongoConnection.collection<User>('users').insertMany(users);
+      await mongoConnection
+        .collection<Comment>('comments')
+        .insertMany(comments);
+      await mongoConnection.collection<Tag>('tags').insertMany(tags);
+      await mongoConnection.collection<Post>('posts').insertMany(posts);
+      await mongoConnection.collection<Image>('images').insertMany(images);
+
+      expect(
+        postsController.updatePost({ user: { sub: userId } }, postId, {
+          title: 'some new title',
+          content: 'some new content',
+          thumbnailId: images[0]._id,
+          tags: tags.slice(0, 5).map((i) => i._id),
+        } as unknown as UpdatePostDTO & { postId: undefined }),
+      ).rejects.toThrow(InternalServerErrorException);
+
+      const postAfterMethodCall = await mongoConnection
+        .collection('posts')
+        .findOne({ _id: postId });
+
+      expect(postAfterMethodCall.title).toBe(post.title);
+      expect(postAfterMethodCall.content).toBe(post.content);
+      expect(String(postAfterMethodCall.thumbnailId ?? null)).toStrictEqual(
+        String(post.thumbnailId ?? null),
+      );
+      expect(postAfterMethodCall.tags).toStrictEqual(post.tags);
+    });
+
+    it('should throw error if given thumbnailId does not correspoonds with an image in the db', async () => {
+      const { users, comments, tags, posts } = generateRandomPosts({
+        userCount: 10,
+        postCount: 50,
+        commentCount: 100,
+        tagCount: 10,
+      });
+      const images = generateRandomImages({ users, imageCount: 30 });
+
+      const userId = users.find((i) => i.posts.length)._id;
+      const post = posts.find((i) => String(i.user) === String(userId));
+      const postId = post._id;
+
+      await mongoConnection.collection<User>('users').insertMany(users);
+      await mongoConnection
+        .collection<Comment>('comments')
+        .insertMany(comments);
+      await mongoConnection.collection<Tag>('tags').insertMany(tags);
+      await mongoConnection.collection<Post>('posts').insertMany(posts);
+      await mongoConnection.collection<Image>('images').insertMany(images);
+
+      const newTitle = 'some new title';
+      const newContent = 'some new content';
+      const newThumbnailId = new mongoose.Types.ObjectId();
+      const newTags = tags.slice(0, 5).map((i) => i._id);
+      expect(
+        postsController.updatePost({ user: { sub: userId } }, postId, {
+          title: newTitle,
+          content: newContent,
+          thumbnailId: newThumbnailId,
+          tags: newTags,
+        } as unknown as UpdatePostDTO & { postId: undefined }),
+      ).rejects.toThrow(InternalServerErrorException);
+
+      const postAfterMethodCall = await mongoConnection
+        .collection('posts')
+        .findOne({ _id: postId });
+
+      expect(postAfterMethodCall.title).toBe(post.title);
+      expect(postAfterMethodCall.content).toBe(post.content);
+      expect(String(postAfterMethodCall.thumbnailId ?? null)).toStrictEqual(
+        String(post.thumbnailId ?? null),
+      );
+      expect(postAfterMethodCall.tags).toStrictEqual(post.tags);
+    });
+  });
 });

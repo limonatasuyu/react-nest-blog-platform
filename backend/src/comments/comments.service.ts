@@ -111,8 +111,18 @@ export class CommentsService {
   }
 
   async likeComment(commentId: string, user_id: string) {
-    const user = await this.usersService.getById(user_id);
-    if (!user) throw new InternalServerErrorException();
+    const queriedUser = await this.usersService.findById(user_id);
+    if (!queriedUser) {
+      throw new InternalServerErrorException();
+    }
+    const user = {
+      firstname: queriedUser.firstname,
+      lastname: queriedUser.lastname,
+      username: queriedUser.username,
+      email: queriedUser.email,
+      profilePictureId: queriedUser.profilePictureId,
+    };
+
     const updatedComment = await this.commentsModel.findOneAndUpdate(
       { _id: new mongoose.Types.ObjectId(commentId) },
       [

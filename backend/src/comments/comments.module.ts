@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 import { CommentsService } from './comments.service';
 import { CommentsController } from './comments.controller';
-import { PostsModule } from 'src/posts/posts.module';
+import { PostsModule } from '../posts/posts.module';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Comment, CommentSchema } from 'src/schemes/comment.schema';
-import { Post, PostSchema } from 'src/schemes/post.schema';
-import { NotificationModule } from 'src/notification/notification.module';
-import { UserModule } from 'src/user/user.module';
+import { Comment, CommentSchema } from '../schemes/comment.schema';
+import { Post, PostSchema } from '../schemes/post.schema';
+import { NotificationModule } from '../notification/notification.module';
+import { UserModule } from '../user/user.module';
 
 @Module({
   imports: [

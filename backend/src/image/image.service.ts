@@ -1,7 +1,7 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Image } from '../schemes/images.schema';
-import { Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import { ObjectId } from 'bson';
 import { Cron, CronExpression } from '@nestjs/schedule';
 //import { CreateImageDTO } from 'src/dto/image-dto';
@@ -38,7 +38,7 @@ export class ImageService {
 
   async relateImage(imageId: string) {
     const updatedImage = await this.imagesModel.updateOne(
-      { _id: imageId },
+      { _id: new mongoose.Types.ObjectId(imageId) },
       { isRelated: true },
     );
     if (!updatedImage || !updatedImage.modifiedCount) {

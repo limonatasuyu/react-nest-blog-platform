@@ -9,6 +9,7 @@ const generateRandomUsers = (count: number): User[] => {
     _id: new mongoose.Types.ObjectId(),
     name: faker.person.fullName(),
     email: faker.internet.email(),
+    username: faker.internet.userName(),
   })) as unknown as User[];
 };
 

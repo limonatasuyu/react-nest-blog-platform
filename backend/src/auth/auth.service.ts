@@ -4,8 +4,8 @@ import {
   InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { loginDTO } from 'src/dto/auth-dto';
-import { UsersService } from 'src/user/user.service';
+import { loginDTO } from '../dto/auth-dto';
+import { UsersService } from '../user/user.service';
 import { compare } from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../schemes/user.schema';
@@ -25,7 +25,6 @@ export class AuthService {
     const user = await this.usersService.findOne(
       'username' in dto ? dto.username : dto.email,
     );
-
     if (!user) {
       throw new BadRequestException('User not found');
     }
@@ -48,7 +47,7 @@ export class AuthService {
   async getChangePasswordToken(userId: string, currentPassword: string) {
     const user = await this.usersService.findById(userId);
 
-    if (!user) throw new InternalServerErrorException('User not found.');
+    if (!user) throw new BadRequestException('User not found.');
 
     const ONE_MONTH_IN_MS = 30 * 24 * 60 * 60 * 1000;
     const passwordLastUpdatedAt = new Date(
@@ -60,12 +59,11 @@ export class AuthService {
       passwordLastUpdatedAt &&
       currentTime - passwordLastUpdatedAt < ONE_MONTH_IN_MS
     ) {
-      throw new UnauthorizedException(
+      throw new BadRequestException(
         'Your password has been changed in the last month. Please wait before trying to change it again.',
       );
     }
 
-    console.log(currentPassword, user)
     const isPasswordsMatch = await compare(currentPassword, user.password);
 
     if (!isPasswordsMatch) {
@@ -118,7 +116,6 @@ export class AuthService {
       const user = await this.usersService.findById(payload.sub);
 
       if (!user) throw new UnauthorizedException('User not found.');
-
       // Verify the current password hash matches the one in the token
       if (user.password !== payload.passwordHash) {
         throw new UnauthorizedException('Token verification failed.');

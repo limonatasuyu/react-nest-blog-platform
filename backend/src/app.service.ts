@@ -26,6 +26,7 @@ export class AppService {
     const postsData = await this.postService.getSearchResults(page, keyword);
     const usersData = await this.userService.getSearchResults(page, keyword);
 
+    if (!postsData || !usersData) throw new InternalServerErrorException();
     return { postsData, usersData };
   }
 }

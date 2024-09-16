@@ -10,10 +10,10 @@ export interface CreateUserDTO {
 }
 
 export interface ActivateUserDTO {
-  user_id: ObjectId;
+  user_id: string;
   activationCode: number;
 }
 
 export interface CreateActivationCodeDTO {
-  user_id: ObjectId;
+  user_id: string;
 }

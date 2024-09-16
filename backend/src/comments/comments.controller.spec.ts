@@ -83,12 +83,11 @@ describe('CommentsController', () => {
       });
       const postId = posts[0]._id;
 
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('users').insertMany(users);
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('posts').insertMany(posts);
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('comments').insertMany(comments);
+      await mongoConnection.collection<User>('users').insertMany(users);
+      await mongoConnection.collection<Post>('posts').insertMany(posts);
+      await mongoConnection
+        .collection<Comment>('comments')
+        .insertMany(comments);
 
       const allPostRelatedComments = comments.filter((i) => {
         return String(i.post) === String(postId) && !i.answerTo;
@@ -138,12 +137,11 @@ describe('CommentsController', () => {
       });
       const postId = new mongoose.Types.ObjectId();
 
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('users').insertMany(users);
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('posts').insertMany(posts);
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('comments').insertMany(comments);
+      await mongoConnection.collection<User>('users').insertMany(users);
+      await mongoConnection.collection<Post>('posts').insertMany(posts);
+      await mongoConnection
+        .collection<Comment>('comments')
+        .insertMany(comments);
 
       const receivedData = await commentsController.getComments({
         page: 1,
@@ -164,12 +162,11 @@ describe('CommentsController', () => {
       });
       const comment = comments[0];
 
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('users').insertMany(users);
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('posts').insertMany(posts);
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('comments').insertMany(comments);
+      await mongoConnection.collection<User>('users').insertMany(users);
+      await mongoConnection.collection<Post>('posts').insertMany(posts);
+      await mongoConnection
+        .collection<Comment>('comments')
+        .insertMany(comments);
 
       const expectedAnswerIds = comment.answers
         .sort(
@@ -203,12 +200,11 @@ describe('CommentsController', () => {
       });
       const commentId = new mongoose.Types.ObjectId();
 
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('users').insertMany(users);
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('posts').insertMany(posts);
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('comments').insertMany(comments);
+      await mongoConnection.collection<User>('users').insertMany(users);
+      await mongoConnection.collection<Post>('posts').insertMany(posts);
+      await mongoConnection
+        .collection<Comment>('comments')
+        .insertMany(comments);
 
       const receivedData = await commentsController.getAnswers({
         page: 1,
@@ -233,12 +229,11 @@ describe('CommentsController', () => {
       const commentBeforeUpdate = comments[0];
       const user = users[0];
 
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('users').insertMany(users);
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('posts').insertMany(posts);
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('comments').insertMany(comments);
+      await mongoConnection.collection<User>('users').insertMany(users);
+      await mongoConnection.collection<Post>('posts').insertMany(posts);
+      await mongoConnection
+        .collection<Comment>('comments')
+        .insertMany(comments);
 
       const isCommentLiked = !commentBeforeUpdate.likedBy.includes(
         user._id as unknown as User,
@@ -276,12 +271,11 @@ describe('CommentsController', () => {
       const commentId = comments[0]._id;
       const userId = new mongoose.Types.ObjectId();
 
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('users').insertMany(users);
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('Posts').insertMany(posts);
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('comments').insertMany(comments);
+      await mongoConnection.collection<User>('users').insertMany(users);
+      await mongoConnection.collection<Post>('posts').insertMany(posts);
+      await mongoConnection
+        .collection<Comment>('comments')
+        .insertMany(comments);
 
       await expect(
         commentsController.likeComment(
@@ -309,12 +303,11 @@ describe('CommentsController', () => {
       const postId = post._id;
       const content = 'A comment, probably about the post';
 
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('users').insertMany(users);
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('posts').insertMany(posts);
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('comments').insertMany(comments);
+      await mongoConnection.collection<User>('users').insertMany(users);
+      await mongoConnection.collection<Post>('posts').insertMany(posts);
+      await mongoConnection
+        .collection<Comment>('comments')
+        .insertMany(comments);
 
       await commentsController.addComment(
         { user: { sub: userId } },
@@ -351,12 +344,11 @@ describe('CommentsController', () => {
       const answeredCommentId = String(answeredCommentBeforeUpdate._id);
       const content = 'A comment, probably about the post';
 
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('users').insertMany(users);
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('posts').insertMany(posts);
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('comments').insertMany(comments);
+      await mongoConnection.collection<User>('users').insertMany(users);
+      await mongoConnection.collection<Post>('posts').insertMany(posts);
+      await mongoConnection
+        .collection<Comment>('comments')
+        .insertMany(comments);
 
       await commentsController.addComment(
         { user: { sub: userId } },
@@ -392,12 +384,11 @@ describe('CommentsController', () => {
       const answeredCommentId = String(answeredCommentBeforeUpdate._id);
       const content = 'A comment, probably about the post';
 
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('users').insertMany(users);
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('posts').insertMany(posts);
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('comments').insertMany(comments);
+      await mongoConnection.collection<User>('users').insertMany(users);
+      await mongoConnection.collection<Post>('posts').insertMany(posts);
+      await mongoConnection
+        .collection<Comment>('comments')
+        .insertMany(comments);
 
       expect(
         commentsController.addComment(
@@ -423,12 +414,11 @@ describe('CommentsController', () => {
       const answeredCommentId = String(answeredCommentBeforeUpdate._id);
       const content = 'A comment, probably about the post';
 
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('users').insertMany(users);
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('posts').insertMany(posts);
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('comments').insertMany(comments);
+      await mongoConnection.collection<User>('users').insertMany(users);
+      await mongoConnection.collection<Post>('posts').insertMany(posts);
+      await mongoConnection
+        .collection<Comment>('comments')
+        .insertMany(comments);
 
       expect(
         commentsController.addComment(
@@ -454,12 +444,11 @@ describe('CommentsController', () => {
       const post = posts.find((i) => i.comments.includes(commentToDelete));
       const postCommentsBeforeUpdate = post.comments;
 
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('users').insertMany(users);
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('posts').insertMany(posts);
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('comments').insertMany(comments);
+      await mongoConnection.collection<User>('users').insertMany(users);
+      await mongoConnection.collection<Post>('posts').insertMany(posts);
+      await mongoConnection
+        .collection<Comment>('comments')
+        .insertMany(comments);
 
       await commentsController.deleteComment({
         postId: String(post._id),
@@ -490,12 +479,11 @@ describe('CommentsController', () => {
       const commentToDelete = comments[0];
       const postId = new mongoose.Types.ObjectId();
 
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('users').insertMany(users);
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('posts').insertMany(posts);
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('comments').insertMany(comments);
+      await mongoConnection.collection<User>('users').insertMany(users);
+      await mongoConnection.collection<Post>('posts').insertMany(posts);
+      await mongoConnection
+        .collection<Comment>('comments')
+        .insertMany(comments);
 
       expect(
         commentsController.deleteComment({
@@ -514,12 +502,11 @@ describe('CommentsController', () => {
       const postId = posts[0]._id;
       const commentId = new mongoose.Types.ObjectId();
 
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('users').insertMany(users);
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('posts').insertMany(posts);
-      //@ts-expect-error i did not understand the error
-      await mongoConnection.collection('comments').insertMany(comments);
+      await mongoConnection.collection<User>('users').insertMany(users);
+      await mongoConnection.collection<Post>('posts').insertMany(posts);
+      await mongoConnection
+        .collection<Comment>('comments')
+        .insertMany(comments);
 
       expect(
         commentsController.deleteComment({
@@ -536,7 +523,8 @@ describe('CommentsController', () => {
         commentCount: 100,
       });
       const postId = posts[0]._id;
-      const commentId = posts.slice(1).find((i) => i.comments.length).comments[0]._id;
+      const commentId = posts.slice(1).find((i) => i.comments.length)
+        .comments[0]._id;
 
       //@ts-expect-error i did not understand the error
       await mongoConnection.collection('users').insertMany(users);

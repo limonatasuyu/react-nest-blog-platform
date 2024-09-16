@@ -40,7 +40,7 @@ describe('CommentsGuard', () => {
 
   afterEach(async () => {
     await module.close();
-  })
+  });
 
   it('should allow requests with valid token and comment', async () => {
     (jwtService.verifyAsync as jest.Mock).mockResolvedValue({

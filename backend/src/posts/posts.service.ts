@@ -2,7 +2,7 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as mongoose from 'mongoose';
-import { Post, PostDocument } from '../schemes/post.schema';
+import { Post } from '../schemes/post.schema';
 import { UsersService } from '../user/user.service';
 import {
   GetPostsDTO,
@@ -15,10 +15,6 @@ import { User } from '../schemes/user.schema';
 import { TagService } from '../tag/tag.service';
 import { NotificationService } from '../notification/notification.service';
 
-interface PostWithLikeStatus extends PostDocument {
-  isUserLiked: boolean;
-}
-
 @Injectable()
 export class PostsService {
   constructor(
@@ -29,10 +25,6 @@ export class PostsService {
     private tagService: TagService,
     private notificationService: NotificationService,
   ) {}
-
-  async getPostByIdAndUser(postId: string, user_id: string) {
-    return await this.postsModel.findOne({ _id: postId, user: user_id });
-  }
 
   async savePost(postId: string, user_id: string) {
     const post = await this.postsModel.findOne({ _id: postId });
@@ -257,30 +249,25 @@ export class PostsService {
     return { message: 'Post created successfully' };
   }
 
-  async deletePost(dto: DeletePostDTO, username: string) {
-    const user = await this.usersService.findOne(username);
+  async deletePost(dto: DeletePostDTO, userId: string) {
+    const result = await this.postsModel.deleteOne({
+      _id: dto.postId,
+      user: userId,
+    });
 
-    if (!user) {
-      throw new InternalServerErrorException();
-    }
-
-    const result = await this.postsModel.deleteOne({ _id: dto.postId });
-
-    if (!result) {
+    if (!result || !result.deletedCount) {
       throw new InternalServerErrorException();
     }
 
     return { message: 'Post deleted successfully' };
   }
 
-  async updatePost(dto: UpdatePostDTO, username: string) {
-    const user = await this.usersService.findOne(username);
-    if (!user) {
-      throw new InternalServerErrorException();
-    }
-
+  async updatePost(dto: UpdatePostDTO, userId: string) {
+    const picture = await this.imageService.getImageWithId(dto.thumbnailId);
+    if (!picture)
+      throw new InternalServerErrorException("Couldn't find the thumbnail");
     const updatedPost = await this.postsModel.updateOne(
-      { _id: dto.postId },
+      { _id: dto.postId, user: userId },
       {
         title: dto.title,
         content: dto.content,
@@ -290,7 +277,7 @@ export class PostsService {
       },
     );
 
-    if (!updatedPost) {
+    if (!updatedPost || !updatedPost.modifiedCount) {
       throw new InternalServerErrorException();
     }
 
@@ -351,10 +338,16 @@ export class PostsService {
   }
 
   async getSearchResults(page: number, keyword: string) {
+    if (!keyword.length) return { posts: [], totalPageCount: 1 }
     const pageSize = 10;
     const posts = await this.postsModel.aggregate([
       {
-        $match: { $text: { $search: keyword } },
+        $match: {
+          $or: [
+            { title: { $regex: keyword, $options: 'i' } },
+            { content: { $regex: keyword, $options: 'i' } },
+          ],
+        },
       },
       {
         $lookup: {
@@ -396,7 +389,7 @@ export class PostsService {
                 },
               },
             },
-            { $sort: { score: { $meta: 'textScore' } } },
+            //{ $sort: { score: { $meta: 'textScore' } } },
             {
               $skip: (page - 1) * pageSize,
             },
@@ -410,16 +403,25 @@ export class PostsService {
       {
         $addFields: {
           totalPageCount: {
-            $ceil: {
-              $divide: [
-                { $arrayElemAt: ['$totalRecordCount.count', 0] },
-                pageSize,
-              ],
-            },
+            $ifNull: [
+              {
+                $ceil: {
+                  $divide: [
+                    { $arrayElemAt: ['$totalRecordCount.count', 0] },
+                    pageSize,
+                  ],
+                },
+              },
+              1,
+            ],
           },
         },
       },
     ]);
     return posts[0] ?? [];
+  }
+
+  async getPostByIdAndUser(postId: string, user_id: string) {
+    return await this.postsModel.findOne({ _id: postId, user: user_id });
   }
 }
