@@ -34,7 +34,7 @@ export default function PostCard({ post }: { post: PostData }) {
           mb: 2,
         }}
       >
-        <Avatar sx={{ mr: 2 }} src={post.user.profilePictureId && `${"https://react-nest-blog-platform-production.up.railway.app"}image/${post.user.profilePictureId}`} >
+        <Avatar sx={{ mr: 2 }} src={post.user.profilePictureId && `${"https://react-nest-blog-platform-production.up.railway.app/"}image/${post.user.profilePictureId}`} >
           {post.user.firstname.charAt(0)}
         </Avatar>
 
@@ -69,7 +69,7 @@ export default function PostCard({ post }: { post: PostData }) {
           component="img"
           src={
             post.thumbnailId
-              ? `${"https://react-nest-blog-platform-production.up.railway.app"}image/${post.thumbnailId}`
+              ? `${"https://react-nest-blog-platform-production.up.railway.app/"}image/${post.thumbnailId}`
               : placeHolderThumbnail
           }
           alt={post.title}
@@ -170,7 +170,7 @@ export function PostCardMinimal({ post }: { post: PostData }) {
             component="img"
             src={
               post.thumbnailId
-                ? `${"https://react-nest-blog-platform-production.up.railway.app"}image/${post.thumbnailId}`
+                ? `${"https://react-nest-blog-platform-production.up.railway.app/"}image/${post.thumbnailId}`
                 : placeHolderThumbnail
             }
             sx={{

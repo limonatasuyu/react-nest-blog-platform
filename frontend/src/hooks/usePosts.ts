@@ -22,7 +22,7 @@ export default function usePosts(params: { page: number; username?: string | nul
       const token = window.sessionStorage.getItem("access_token");
       dispatch(fetchPostsRequest());
       try {
-        const response = await fetch(`${"https://react-nest-blog-platform-production.up.railway.app"}posts?${cacheKey}`, {
+        const response = await fetch(`${"https://react-nest-blog-platform-production.up.railway.app/"}posts?${cacheKey}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 

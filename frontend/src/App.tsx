@@ -40,7 +40,7 @@ function App() {
     }
 
     try {
-      const response = await fetch(`${"https://react-nest-blog-platform-production.up.railway.app"}auth/profile`, {
+      const response = await fetch(`${"https://react-nest-blog-platform-production.up.railway.app/"}auth/profile`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
