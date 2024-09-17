@@ -79,17 +79,13 @@ export default function PostPage({ userInfo }: { userInfo: userInfo }) {
 
   function fetchComments() {
     const token = window.sessionStorage.getItem("access_token");
-    fetch(
-      `http://localhost:5000/comments?page=${commentsPage}&postId=${postId}`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    ).then((res) => {
+    fetch(`http://localhost:5000/comments?page=${commentsPage}&postId=${postId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }).then((res) => {
       if (!res.ok) return;
       res.json().then((result) => {
-        console.log("result: ", result)
-        if (totalPageCount !== result.totalPageCount)
-          setTotalPageCount(result.totalPageCount);
+        console.log("result: ", result);
+        if (totalPageCount !== result.totalPageCount) setTotalPageCount(result.totalPageCount);
         setComments([...comments, ...result.comments]);
         setCommentsPage(commentsPage + 1);
       });
@@ -109,19 +105,12 @@ export default function PostPage({ userInfo }: { userInfo: userInfo }) {
           res
             .json()
             .then((res) =>
-              setSnackBar(
-                res.message ??
-                  "Unexpected error occured, please try again later.",
-                "error"
-              )
+              setSnackBar(res.message ?? "Unexpected error occured, please try again later.", "error")
             );
         }
       })
       .catch((err) => {
-        setSnackBar(
-          err.message ?? "Unexpected error occured, please try again later.",
-          "error"
-        );
+        setSnackBar(err.message ?? "Unexpected error occured, please try again later.", "error");
         setIsUserSaved(oldIsSaved);
       });
   }
@@ -134,11 +123,7 @@ export default function PostPage({ userInfo }: { userInfo: userInfo }) {
       .then(async (res) => {
         const jsonResponse = await res.json();
         if (!res.ok) {
-          setSnackBar(
-            jsonResponse.message ??
-              "Unexpected error occured, please try again later.",
-            "error"
-          );
+          setSnackBar(jsonResponse.message ?? "Unexpected error occured, please try again later.", "error");
           return;
         }
         setPost(jsonResponse);
@@ -146,10 +131,7 @@ export default function PostPage({ userInfo }: { userInfo: userInfo }) {
         setIsUserSaved(jsonResponse.isUserSaved);
       })
       .catch((err) =>
-        setSnackBar(
-          err.message ?? "Unexpected error occured, please try again later.",
-          "error"
-        )
+        setSnackBar(err.message ?? "Unexpected error occured, please try again later.", "error")
       )
       .finally(() => setLoaded(true));
   }
@@ -172,6 +154,7 @@ export default function PostPage({ userInfo }: { userInfo: userInfo }) {
         likedCount: 0,
         answers: [],
         isUserLiked: false,
+        answerPageCount: 1,
       },
       ...comments,
     ];
@@ -190,27 +173,17 @@ export default function PostPage({ userInfo }: { userInfo: userInfo }) {
       .then(async (res) => {
         const jsonResponse = await res.json();
         if (!res.ok) {
-          setSnackBar(
-            jsonResponse.message ??
-              "Unexpected error occured, please try again later",
-            "error"
-          );
+          setSnackBar(jsonResponse.message ?? "Unexpected error occured, please try again later", "error");
           return;
           setComments(oldComments);
         }
-        setSnackBar(
-          jsonResponse.message ?? "Comment added successfully.",
-          "success"
-        );
+        setSnackBar(jsonResponse.message ?? "Comment added successfully.", "success");
         newComments[0]._id = jsonResponse.commentId;
         setComments(newComments);
         setComment("");
       })
       .catch((err) => {
-        setSnackBar(
-          err.message ?? "Unexpected error occured, please try again later",
-          "error"
-        );
+        setSnackBar(err.message ?? "Unexpected error occured, please try again later", "error");
         setComments(oldComments);
       })
       .finally(() => setIsSubmitting(false));
@@ -229,20 +202,13 @@ export default function PostPage({ userInfo }: { userInfo: userInfo }) {
           res
             .json()
             .then((res) =>
-              setSnackBar(
-                res.message ??
-                  "Unexpected error occured, please try again later",
-                "error"
-              )
+              setSnackBar(res.message ?? "Unexpected error occured, please try again later", "error")
             );
         }
       })
       .catch((err) => {
         setIsUserLiked(!isLiked);
-        setSnackBar(
-          err.message ?? "Unexpected error occured, please try again later",
-          "error"
-        );
+        setSnackBar(err.message ?? "Unexpected error occured, please try again later", "error");
       });
   }
 
@@ -252,14 +218,7 @@ export default function PostPage({ userInfo }: { userInfo: userInfo }) {
   return (
     <AppLayout>
       <Box display="flex" justifyContent="center" mb={3}>
-        <Box
-          display="flex"
-          alignItems="center"
-          justifyContent="start"
-          sx={{ width: "60%" }}
-          gap={3}
-          mb={2}
-        >
+        <Box display="flex" alignItems="center" justifyContent="start" sx={{ width: "60%" }} gap={3} mb={2}>
           <Avatar
             sx={{
               height: "4rem",
@@ -283,8 +242,8 @@ export default function PostPage({ userInfo }: { userInfo: userInfo }) {
               {post.user?.firstname + " " + post.user?.lastname}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {post.user.description && post.user.description + " · "}published
-              at {new Date(post.createdAt).toLocaleString() + " · "}
+              {post.user.description && post.user.description + " · "}published at{" "}
+              {new Date(post.createdAt).toLocaleString() + " · "}
               {calculateReadingTime(post.content)} min read
             </Typography>
           </Box>
@@ -292,11 +251,7 @@ export default function PostPage({ userInfo }: { userInfo: userInfo }) {
       </Box>
 
       <Box display="flex" justifyContent="center" mb={3}>
-        <Box
-          display="flex"
-          justifyContent="space-between"
-          sx={{ width: "60%" }}
-        >
+        <Box display="flex" justifyContent="space-between" sx={{ width: "60%" }}>
           <Box display="flex" gap={3}>
             <Tooltip title={`${post.commentCount} comments`}>
               <Box display="flex" alignItems="center" gap={1}>
@@ -306,30 +261,13 @@ export default function PostPage({ userInfo }: { userInfo: userInfo }) {
             </Tooltip>
             <Tooltip
               title={`${
-                post.likedCount +
-                (post.isUserLiked
-                  ? isUserLiked
-                    ? 0
-                    : -1
-                  : isUserLiked
-                    ? 1
-                    : 0)
+                post.likedCount + (post.isUserLiked ? (isUserLiked ? 0 : -1) : isUserLiked ? 1 : 0)
               } likes`}
             >
-              <IconButton
-                onClick={handleLike}
-                color={isUserLiked ? "error" : "primary"}
-              >
+              <IconButton onClick={handleLike} color={isUserLiked ? "error" : "primary"}>
                 <FavoriteIcon />
                 <Typography variant="body2" sx={{ ml: 1 }}>
-                  {post.likedCount +
-                    (post.isUserLiked
-                      ? isUserLiked
-                        ? 0
-                        : -1
-                      : isUserLiked
-                        ? 1
-                        : 0)}
+                  {post.likedCount + (post.isUserLiked ? (isUserLiked ? 0 : -1) : isUserLiked ? 1 : 0)}
                 </Typography>
               </IconButton>
             </Tooltip>
@@ -352,11 +290,7 @@ export default function PostPage({ userInfo }: { userInfo: userInfo }) {
             </Tooltip>
           </Box>
 
-          <Menu
-            anchorEl={moreAnchorEl}
-            open={moreMenuOpen}
-            onClose={handleMoreMenuClose}
-          >
+          <Menu anchorEl={moreAnchorEl} open={moreMenuOpen} onClose={handleMoreMenuClose}>
             <MenuItem
               onClick={() => {
                 handleMoreMenuClose();
@@ -393,12 +327,7 @@ export default function PostPage({ userInfo }: { userInfo: userInfo }) {
         >
           {modalType === "share" ? (
             <>
-              <Typography
-                id="modal-share-title"
-                variant="subtitle1"
-                component="h2"
-                sx={{ mb: 2 }}
-              >
+              <Typography id="modal-share-title" variant="subtitle1" component="h2" sx={{ mb: 2 }}>
                 Share This Post
               </Typography>
               {/* Copy to Clipboard */}
@@ -427,9 +356,7 @@ export default function PostPage({ userInfo }: { userInfo: userInfo }) {
                 <IconButton
                   sx={{ p: 0.5, ml: 1 }}
                   onClick={() =>
-                    navigator.clipboard.writeText(
-                      `https://yourwebsite.com/content/${modalType}`
-                    )
+                    navigator.clipboard.writeText(`https://yourwebsite.com/content/${modalType}`)
                   }
                 >
                   <ContentCopyIcon fontSize="small" />
@@ -437,9 +364,7 @@ export default function PostPage({ userInfo }: { userInfo: userInfo }) {
               </Box>
 
               {/* Share Buttons */}
-              <Box
-                sx={{ display: "flex", justifyContent: "space-evenly", pt: 1 }}
-              >
+              <Box sx={{ display: "flex", justifyContent: "space-evenly", pt: 1 }}>
                 <IconButton
                   sx={{ color: "#1877F2" }}
                   onClick={() => {
@@ -475,10 +400,7 @@ export default function PostPage({ userInfo }: { userInfo: userInfo }) {
       <Box sx={{ width: "100%", padding: { xs: 2, md: 5 } }}>
         <Grid container justifyContent="center">
           <Grid item xs={12} md={8}>
-            <Typography
-              variant="h3"
-              sx={{ mb: 4, fontWeight: "bold", textAlign: "center" }}
-            >
+            <Typography variant="h3" sx={{ mb: 4, fontWeight: "bold", textAlign: "center" }}>
               {post?.title}
             </Typography>
             <Box sx={{ display: "flex", justifyContent: "center", mb: 4 }}>
@@ -540,11 +462,7 @@ export default function PostPage({ userInfo }: { userInfo: userInfo }) {
                 variant="outlined"
                 size="small"
               />
-              <Button
-                variant="contained"
-                disabled={!comment.length || isSubmitting}
-                onClick={handleSubmit}
-              >
+              <Button variant="contained" disabled={!comment.length || isSubmitting} onClick={handleSubmit}>
                 Submit
               </Button>
             </Box>
@@ -624,43 +542,34 @@ function CommentCard({
       .then(async (res) => {
         const jsonResponse = await res.json();
         if (!res.ok) {
-          setSnackBar(
-            jsonResponse.message ??
-              "Unexpected error occured, please try again later",
-            "error"
-          );
+          setSnackBar(jsonResponse.message ?? "Unexpected error occured, please try again later", "error");
           setAnswers(oldAnswers);
           return;
         }
-        setSnackBar(
-          jsonResponse.message ?? "Comment added successfully.",
-          "success"
-        );
+        setSnackBar(jsonResponse.message ?? "Comment added successfully.", "success");
         newAnswers[0]._id = jsonResponse.commentId;
         setAnswers(newAnswers);
         setReply("");
       })
       .catch((err) => {
-        setSnackBar(
-          err.message ?? "Unexpected error occured, please try again later",
-          "error"
-        );
+        setSnackBar(err.message ?? "Unexpected error occured, please try again later", "error");
         setAnswers(oldAnswers);
       })
       .finally(() => setIsSubmitting(false));
   }
 
   function handleAnswerFetch() {
-    const token = window.sessionStorage.getItem('access_token');
-    fetch(`http://localhost:5000/comments/answers?commentId=${commentData._id}&page=${answerPage}`, { headers: { Authorization: `Bearer ${token}` } }).then((res) => {
+    const token = window.sessionStorage.getItem("access_token");
+    fetch(`http://localhost:5000/comments/answers?commentId=${commentData._id}&page=${answerPage}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }).then((res) => {
       if (!res.ok) return;
       res.json().then((result) => {
-        setAnswerPage(answerPage + 1)
-        setAnswers([...answers, ...result])
-      })
-    })
+        setAnswerPage(answerPage + 1);
+        setAnswers([...answers, ...result]);
+      });
+    });
   }
-
 
   function handleLike() {
     const oldIsUserLiked = isUserLiked;
@@ -692,19 +601,12 @@ function CommentCard({
           res
             .json()
             .then((res) =>
-              setSnackBar(
-                res.message ??
-                  "Unexpected error occurred, please try again later",
-                "error"
-              )
+              setSnackBar(res.message ?? "Unexpected error occurred, please try again later", "error")
             );
         }
       })
       .catch((err) => {
-        setSnackBar(
-          err.message ?? "Unexpected error occurred, please try again later",
-          "error"
-        );
+        setSnackBar(err.message ?? "Unexpected error occurred, please try again later", "error");
         setLikeCount(oldLikeCount);
       });
   }
@@ -811,48 +713,45 @@ function CommentCard({
           onClick={() => setShowReplies(!showReplies)}
           sx={{ mt: 1, textTransform: "none" }}
         >
-          {showReplies
-            ? "Hide Replies"
-            : `Show ${answers.length} Repl${answers.length > 1 ? "ies" : "y"}`}
+          {showReplies ? "Hide Replies" : `Show ${answers.length} Repl${answers.length > 1 ? "ies" : "y"}`}
         </Button>
       )}
-      {showReplies &&
+      {showReplies && (
         <>
-        {answers?.map((i, x) => (
-          <ReplyComment
-            key={x}
-            reply={i}
-            setAnswer={setAnsweredCommentId}
-            setIsReplyInputVisible={setIsReplyInputVisible}
-            setSnackBar={setSnackBar}
-          />
-        ))}
-          {commentData.answerPageCount > answerPage && <Button
-            size="small"
-            onClick={handleAnswerFetch}
-            sx={{ mt: 1, textTransform: "none" }}
-          >
-            More replies
-          </Button>}
-        </>}
+          {answers?.map((i, x) => (
+            <ReplyComment
+              key={x}
+              reply={i}
+              setAnswer={setAnsweredCommentId}
+              setIsReplyInputVisible={setIsReplyInputVisible}
+              //setSnackBar={setSnackBar}
+            />
+          ))}
+          {commentData.answerPageCount > answerPage && (
+            <Button size="small" onClick={handleAnswerFetch} sx={{ mt: 1, textTransform: "none" }}>
+              More replies
+            </Button>
+          )}
+        </>
+      )}
     </Box>
   );
 }
 
 function ReplyComment({
   reply,
-  setSnackBar,
+  //setSnackBar,
   setAnswer,
   setIsReplyInputVisible,
 }: {
   reply: ReplyData;
-  setSnackBar: (msg: string, status: AlertColor) => void;
+  //setSnackBar: (msg: string, status: AlertColor) => void;
   setAnswer: (id: string) => void;
   setIsReplyInputVisible: (is: boolean) => void;
 }) {
-  const [likeCount, setLikeCount] = useState(reply.likedCount);
-  const [isUserLiked, setIsUserLiked] = useState(reply.isUserLiked);
-
+ // const [likeCount, setLikeCount] = useState(reply.likedCount);
+ // const [isUserLiked, setIsUserLiked] = useState(reply.isUserLiked);
+/*
   function handleLike() {
     const oldIsUserLiked = isUserLiked;
     const oldLikeCount = likeCount;
@@ -884,22 +783,15 @@ function ReplyComment({
           res
             .json()
             .then((res) =>
-              setSnackBar(
-                res.message ??
-                  "Unexpected error occurred, please try again later",
-                "error"
-              )
+              setSnackBar(res.message ?? "Unexpected error occurred, please try again later", "error")
             );
         }
       })
       .catch((err) => {
-        setSnackBar(
-          err.message ?? "Unexpected error occurred, please try again later",
-          "error"
-        );
+        setSnackBar(err.message ?? "Unexpected error occurred, please try again later", "error");
         setLikeCount(oldLikeCount);
       });
-  }
+  }*/
   return (
     <Box
       sx={{
@@ -1006,42 +898,25 @@ function ReportPostForm({
       .then(async (res) => {
         const jsonResponse = await res.json();
         if (!res.ok) {
-          setSnackBar(
-            jsonResponse.message ??
-              "Unexpected error occured, please try again later.",
-            "error"
-          );
+          setSnackBar(jsonResponse.message ?? "Unexpected error occured, please try again later.", "error");
           return;
         }
         setSnackBar(
-          jsonResponse.message ??
-            "Report made successfully, thank you for the feedback",
+          jsonResponse.message ?? "Report made successfully, thank you for the feedback",
           "success"
         );
       })
       .catch((err) => {
-        setSnackBar(
-          err.message ?? "Unexpected error occured, please try again later.",
-          "error"
-        );
+        setSnackBar(err.message ?? "Unexpected error occured, please try again later.", "error");
       });
   }
   return (
     <>
-      <Typography
-        id="modal-report-title"
-        variant="subtitle1"
-        component="h2"
-        sx={{ mb: 2 }}
-      >
+      <Typography id="modal-report-title" variant="subtitle1" component="h2" sx={{ mb: 2 }}>
         Report This Post
       </Typography>
 
-      <Typography
-        id="modal-report-description"
-        variant="body2"
-        sx={{ mb: 2, color: "#555" }}
-      >
+      <Typography id="modal-report-description" variant="body2" sx={{ mb: 2, color: "#555" }}>
         Please select a reason for reporting this post:
       </Typography>
 
@@ -1055,28 +930,15 @@ function ReportPostForm({
             onChange={(e) => {
               setValues({
                 ...values,
-                reason: e.target.value as
-                  | "spam"
-                  | "abusive"
-                  | "misinformation"
-                  | "other"
-                  | null,
+                reason: e.target.value as "spam" | "abusive" | "misinformation" | "other" | null,
               });
 
               handleValidation();
             }}
           >
             <FormControlLabel value="spam" control={<Radio />} label="Spam" />
-            <FormControlLabel
-              value="abusive"
-              control={<Radio />}
-              label="Abusive or Harmful"
-            />
-            <FormControlLabel
-              value="misinformation"
-              control={<Radio />}
-              label="Misinformation"
-            />
+            <FormControlLabel value="abusive" control={<Radio />} label="Abusive or Harmful" />
+            <FormControlLabel value="misinformation" control={<Radio />} label="Misinformation" />
             <FormControlLabel value="other" control={<Radio />} label="Other" />
           </RadioGroup>
           <FormHelperText>{errors.reason}</FormHelperText>

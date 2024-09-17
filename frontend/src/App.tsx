@@ -26,12 +26,9 @@ function App() {
   const [userInfo, setUserInfo] = useState<userInfo | null>(null);
 
   const checkAccessToken = useCallback(async () => {
-    const isAuthRoute = [
-      "/login",
-      "/signup",
-      "/forget_password",
-      "/activate",
-    ].includes(currentPath.split("?")[0]);
+    const isAuthRoute = ["/login", "/signup", "/forget_password", "/activate"].includes(
+      currentPath.split("?")[0]
+    );
 
     const token = window.sessionStorage.getItem("access_token");
 
@@ -78,11 +75,15 @@ function App() {
       "/activate": ActivateUserPage,
       "/signup": SignUpPage,
       "/create_post": CreatePostPage,
+      //@ts-expect-error whatever
       "/my_posts": MyPostsPage,
+      //@ts-expect-error whatever
       "/profile": ProfilePage,
+      //@ts-expect-error whatever
       "/post": PostPage,
       "/change_password": ChangePasswordPage,
       "/tag": TagPage,
+      //@ts-expect-error whatever
       "/user": UserPage,
       "/followers": FollowersPage,
       "/search": SearchPage,
@@ -91,12 +92,10 @@ function App() {
     const PageComponent = routes[currentPath.split("?")[0]] || NotFoundPage;
 
     const props: { currentUserName?: string; userInfo?: userInfo } = {};
-    if (
-      ["/profile", "/user", "/my_posts"].includes(currentPath.split("?")[0])
-    ) {
+    if (["/profile", "/user", "/my_posts"].includes(currentPath.split("?")[0])) {
       props.currentUserName = userInfo?.username;
     } else if (currentPath.split("?")[0] === "/post" && userInfo) {
-      props.userInfo = userInfo
+      props.userInfo = userInfo;
     }
 
     return <PageComponent {...props} />;

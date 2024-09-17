@@ -38,7 +38,8 @@ export default function CreatePostPage() {
   const [tabValue, setTabValue] = useState(0);
   const [imageDataUri, setImageDataUri] = useState<null | string>(null);
 
-  const handleTabChange = (event, newValue) => {
+  //@ts-expect-error i need the second value
+  const handleTabChange = (event: any, newValue: number) => {
     setTabValue(newValue);
   };
 

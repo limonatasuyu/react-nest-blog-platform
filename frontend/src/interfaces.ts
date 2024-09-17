@@ -4,9 +4,12 @@ export interface userInfo {
   lastname: string;
   username: string;
   description?: string;
+  email?: string;
 }
 
 export interface PostData {
+  isUserLiked: boolean;
+  createdAt: string | number | Date;
   _id: string;
   title: string;
   content: string;
@@ -35,6 +38,7 @@ export interface ReplyData {
 }
 
 export interface CommentData extends ReplyData {
+  answerPageCount: number;
   answers?: ReplyData[];
 }
 

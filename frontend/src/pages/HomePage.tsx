@@ -18,7 +18,7 @@ import useRecommended from "../hooks/useRecommended";
 const HomePage = memo(() => {
   const [activeTagTab, setActiveTagTab] = useState("All");
   const [page, setPage] = useState(1);
-  const { postsData, loading, error } = usePosts({ page, tag: activeTagTab });
+  const { postsData, loading/*, error*/ } = usePosts({ page, tag: activeTagTab });
   const { recommended } = useRecommended()
   const { tags, users: whoToFollow } = recommended
 

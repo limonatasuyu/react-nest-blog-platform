@@ -1,9 +1,5 @@
 import { expect, describe, it, vi } from "vitest";
-import {
-  render,
-  screen,
-  waitForElementToBeRemoved,
-} from "@testing-library/react";
+import { render, screen, waitForElementToBeRemoved } from "@testing-library/react";
 import HomePage from "./HomePage";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { SnackbarProvider } from "../hooks/useSnackbar";
@@ -14,6 +10,8 @@ import { PostData, RecommendedData } from "../interfaces";
 const mockPostData: { posts: PostData[]; totalPageCount: number } = {
   posts: [
     {
+      isUserLiked: false,
+      createdAt: new Date(),
       _id: "0",
       title: "title 1",
       content: "some long text",
@@ -83,11 +81,7 @@ const mockFetch = vi.fn((url) => {
       ok: true,
       json: () => Promise.resolve(mockRecommendedData),
     });
-  } else if (
-    url.includes("/notification") &&
-    !url.includes("see") &&
-    !url.includes("see")
-  ) {
+  } else if (url.includes("/notification") && !url.includes("see") && !url.includes("see")) {
     return Promise.resolve({
       ok: true,
       json: () => Promise.resolve([]),
@@ -97,13 +91,13 @@ const mockFetch = vi.fn((url) => {
   }
 });
 
-global.fetch = mockFetch;
+global.fetch = mockFetch as any;
 
 describe("Home page render tests", () => {
   it("should render the buttons", async () => {
-process.on('warning', (warning) => {
-    console.log(warning.stack);
-});
+    process.on("warning", (warning) => {
+      console.log(warning.stack);
+    });
 
     render(
       <StateProvider>
@@ -119,19 +113,17 @@ process.on('warning', (warning) => {
     await waitForElementToBeRemoved(loadingIndicator);
 
     const AllPostsTabButton = screen.getByRole("button", { name: "All" });
-    const recommendedUser1 = screen.getAllByText(
-      mockRecommendedData.users[0].description as string
-    )[0];
-    const recommendedUser2 = screen.getAllByText(
-      mockRecommendedData.users[1].description as string
-    )[0];
-    const recommendedUser3 = screen.getAllByText(
-      mockRecommendedData.users[2].description as string
-    )[0];
+    const recommendedUser1 = screen.getAllByText(mockRecommendedData.users[0].description as string)[0];
+    const recommendedUser2 = screen.getAllByText(mockRecommendedData.users[1].description as string)[0];
+    const recommendedUser3 = screen.getAllByText(mockRecommendedData.users[2].description as string)[0];
 
+    //@ts-expect-error vitest seems to be okay with the method
     expect(AllPostsTabButton).toBeInTheDocument();
+    //@ts-expect-error vitest seems to be okay with the method
     expect(recommendedUser1).toBeInTheDocument();
+    //@ts-expect-error vitest seems to be okay with the method
     expect(recommendedUser2).toBeInTheDocument();
+    //@ts-expect-error vitest seems to be okay with the method
     expect(recommendedUser3).toBeInTheDocument();
   });
 });

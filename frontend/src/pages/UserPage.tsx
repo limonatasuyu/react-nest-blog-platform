@@ -25,7 +25,7 @@ export default function UserPage({ currentUserName }: { currentUserName: string 
   const { setSnackBar } = useSnackbar();
   const [page, setPage] = useState(1);
   console.log("userName ith big N", userName)
-  const { postsData, loading, error } = usePosts({ page, username: userName });
+  const { postsData, loading/*, error*/ } = usePosts({ page, username: userName });
   const { navigate } = useRoute();
 
 

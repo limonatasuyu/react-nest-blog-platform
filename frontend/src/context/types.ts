@@ -27,7 +27,7 @@ export interface CommentState {
     }
   },
   loading: boolean,
-  errors: string | null
+  error: string | null
 }
 
 export interface FetchPostsRequestAction {

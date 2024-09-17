@@ -14,7 +14,7 @@ const Tagpage = memo(() => {
 
   const [page, setPage] = useState(1);
 
-  const { postsData, loading, error } = usePosts({ page, tag: tagName })
+  const { postsData, loading/*, error*/ } = usePosts({ page, tag: tagName })
 
   //if (!tagName || error) return <ErroPage />
   if (loading) return <Loading />;

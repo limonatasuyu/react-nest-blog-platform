@@ -11,7 +11,7 @@ import CustomLink from "../components/CustomLink";
 export default function MyPostsPage({ currentUserName }: { currentUserName: string }) {
   
   const [page, setPage] = useState(1);
-  const { postsData, loading, error } = usePosts({page, username: currentUserName})
+  const { postsData, loading/*, error*/ } = usePosts({page, username: currentUserName})
 
   //if (!currentUserName || error) return <ErrorPage />
   if (loading) return <Loading />;

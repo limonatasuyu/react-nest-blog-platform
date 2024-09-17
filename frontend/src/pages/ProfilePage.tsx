@@ -12,12 +12,13 @@ import { ChangeEvent, useCallback, useEffect, useState } from "react";
 import useSnackbar from "../hooks/useSnackbar";
 import Loading from "../components/Loading";
 import {
-  AccountCircle as AccountCircleIcon,
+  //AccountCircle as AccountCircleIcon,
   Upload as UploadIcon,
   Lock as LockIcon,
 } from "@mui/icons-material";
 import { styled } from "@mui/material/styles";
 import CustomLink from "../components/CustomLink";
+import { userInfo } from "../interfaces";
 
 const VisuallyHiddenInput = styled("input")({
   clip: "rect(0 0 0 0)",
@@ -45,13 +46,7 @@ export default function ProfilePage({
 }: {
   currentUserName: string;
 }) {
-  const [userInfo, setUserInfo] = useState<{
-    email: string;
-    firstname: string;
-    lastname: string;
-    currentUserName: string;
-    profilePictureId?: string;
-  } | null>(null);
+  const [userInfo, setUserInfo] = useState<userInfo | null>(null);
   const [loaded, setLoaded] = useState(false);
   const { setSnackBar } = useSnackbar();
   const [imageDataUri, setImageDataUri] = useState<string | null>(null);
