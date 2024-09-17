@@ -30,7 +30,7 @@ export default function ActivateUserPage() {
     }
     setIsSubmitting(true);
 
-    fetch(`${process.env.REACT_APP_API_URL}user/activate`, {
+    fetch(`${https://react-nest-blog-platform-production.up.railway.app:5000/}user/activate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -63,7 +63,7 @@ export default function ActivateUserPage() {
 
   function handleRequestNewCode() {
     setIsSubmittingNewRequest(true);
-    fetch(`${process.env.REACT_APP_API_URL}user/recreate-activation`, {
+    fetch(`${https://react-nest-blog-platform-production.up.railway.app:5000/}user/recreate-activation`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

@@ -22,7 +22,7 @@ export default function usePosts(params: { page: number; postId: string | null }
       const token = window.sessionStorage.getItem("access_token");
       dispatch(fetchCommentRequest());
       try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}comments?${cacheKey}`, {
+        const response = await fetch(`${https://react-nest-blog-platform-production.up.railway.app:5000/}comments?${cacheKey}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 

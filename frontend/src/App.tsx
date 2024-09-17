@@ -40,7 +40,7 @@ function App() {
     }
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}auth/profile`, {
+      const response = await fetch(`${https://react-nest-blog-platform-production.up.railway.app:5000/}auth/profile`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

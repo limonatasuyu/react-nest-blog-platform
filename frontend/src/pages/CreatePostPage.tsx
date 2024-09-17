@@ -67,7 +67,7 @@ export default function CreatePostPage() {
     { setSubmitting }: { setSubmitting: (is: boolean) => void }
   ) {
     const token = window.sessionStorage.getItem("access_token");
-    fetch(`${process.env.REACT_APP_API_URL}posts`, {
+    fetch(`${https://react-nest-blog-platform-production.up.railway.app:5000/}posts`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -108,7 +108,7 @@ export default function CreatePostPage() {
     const formData = new FormData();
     formData.append("file", image);
     const token = window.sessionStorage.getItem("access_token");
-    const res = await fetch(`${process.env.REACT_APP_API_URL}image`, {
+    const res = await fetch(`${https://react-nest-blog-platform-production.up.railway.app:5000/}image`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,

@@ -68,7 +68,7 @@ export default function ProfilePage({
     }
 
     const token = window.sessionStorage.getItem("access_token");
-    fetch(`${process.env.REACT_APP_API_URL}user/change_description`, {
+    fetch(`${https://react-nest-blog-platform-production.up.railway.app:5000/}user/change_description`, {
       method: "PUT",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -95,7 +95,7 @@ export default function ProfilePage({
   const fetchUserInfo = useCallback(() => {
     if (!currentUserName) return;
     const token = window.sessionStorage.getItem("access_token");
-    fetch(`${process.env.REACT_APP_API_URL}user/profile/${currentUserName}`, {
+    fetch(`${https://react-nest-blog-platform-production.up.railway.app:5000/}user/profile/${currentUserName}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -130,7 +130,7 @@ export default function ProfilePage({
     const formData = new FormData();
     formData.append("file", image);
     const token = window.sessionStorage.getItem("access_token");
-    const res = await fetch(`${process.env.REACT_APP_API_URL}image`, {
+    const res = await fetch(`${https://react-nest-blog-platform-production.up.railway.app:5000/}image`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -160,7 +160,7 @@ export default function ProfilePage({
   function handleSubmit() {
     setIsSubmitting(true);
     const token = window.sessionStorage.getItem("access_token");
-    fetch(`${process.env.REACT_APP_API_URL}user/change_picture`, {
+    fetch(`${https://react-nest-blog-platform-production.up.railway.app:5000/}user/change_picture`, {
       method: "PUT",
       body: JSON.stringify({ imageId }),
       headers: {
@@ -226,7 +226,7 @@ export default function ProfilePage({
             <Avatar
               src={
                 imageDataUri ??
-                `${process.env.REACT_APP_API_URL}image/${userInfo?.profilePictureId}`
+                `${https://react-nest-blog-platform-production.up.railway.app:5000/}image/${userInfo?.profilePictureId}`
               }
               sx={{ width: "8rem", height: "8rem" }}
             >
