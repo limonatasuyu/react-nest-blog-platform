@@ -152,7 +152,7 @@ const HomePage = memo(() => {
                   <Avatar
                     src={
                       user.profilePictureId &&
-                      `${"react-nest-blog-platform-production.up.railway.app"}image/${user.profilePictureId}`
+                      `${"https://react-nest-blog-platform-production.up.railway.app"}image/${user.profilePictureId}`
                     }
                   >
                     {user.firstname.charAt(0)}
