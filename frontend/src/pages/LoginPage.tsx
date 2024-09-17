@@ -56,28 +56,20 @@ export default function LoginPage() {
     fetch(`${"https://refreshing-illumination-production.up.railway.app/"}auth/login`, {
       method: "POST",
       body: JSON.stringify(values),
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", credentials: "include" },
     })
       .then(async (res) => {
         const jsonResponse = await res.json();
-        setSnackBar(
-          jsonResponse?.message,
-          jsonResponse.error ? "error" : "success"
-        );
+        setSnackBar(jsonResponse?.message, jsonResponse.error ? "error" : "success");
 
         if (jsonResponse.access_token) {
-          window.sessionStorage.setItem(
-            "access_token",
-            jsonResponse.access_token
-          );
+          window.sessionStorage.setItem("access_token", jsonResponse.access_token);
           window.location.pathname = "/";
         }
       })
       .catch((err) => {
         setSnackBar(
-          JSON.stringify(err) === "{}"
-            ? "An unexpected error occured, please try again later."
-            : err,
+          JSON.stringify(err) === "{}" ? "An unexpected error occured, please try again later." : err,
           "error"
         );
       })
@@ -89,19 +81,8 @@ export default function LoginPage() {
   return (
     <LoginLayout>
       <img src={logo_white} style={{ marginBottom: "2rem" }} />
-      <Formik
-        initialValues={{ email: "", password: "" }}
-        validate={handleValidation}
-        onSubmit={handleSubmit}
-      >
-        {({
-          values,
-          errors,
-          handleChange,
-          isSubmitting,
-          handleSubmit,
-          touched,
-        }) => (
+      <Formik initialValues={{ email: "", password: "" }} validate={handleValidation} onSubmit={handleSubmit}>
+        {({ values, errors, handleChange, isSubmitting, handleSubmit, touched }) => (
           <form
             style={{
               display: "flex",
@@ -119,10 +100,7 @@ export default function LoginPage() {
               sx={{ mb: 2 }}
             />
             <FormControl variant="outlined">
-              <InputLabel
-                htmlFor="password"
-                error={Boolean(errors.password) && touched.password}
-              >
+              <InputLabel htmlFor="password" error={Boolean(errors.password) && touched.password}>
                 Password
               </InputLabel>
               <OutlinedInput
@@ -148,27 +126,15 @@ export default function LoginPage() {
                 }
                 label="Password"
               />
-              <FormHelperText error>
-                {touched.password && errors.password}
-              </FormHelperText>
+              <FormHelperText error>{touched.password && errors.password}</FormHelperText>
             </FormControl>
             <CustomLink to="/forget_password">Did you forget your password ?</CustomLink>
-            <Box
-              display="flex"
-              sx={{ gap: 2, justifyContent: "center", mt: 2 }}
-            >
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                variant="contained"
-                color="success"
-              >
+            <Box display="flex" sx={{ gap: 2, justifyContent: "center", mt: 2 }}>
+              <Button type="submit" disabled={isSubmitting} variant="contained" color="success">
                 Login
               </Button>
               <CustomLink to="/signup">
-                <Button variant="contained">
-                  Signup
-                </Button>
+                <Button variant="contained">Signup</Button>
               </CustomLink>
             </Box>
           </form>
