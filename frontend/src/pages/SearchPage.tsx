@@ -26,7 +26,7 @@ export default function SearchPage() {
   const cacheKey = createCacheKey({ page, keyword });
   useEffect(() => {
     if (cache[cacheKey]) return;
-    fetch(`${https://react-nest-blog-platform-production.up.railway.app:5000/}search?${cacheKey}`).then((res) => {
+    fetch(`${"https://react-nest-blog-platform-production.up.railway.app:5000/"}search?${cacheKey}`).then((res) => {
       if (!res.ok) return;
       res.json().then((result) => {
         setCache({ ...cache, [cacheKey]: result });
@@ -129,7 +129,7 @@ export default function SearchPage() {
                   <Avatar
                     src={
                       user.profilePictureId &&
-                      `${https://react-nest-blog-platform-production.up.railway.app:5000/}image/${user.profilePictureId}`
+                      `${"https://react-nest-blog-platform-production.up.railway.app:5000/"}image/${user.profilePictureId}`
                     }
                     sx={{ width: 56, height: 56 }}
                   >

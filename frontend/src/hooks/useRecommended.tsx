@@ -14,7 +14,7 @@ export default function useRecommended() {
       const token = window.sessionStorage.getItem("access_token");
       dispatch(fetchRecommendedRequest());
       try {
-        const response = await fetch(`${https://react-nest-blog-platform-production.up.railway.app:5000/}${cacheKey}`, {
+        const response = await fetch(`${"https://react-nest-blog-platform-production.up.railway.app:5000/"}${cacheKey}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 

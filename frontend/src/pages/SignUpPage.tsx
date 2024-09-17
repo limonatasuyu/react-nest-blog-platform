@@ -86,7 +86,7 @@ export default function SignUpPage() {
     values: any,
     { setSubmitting }: { setSubmitting: (is: boolean) => void }
   ) {
-    fetch(`${https://react-nest-blog-platform-production.up.railway.app:5000/}user/sign`, {
+    fetch(`${"https://react-nest-blog-platform-production.up.railway.app:5000/"}user/sign`, {
       method: "POST",
       body: JSON.stringify({
         email: values.email,
