@@ -50,7 +50,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   async function handleSeeNotification(notificationIds: string[]) {
     console.log("i got a cal");
     const token = window.sessionStorage.getItem("access_token");
-    await fetch(`${"https://react-nest-blog-platform-production.up.railway.app:5000/"}notification/see`, {
+    await fetch(`${"https://refreshing-illumination-production.up.railway.app/"}notification/see`, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-type": "application/json",
@@ -63,7 +63,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   function handleLookAtNotifications() {
     if (!isNewNotificationExists) return;
     const token = window.sessionStorage.getItem("access_token");
-    fetch(`${"https://react-nest-blog-platform-production.up.railway.app:5000/"}notification/look`, {
+    fetch(`${"https://refreshing-illumination-production.up.railway.app/"}notification/look`, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-type": "application/json",
@@ -86,7 +86,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const token = window.sessionStorage.getItem("access_token");
-    fetch(`${"https://react-nest-blog-platform-production.up.railway.app:5000/"}notification`, {
+    fetch(`${"https://refreshing-illumination-production.up.railway.app/"}notification`, {
       headers: { Authorization: `Bearer ${token}` },
     }).then((res) => {
       if (res.ok) {
@@ -273,7 +273,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                     <Avatar
                       src={
                         notification.lastPerson.profilePictureId &&
-                        `${"https://react-nest-blog-platform-production.up.railway.app:5000/"}image/${notification.lastPerson.profilePictureId}`
+                        `${"https://refreshing-illumination-production.up.railway.app/"}image/${notification.lastPerson.profilePictureId}`
                       }
                       sx={{ width: 48, height: 48 }}
                     >
@@ -332,7 +332,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                         component="img"
                         src={
                           notification.thumbnailId
-                            ? `${"https://react-nest-blog-platform-production.up.railway.app:5000/"}image/${notification.thumbnailId}`
+                            ? `${"https://refreshing-illumination-production.up.railway.app/"}image/${notification.thumbnailId}`
                             : placeHolderThumbnail
                         }
                         sx={{

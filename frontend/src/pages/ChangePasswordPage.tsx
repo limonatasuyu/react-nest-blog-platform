@@ -35,7 +35,7 @@ export default function ChangePasswordPage() {
     setIsSubmitting(true);
     const token = window.sessionStorage.getItem("access_token");
 
-    fetch(`${"https://react-nest-blog-platform-production.up.railway.app:5000/"}auth/change_password_one`, {
+    fetch(`${"https://refreshing-illumination-production.up.railway.app/"}auth/change_password_one`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -81,7 +81,7 @@ export default function ChangePasswordPage() {
     setIsSubmitting(true);
     const token = window.sessionStorage.getItem("access_token");
 
-    fetch(`${"https://react-nest-blog-platform-production.up.railway.app:5000/"}auth/change_password_two`, {
+    fetch(`${"https://refreshing-illumination-production.up.railway.app/"}auth/change_password_two`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
