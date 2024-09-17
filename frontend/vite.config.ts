@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: '/react-nest-blog-platform/',
   plugins: [react()],
   //@ts-expect-error needed for vitest but typescript is upset about it
   test: {
