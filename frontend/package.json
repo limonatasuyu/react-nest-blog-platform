@@ -1,11 +1,14 @@
 {
   "name": "frontend",
+  "homepage": "https://limonatasuyu.github.io/react-nest-blog-platform",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest"
@@ -20,6 +23,7 @@
     "buffer": "^6.0.3",
     "dayjs": "^1.11.12",
     "formik": "^2.4.6",
+    "gh-pages": "^6.1.1",
     "jsdom": "^25.0.0",
     "marked": "^14.0.0",
     "pako": "^2.1.0",
