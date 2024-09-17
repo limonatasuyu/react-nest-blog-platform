@@ -86,7 +86,7 @@ export default function SignUpPage() {
     values: any,
     { setSubmitting }: { setSubmitting: (is: boolean) => void }
   ) {
-    fetch("http://localhost:5000/user/sign", {
+    fetch(`${process.env.API_URL}user/sign`, {
       method: "POST",
       body: JSON.stringify({
         email: values.email,

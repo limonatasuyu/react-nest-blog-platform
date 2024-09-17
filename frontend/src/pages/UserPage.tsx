@@ -36,7 +36,7 @@ export default function UserPage({ currentUserName }: { currentUserName: string 
     }
     if (!userName) return;
     const token = window.sessionStorage.getItem("access_token");
-    fetch(`http://localhost:5000/user/profile/${userName}`, {
+    fetch(`${process.env.API_URL}user/profile/${userName}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(async (res) => {
@@ -58,7 +58,7 @@ export default function UserPage({ currentUserName }: { currentUserName: string 
     const oldIsFollowing = isFollowing;
     setIsFollowing(!isFollowing);
     const token = window.sessionStorage.getItem("access_token")
-    fetch(`http://localhost:5000/user/follow/${userName}`, { headers: { Authorization: `Bearer ${token}` } }).then((res) => {
+    fetch(`${process.env.API_URL}user/follow/${userName}`, { headers: { Authorization: `Bearer ${token}` } }).then((res) => {
       if (!res.ok) {
         res.json().then((result) => setSnackBar(result.mesage ?? "An unexpected error occured, please try again later.", "error"))
         setIsFollowing(oldIsFollowing);
@@ -107,7 +107,7 @@ export default function UserPage({ currentUserName }: { currentUserName: string 
             }}
           >
             <Avatar
-              src={userInfo?.profilePictureId && `http://localhost:5000/image/${userInfo?.profilePictureId}`}
+              src={userInfo?.profilePictureId && `${process.env.API_URL}image/${userInfo?.profilePictureId}`}
               sx={{
                 width: 120,
                 height: 120,

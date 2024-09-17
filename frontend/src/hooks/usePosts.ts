@@ -22,7 +22,7 @@ export default function usePosts(params: { page: number; username?: string | nul
       const token = window.sessionStorage.getItem("access_token");
       dispatch(fetchPostsRequest());
       try {
-        const response = await fetch(`http://localhost:5000/posts?${cacheKey}`, {
+        const response = await fetch(`${process.env.API_URL}posts?${cacheKey}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 

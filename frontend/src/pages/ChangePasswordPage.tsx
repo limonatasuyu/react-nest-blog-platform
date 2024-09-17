@@ -35,7 +35,7 @@ export default function ChangePasswordPage() {
     setIsSubmitting(true);
     const token = window.sessionStorage.getItem("access_token");
 
-    fetch(`http://localhost:5000/auth/change_password_one`, {
+    fetch(`${process.env.API_URL}auth/change_password_one`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -81,7 +81,7 @@ export default function ChangePasswordPage() {
     setIsSubmitting(true);
     const token = window.sessionStorage.getItem("access_token");
 
-    fetch(`http://localhost:5000/auth/change_password_two`, {
+    fetch(`${process.env.API_URL}auth/change_password_two`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,

@@ -53,7 +53,7 @@ export default function LoginPage() {
     values: { email: string; password: string },
     { setSubmitting }: { setSubmitting: (is: boolean) => void }
   ) {
-    fetch("http://localhost:5000/auth/login", {
+    fetch(`${process.env.API_URL}auth/login`, {
       method: "POST",
       body: JSON.stringify(values),
       headers: { "Content-Type": "application/json" },

@@ -152,7 +152,7 @@ const HomePage = memo(() => {
                   <Avatar
                     src={
                       user.profilePictureId &&
-                      `http://localhost:5000/image/${user.profilePictureId}`
+                      `${process.env.API_URL}image/${user.profilePictureId}`
                     }
                   >
                     {user.firstname.charAt(0)}

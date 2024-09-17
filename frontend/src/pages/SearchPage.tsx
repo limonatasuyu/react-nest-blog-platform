@@ -26,7 +26,7 @@ export default function SearchPage() {
   const cacheKey = createCacheKey({ page, keyword });
   useEffect(() => {
     if (cache[cacheKey]) return;
-    fetch(`http://localhost:5000/search?${cacheKey}`).then((res) => {
+    fetch(`${process.env.API_URL}search?${cacheKey}`).then((res) => {
       if (!res.ok) return;
       res.json().then((result) => {
         setCache({ ...cache, [cacheKey]: result });
@@ -129,7 +129,7 @@ export default function SearchPage() {
                   <Avatar
                     src={
                       user.profilePictureId &&
-                      `http://localhost:5000/image/${user.profilePictureId}`
+                      `${process.env.API_URL}image/${user.profilePictureId}`
                     }
                     sx={{ width: 56, height: 56 }}
                   >
