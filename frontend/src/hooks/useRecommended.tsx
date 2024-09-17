@@ -14,7 +14,7 @@ export default function useRecommended() {
       const token = window.sessionStorage.getItem("access_token");
       dispatch(fetchRecommendedRequest());
       try {
-        const response = await fetch(`${process.env.API_URL}${cacheKey}`, {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}${cacheKey}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 

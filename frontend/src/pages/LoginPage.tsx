@@ -53,7 +53,7 @@ export default function LoginPage() {
     values: { email: string; password: string },
     { setSubmitting }: { setSubmitting: (is: boolean) => void }
   ) {
-    fetch(`${process.env.API_URL}auth/login`, {
+    fetch(`${process.env.REACT_APP_API_URL}auth/login`, {
       method: "POST",
       body: JSON.stringify(values),
       headers: { "Content-Type": "application/json" },

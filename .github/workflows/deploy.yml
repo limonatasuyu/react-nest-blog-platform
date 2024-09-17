@@ -21,6 +21,9 @@ jobs:
         working-directory: frontend
         run: npm install
 
+      - name: Set environment variables
+        run: echo "REACT_APP_API_URL=${{ secrets.REACT_APP_API_URL }}" >> .env
+
       - name: Build project
         working-directory: frontend
         run: npm run build

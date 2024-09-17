@@ -79,7 +79,7 @@ export default function PostPage({ userInfo }: { userInfo: userInfo }) {
 
   function fetchComments() {
     const token = window.sessionStorage.getItem("access_token");
-    fetch(`${process.env.API_URL}comments?page=${commentsPage}&postId=${postId}`, {
+    fetch(`${process.env.REACT_APP_API_URL}comments?page=${commentsPage}&postId=${postId}`, {
       headers: { Authorization: `Bearer ${token}` },
     }).then((res) => {
       if (!res.ok) return;
@@ -96,7 +96,7 @@ export default function PostPage({ userInfo }: { userInfo: userInfo }) {
     const oldIsSaved = isUserSaved;
     setIsUserSaved(!oldIsSaved);
     const token = window.sessionStorage.getItem("access_token");
-    fetch(`${process.env.API_URL}posts/save/${postId}`, {
+    fetch(`${process.env.REACT_APP_API_URL}posts/save/${postId}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => {
@@ -117,7 +117,7 @@ export default function PostPage({ userInfo }: { userInfo: userInfo }) {
 
   function fetchPost() {
     const token = window.sessionStorage.getItem("access_token");
-    fetch(`${process.env.API_URL}posts/${postId}`, {
+    fetch(`${process.env.REACT_APP_API_URL}posts/${postId}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(async (res) => {
@@ -162,7 +162,7 @@ export default function PostPage({ userInfo }: { userInfo: userInfo }) {
     setComments(newComments);
     const token = window.sessionStorage.getItem("access_token");
     setIsSubmitting(true);
-    fetch(`${process.env.API_URL}comments`, {
+    fetch(`${process.env.REACT_APP_API_URL}comments`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -193,7 +193,7 @@ export default function PostPage({ userInfo }: { userInfo: userInfo }) {
     const isLiked = !isUserLiked;
     setIsUserLiked(isLiked);
     const token = window.sessionStorage.getItem("access_token");
-    fetch(`${process.env.API_URL}posts/like/${postId}`, {
+    fetch(`${process.env.REACT_APP_API_URL}posts/like/${postId}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => {
@@ -230,7 +230,7 @@ export default function PostPage({ userInfo }: { userInfo: userInfo }) {
             {post.user?.profilePictureId ? (
               <Box
                 component="img"
-                src={`${process.env.API_URL}image/${post.user?.profilePictureId}`}
+                src={`${process.env.REACT_APP_API_URL}image/${post.user?.profilePictureId}`}
                 sx={{ borderRadius: "50%", width: "100%", height: "100%" }}
               />
             ) : (
@@ -414,7 +414,7 @@ export default function PostPage({ userInfo }: { userInfo: userInfo }) {
                 }}
                 src={
                   post?.thumbnailId
-                    ? `${process.env.API_URL}image/${post?.thumbnailId}`
+                    ? `${process.env.REACT_APP_API_URL}image/${post?.thumbnailId}`
                     : placeholderThumbnail
                 }
                 alt="Post Thumbnail"
@@ -531,7 +531,7 @@ function CommentCard({
     setShowReplies(true);
     const token = window.sessionStorage.getItem("access_token");
     setIsSubmitting(true);
-    fetch(`${process.env.API_URL}comments`, {
+    fetch(`${process.env.REACT_APP_API_URL}comments`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -560,7 +560,7 @@ function CommentCard({
 
   function handleAnswerFetch() {
     const token = window.sessionStorage.getItem("access_token");
-    fetch(`${process.env.API_URL}comments/answers?commentId=${commentData._id}&page=${answerPage}`, {
+    fetch(`${process.env.REACT_APP_API_URL}comments/answers?commentId=${commentData._id}&page=${answerPage}`, {
       headers: { Authorization: `Bearer ${token}` },
     }).then((res) => {
       if (!res.ok) return;
@@ -591,7 +591,7 @@ function CommentCard({
 
     const token = window.sessionStorage.getItem("access_token");
 
-    fetch(`${process.env.API_URL}comments/${commentData._id}/like`, {
+    fetch(`${process.env.REACT_APP_API_URL}comments/${commentData._id}/like`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => {
@@ -635,7 +635,7 @@ function CommentCard({
           {commentData.user?.profilePictureId ? (
             <Box
               component="img"
-              src={`${process.env.API_URL}image/${commentData.user?.profilePictureId}`}
+              src={`${process.env.REACT_APP_API_URL}image/${commentData.user?.profilePictureId}`}
               sx={{ width: "100%", height: "100%", borderRadius: "50%" }}
             />
           ) : (
@@ -773,7 +773,7 @@ function ReplyComment({
 
     const token = window.sessionStorage.getItem("access_token");
 
-    fetch(`${process.env.API_URL}comments/${reply._id}/like`, {
+    fetch(`${process.env.REACT_APP_API_URL}comments/${reply._id}/like`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => {
@@ -816,7 +816,7 @@ function ReplyComment({
           {reply.user?.profilePictureId ? (
             <Box
               component="img"
-              src={`${process.env.API_URL}image/${reply.user?.profilePictureId}`}
+              src={`${process.env.REACT_APP_API_URL}image/${reply.user?.profilePictureId}`}
               sx={{ width: "100%", height: "100%", borderRadius: "50%" }}
             />
           ) : (
@@ -891,7 +891,7 @@ function ReportPostForm({
     const errors = handleValidation();
     if (errors.text || errors.reason) return;
     const token = window.sessionStorage.getItem("access_token");
-    fetch(`${process.env.API_URL}posts/report/${postId}`, {
+    fetch(`${process.env.REACT_APP_API_URL}posts/report/${postId}`, {
       method: "POST",
       headers: { Authorization: `Bearer  ${token}` },
     })

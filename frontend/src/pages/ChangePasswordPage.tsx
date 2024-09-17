@@ -35,7 +35,7 @@ export default function ChangePasswordPage() {
     setIsSubmitting(true);
     const token = window.sessionStorage.getItem("access_token");
 
-    fetch(`${process.env.API_URL}auth/change_password_one`, {
+    fetch(`${process.env.REACT_APP_API_URL}auth/change_password_one`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -81,7 +81,7 @@ export default function ChangePasswordPage() {
     setIsSubmitting(true);
     const token = window.sessionStorage.getItem("access_token");
 
-    fetch(`${process.env.API_URL}auth/change_password_two`, {
+    fetch(`${process.env.REACT_APP_API_URL}auth/change_password_two`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,

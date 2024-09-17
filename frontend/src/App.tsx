@@ -40,7 +40,7 @@ function App() {
     }
 
     try {
-      const response = await fetch(`${process.env.API_URL}auth/profile`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}auth/profile`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

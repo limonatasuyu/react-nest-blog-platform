@@ -50,7 +50,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   async function handleSeeNotification(notificationIds: string[]) {
     console.log("i got a cal");
     const token = window.sessionStorage.getItem("access_token");
-    await fetch(`${process.env.API_URL}notification/see`, {
+    await fetch(`${process.env.REACT_APP_API_URL}notification/see`, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-type": "application/json",
@@ -63,7 +63,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   function handleLookAtNotifications() {
     if (!isNewNotificationExists) return;
     const token = window.sessionStorage.getItem("access_token");
-    fetch(`${process.env.API_URL}notification/look`, {
+    fetch(`${process.env.REACT_APP_API_URL}notification/look`, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-type": "application/json",
@@ -86,7 +86,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const token = window.sessionStorage.getItem("access_token");
-    fetch(`${process.env.API_URL}notification`, {
+    fetch(`${process.env.REACT_APP_API_URL}notification`, {
       headers: { Authorization: `Bearer ${token}` },
     }).then((res) => {
       if (res.ok) {
@@ -273,7 +273,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                     <Avatar
                       src={
                         notification.lastPerson.profilePictureId &&
-                        `${process.env.API_URL}image/${notification.lastPerson.profilePictureId}`
+                        `${process.env.REACT_APP_API_URL}image/${notification.lastPerson.profilePictureId}`
                       }
                       sx={{ width: 48, height: 48 }}
                     >
@@ -332,7 +332,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                         component="img"
                         src={
                           notification.thumbnailId
-                            ? `${process.env.API_URL}image/${notification.thumbnailId}`
+                            ? `${process.env.REACT_APP_API_URL}image/${notification.thumbnailId}`
                             : placeHolderThumbnail
                         }
                         sx={{
