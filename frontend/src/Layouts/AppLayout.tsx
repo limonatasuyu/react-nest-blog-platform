@@ -26,32 +26,11 @@ import CircleIcon from "@mui/icons-material/Circle";
 import placeHolderThumbnail from "/placeholderThumbnail.jpg";
 import CustomLink from "../components/CustomLink";
 import { useRoute } from "../context/RouteProvider";
-import GroupsIcon from '@mui/icons-material/Groups';
+import GroupsIcon from "@mui/icons-material/Groups";
+import { NotificationData } from "../interfaces";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
-  const [notifications, setNotifications] = useState<
-    {
-      id?: string;
-      type: "like" | "comment" | "answer" | "follow";
-      commentId: string;
-      postId: string;
-      lastPerson: {
-        firstname: string;
-        lastname: string;
-        username: string;
-        profilePictureId?: string;
-      };
-      count: number;
-      isLookedAt: boolean;
-      notificationIds: string[];
-      isSeen: boolean;
-      targetHref: string;
-      commentContent?: string;
-      thumbnailId?: string;
-      answerContent?: string;
-      passedTime: string;
-    }[]
-  >([]);
+  const [notifications, setNotifications] = useState<NotificationData[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const [menuType, setMenuType] = useState<"notification" | "profile" | null>(
     null
@@ -102,7 +81,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   }
 
   function handleSearch() {
-    if (searchValue.length > 3) navigate(`/search?keyword=${searchValue}`)
+    if (searchValue.length > 3) navigate(`/search?keyword=${searchValue}`);
   }
 
   useEffect(() => {
@@ -160,8 +139,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             }}
             endAdornment={
               <InputAdornment position="end">
-                <IconButton aria-label="search">
-                  <SearchIcon onClick={handleSearch}/>
+                <IconButton onClick={handleSearch} aria-label="search">
+                  <SearchIcon />
                 </IconButton>
               </InputAdornment>
             }
@@ -245,12 +224,12 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                 to="/followers"
                 sx={{ textDecoration: "none", color: "inherit" }}
               >
-              <MenuItem>
-                <ListItemIcon>
-                  <GroupsIcon fontSize="small" />
-                </ListItemIcon>
-                <ListItemText primary="Followers" />
-              </MenuItem>
+                <MenuItem>
+                  <ListItemIcon>
+                    <GroupsIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText primary="Followers" />
+                </MenuItem>
               </CustomLink>
               <MenuItem onClick={handleLogout}>
                 <ListItemIcon>

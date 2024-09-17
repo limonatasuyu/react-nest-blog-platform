@@ -31,7 +31,7 @@ function App() {
       "/signup",
       "/forget_password",
       "/activate",
-    ].includes(currentPath);
+    ].includes(currentPath.split("?")[0]);
 
     const token = window.sessionStorage.getItem("access_token");
 

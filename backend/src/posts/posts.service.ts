@@ -286,7 +286,7 @@ export class PostsService {
 
   async getPostById(postId: string, user_id: string) {
     const post = await this.postsModel.aggregate([
-      { $match: { _id: postId } },
+      { $match: { _id: new mongoose.Types.ObjectId(postId) } },
       {
         $lookup: {
           from: 'users',

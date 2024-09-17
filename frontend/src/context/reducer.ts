@@ -9,7 +9,7 @@ import {
 
 export const initialState = {
   cache: {},
-  loading: false,
+  loading: true,
   error: null,
 };
 

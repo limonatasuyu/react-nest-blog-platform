@@ -7,8 +7,6 @@ const cacheKey = "recommended"
 export default function useRecommended() {
   const [{ cache, loading, error }, dispatch] = useStateContext() as [RecommendedState, Dispatch<any>];
 
-  console.log("cache: ", cache)
-
   useEffect(() => {
     if (cache[cacheKey]) return;
 

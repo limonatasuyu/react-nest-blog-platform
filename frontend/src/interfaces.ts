@@ -15,7 +15,7 @@ export interface PostData {
   thumbnailId?: string;
   tags: string[];
   user: userInfo;
-  totalPageCount: number;
+  //totalPageCount: number;
 }
 
 export interface RecommendedData {
@@ -37,3 +37,25 @@ export interface ReplyData {
 export interface CommentData extends ReplyData {
   answers?: ReplyData[];
 }
+
+export interface NotificationData {
+  id?: string;
+  type: "like" | "comment" | "answer" | "follow";
+  commentId: string;
+  postId: string;
+  lastPerson: {
+    firstname: string;
+    lastname: string;
+    username: string;
+    profilePictureId?: string;
+  };
+  count: number;
+  isLookedAt: boolean;
+  notificationIds: string[];
+  isSeen: boolean;
+  targetHref: string;
+  commentContent?: string;
+  thumbnailId?: string;
+  answerContent?: string;
+  passedTime: string;
+};

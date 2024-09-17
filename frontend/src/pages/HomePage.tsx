@@ -123,9 +123,8 @@ const HomePage = memo(() => {
             </Typography>
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
               {tags.map((tag, index) => (
-                <CustomLink to={`/tag?name=${tag.name}`}>
+                <CustomLink key={index} to={`/tag?name=${tag.name}`}>
                   <Chip
-                    key={index}
                     label={tag.name}
                     clickable
                     variant="outlined"
