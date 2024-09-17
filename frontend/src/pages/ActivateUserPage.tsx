@@ -30,7 +30,7 @@ export default function ActivateUserPage() {
     }
     setIsSubmitting(true);
 
-    fetch(`${"https://refreshing-illumination-production.up.railway.app/"}user/activate`, {
+    fetch(`${"react-nest-blog-platform-production.up.railway.app"}user/activate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -63,7 +63,7 @@ export default function ActivateUserPage() {
 
   function handleRequestNewCode() {
     setIsSubmittingNewRequest(true);
-    fetch(`${"https://refreshing-illumination-production.up.railway.app/"}user/recreate-activation`, {
+    fetch(`${"react-nest-blog-platform-production.up.railway.app"}user/recreate-activation`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

@@ -67,7 +67,7 @@ export default function CreatePostPage() {
     { setSubmitting }: { setSubmitting: (is: boolean) => void }
   ) {
     const token = window.sessionStorage.getItem("access_token");
-    fetch(`${"https://refreshing-illumination-production.up.railway.app/"}posts`, {
+    fetch(`${"react-nest-blog-platform-production.up.railway.app"}posts`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -108,7 +108,7 @@ export default function CreatePostPage() {
     const formData = new FormData();
     formData.append("file", image);
     const token = window.sessionStorage.getItem("access_token");
-    const res = await fetch(`${"https://refreshing-illumination-production.up.railway.app/"}image`, {
+    const res = await fetch(`${"react-nest-blog-platform-production.up.railway.app"}image`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,

@@ -36,7 +36,7 @@ export default function UserPage({ currentUserName }: { currentUserName: string 
     }
     if (!userName) return;
     const token = window.sessionStorage.getItem("access_token");
-    fetch(`${"https://refreshing-illumination-production.up.railway.app/"}user/profile/${userName}`, {
+    fetch(`${"react-nest-blog-platform-production.up.railway.app"}user/profile/${userName}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(async (res) => {
@@ -58,7 +58,7 @@ export default function UserPage({ currentUserName }: { currentUserName: string 
     const oldIsFollowing = isFollowing;
     setIsFollowing(!isFollowing);
     const token = window.sessionStorage.getItem("access_token")
-    fetch(`${"https://refreshing-illumination-production.up.railway.app/"}user/follow/${userName}`, { headers: { Authorization: `Bearer ${token}` } }).then((res) => {
+    fetch(`${"react-nest-blog-platform-production.up.railway.app"}user/follow/${userName}`, { headers: { Authorization: `Bearer ${token}` } }).then((res) => {
       if (!res.ok) {
         res.json().then((result) => setSnackBar(result.mesage ?? "An unexpected error occured, please try again later.", "error"))
         setIsFollowing(oldIsFollowing);
@@ -107,7 +107,7 @@ export default function UserPage({ currentUserName }: { currentUserName: string 
             }}
           >
             <Avatar
-              src={userInfo?.profilePictureId && `${"https://refreshing-illumination-production.up.railway.app/"}image/${userInfo?.profilePictureId}`}
+              src={userInfo?.profilePictureId && `${"react-nest-blog-platform-production.up.railway.app"}image/${userInfo?.profilePictureId}`}
               sx={{
                 width: 120,
                 height: 120,

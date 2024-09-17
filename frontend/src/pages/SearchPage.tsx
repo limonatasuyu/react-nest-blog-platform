@@ -26,7 +26,7 @@ export default function SearchPage() {
   const cacheKey = createCacheKey({ page, keyword });
   useEffect(() => {
     if (cache[cacheKey]) return;
-    fetch(`${"https://refreshing-illumination-production.up.railway.app/"}search?${cacheKey}`).then((res) => {
+    fetch(`${"react-nest-blog-platform-production.up.railway.app"}search?${cacheKey}`).then((res) => {
       if (!res.ok) return;
       res.json().then((result) => {
         setCache({ ...cache, [cacheKey]: result });
@@ -129,7 +129,7 @@ export default function SearchPage() {
                   <Avatar
                     src={
                       user.profilePictureId &&
-                      `${"https://refreshing-illumination-production.up.railway.app/"}image/${user.profilePictureId}`
+                      `${"react-nest-blog-platform-production.up.railway.app"}image/${user.profilePictureId}`
                     }
                     sx={{ width: 56, height: 56 }}
                   >

@@ -86,7 +86,7 @@ export default function SignUpPage() {
     values: any,
     { setSubmitting }: { setSubmitting: (is: boolean) => void }
   ) {
-    fetch(`${"https://refreshing-illumination-production.up.railway.app/"}user/sign`, {
+    fetch(`${"react-nest-blog-platform-production.up.railway.app"}user/sign`, {
       method: "POST",
       body: JSON.stringify({
         email: values.email,
