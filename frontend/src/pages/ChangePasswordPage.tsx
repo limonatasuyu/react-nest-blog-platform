@@ -9,6 +9,7 @@ import {
 import { useState } from "react";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import useSnackbar from "../hooks/useSnackbar";
+import { useRoute } from "../context/RouteProvider";
 
 export default function ChangePasswordPage() {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -20,6 +21,7 @@ export default function ChangePasswordPage() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showNewPasswordAgain, setShowNewPasswordAgain] = useState(false);
   const { setSnackBar } = useSnackbar();
+  const { navigate } = useRoute();
 
   const validatePassword = (password: string) => {
     const regex = /^(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/;
@@ -106,7 +108,7 @@ export default function ChangePasswordPage() {
         }
         setSnackBar(jsonResponse.message, "success");
         setTimeout(() => {
-          window.location.pathname = "/"
+          navigate("/")
         }, 2000)
       })
       .catch((err) => {

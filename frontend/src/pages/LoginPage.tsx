@@ -17,10 +17,12 @@ import { useState } from "react";
 import LoginLayout from "../Layouts/LoginLayout";
 import useSnackbar from "../hooks/useSnackbar";
 import CustomLink from "../components/CustomLink";
+import { useRoute } from "../context/RouteProvider";
 
 export default function LoginPage() {
   const { setSnackBar } = useSnackbar();
   const [showPassword, setShowPassword] = useState(false);
+  const { navigate } = useRoute()
 
   function handleClickShowPassword() {
     setShowPassword((show) => !show);
@@ -64,7 +66,7 @@ export default function LoginPage() {
 
         if (jsonResponse.access_token) {
           window.sessionStorage.setItem("access_token", jsonResponse.access_token);
-          window.location.pathname = "/";
+          navigate("/") 
         }
       })
       .catch((err) => {

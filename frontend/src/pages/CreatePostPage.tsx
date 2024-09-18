@@ -8,6 +8,7 @@ import { marked } from "marked";
 import TagsInput from "../components/TagsInput";
 import placeholderThumbnail from "/placeholderThumbnail.jpg";
 import useSnackbar from "../hooks/useSnackbar";
+import { useRoute } from "../context/RouteProvider";
 
 const VisuallyHiddenInput = styled("input")({
   clip: "rect(0 0 0 0)",
@@ -37,6 +38,7 @@ export default function CreatePostPage() {
   const { setSnackBar } = useSnackbar();
   const [tabValue, setTabValue] = useState(0);
   const [imageDataUri, setImageDataUri] = useState<null | string>(null);
+  const { navigate } = useRoute();
 
   //@ts-expect-error i need the second value
   const handleTabChange = (event: any, newValue: number) => {
@@ -92,7 +94,7 @@ export default function CreatePostPage() {
         );
 
         setTimeout(() => {
-          window.location.pathname = "/";
+          navigate("/");
         }, 2000);
       })
       .catch((err) => {

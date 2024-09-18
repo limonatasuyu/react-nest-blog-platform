@@ -3,10 +3,12 @@ import LoginLayout from "../Layouts/LoginLayout";
 import { TextField, Typography, Button, Box, AlertColor } from "@mui/material";
 import useTimer from "../hooks/useTimer";
 import useSnackbar from "../hooks/useSnackbar";
+import { useRoute } from "../context/RouteProvider";
 
 export default function ActivateUserPage() {
   const { timeLeft, formatTime, reInitalize } = useTimer(5 * 60);
   const { setSnackBar } = useSnackbar();
+  const { navigate } = useRoute();
 
   const [textValue, setTextValue] = useState("");
   const [error, setError] = useState("");
@@ -18,7 +20,7 @@ export default function ActivateUserPage() {
 
   if (!userId) {
     setTimeout(() => {
-      window.location.pathname = "/login";
+      navigate("/login");
     }, 4000);
     return <div>Some error happened</div>;
   }
@@ -45,7 +47,7 @@ export default function ActivateUserPage() {
         if (res.ok) {
           status = "success";
           setTimeout(() => {
-            window.location.pathname = "/";
+            navigate("/")
           }, 3000);
         } else {
           status = "error";

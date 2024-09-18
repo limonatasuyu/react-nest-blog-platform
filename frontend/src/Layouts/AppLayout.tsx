@@ -32,9 +32,7 @@ import { NotificationData } from "../interfaces";
 export default function AppLayout({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<NotificationData[]>([]);
   const [searchValue, setSearchValue] = useState("");
-  const [menuType, setMenuType] = useState<"notification" | "profile" | null>(
-    null
-  );
+  const [menuType, setMenuType] = useState<"notification" | "profile" | null>(null);
   const [isNewNotificationExists, setIsNewNotificationExists] = useState(false);
 
   const [AnchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -77,7 +75,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
   function handleLogout() {
     window.sessionStorage.removeItem("access_token");
-    window.location.pathname = "/login";
+    navigate("/login");
   }
 
   function handleSearch() {
@@ -92,9 +90,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       if (res.ok) {
         res.json().then((result) => {
           setNotifications(result);
-          setIsNewNotificationExists(
-            result.find((i: { isSeen: boolean }) => !i.isSeen)
-          );
+          setIsNewNotificationExists(result.find((i: { isSeen: boolean }) => !i.isSeen));
         });
       }
     });
@@ -118,12 +114,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         sx={{ padding: 2, backgroundColor: "#ffffff", boxShadow: 1 }}
       >
         <CustomLink to="/" sx={{ display: "flex", alignItems: "center" }}>
-          <img
-            src={logo_black}
-            height="50"
-            alt="Logo"
-            style={{ padding: "10px" }}
-          />
+          <img src={logo_black} height="50" alt="Logo" style={{ padding: "10px" }} />
         </CustomLink>
 
         <FormControl variant="outlined" sx={{ flex: 1, maxWidth: "500px" }}>
@@ -131,9 +122,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           <OutlinedInput
             id="search"
             value={searchValue}
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              setSearchValue(e.target.value)
-            }
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchValue(e.target.value)}
             onKeyPress={(e) => {
               if (e.key === "Enter") handleSearch();
             }}
@@ -197,10 +186,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         <Menu anchorEl={AnchorEl} open={menuOpen} onClose={handleMenuClose}>
           {menuType === "profile" ? (
             <div>
-              <CustomLink
-                to="/profile"
-                sx={{ textDecoration: "none", color: "inherit" }}
-              >
+              <CustomLink to="/profile" sx={{ textDecoration: "none", color: "inherit" }}>
                 <MenuItem onClick={handleMenuClose}>
                   <ListItemIcon>
                     <AccountCircleIcon fontSize="small" />
@@ -208,10 +194,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                   <ListItemText primary="Profile" />
                 </MenuItem>
               </CustomLink>
-              <CustomLink
-                to="/my_posts"
-                sx={{ textDecoration: "none", color: "inherit" }}
-              >
+              <CustomLink to="/my_posts" sx={{ textDecoration: "none", color: "inherit" }}>
                 <MenuItem onClick={handleMenuClose}>
                   <ListItemIcon>
                     <DynamicFeedIcon fontSize="small" />
@@ -220,10 +203,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                 </MenuItem>
               </CustomLink>
 
-              <CustomLink
-                to="/followers"
-                sx={{ textDecoration: "none", color: "inherit" }}
-              >
+              <CustomLink to="/followers" sx={{ textDecoration: "none", color: "inherit" }}>
                 <MenuItem>
                   <ListItemIcon>
                     <GroupsIcon fontSize="small" />
@@ -245,9 +225,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                   <MenuItem
                     onClick={() => {
                       handleSeeNotification(
-                        notification.id
-                          ? [notification.id]
-                          : notification.notificationIds
+                        notification.id ? [notification.id] : notification.notificationIds
                       );
                       navigate(notification.targetHref);
                     }}
@@ -264,16 +242,16 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                       },
                       borderRadius: 1,
                       mt: 1,
-                      boxShadow: notification.isLookedAt
-                        ? "none"
-                        : "0px 2px 4px rgba(0,0,0,0.1)",
+                      boxShadow: notification.isLookedAt ? "none" : "0px 2px 4px rgba(0,0,0,0.1)",
                       width: 400,
                     }}
                   >
                     <Avatar
                       src={
                         notification.lastPerson.profilePictureId &&
-                        `${"https://react-nest-blog-platform-production.up.railway.app/"}image/${notification.lastPerson.profilePictureId}`
+                        `${"https://react-nest-blog-platform-production.up.railway.app/"}image/${
+                          notification.lastPerson.profilePictureId
+                        }`
                       }
                       sx={{ width: 48, height: 48 }}
                     >
@@ -281,48 +259,32 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                     </Avatar>
 
                     <Box sx={{ flex: 1, ml: 1 }}>
-                      <Typography
-                        variant="body1"
-                        sx={{ fontWeight: "bold", mb: 0.5 }}
-                      >
-                        {notification.lastPerson.firstname}{" "}
-                        {notification.lastPerson.lastname}{" "}
-                        {notification.count > 1 &&
-                          `and ${notification.count - 1} others`}
+                      <Typography variant="body1" sx={{ fontWeight: "bold", mb: 0.5 }}>
+                        {notification.lastPerson.firstname} {notification.lastPerson.lastname}{" "}
+                        {notification.count > 1 && `and ${notification.count - 1} others`}
                       </Typography>
 
-                      <Typography
-                        variant="body2"
-                        sx={{ color: "text.secondary" }}
-                      >
+                      <Typography variant="body2" sx={{ color: "text.secondary" }}>
                         {notification.type === "like" &&
-                          `liked your ${
-                            notification.commentId ? "comment" : "post"
-                          }`}
-                        {notification.type === "comment" &&
-                          `commented on your post:`}
-                        {notification.type === "answer" &&
-                          `answered your comment:`}
+                          `liked your ${notification.commentId ? "comment" : "post"}`}
+                        {notification.type === "comment" && `commented on your post:`}
+                        {notification.type === "answer" && `answered your comment:`}
                         {notification.type === "follow" && `followed you`}
                       </Typography>
-                      {notification.type !== "follow" &&
-                        notification.commentContent && (
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              color: "text.secondary",
-                              mt: 0.5,
-                              fontStyle: "italic",
-                            }}
-                          >
-                            {notification.commentContent}
-                          </Typography>
-                        )}
+                      {notification.type !== "follow" && notification.commentContent && (
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: "text.secondary",
+                            mt: 0.5,
+                            fontStyle: "italic",
+                          }}
+                        >
+                          {notification.commentContent}
+                        </Typography>
+                      )}
 
-                      <Typography
-                        variant="subtitle1"
-                        sx={{ color: "text.secondary", fontSize: 10 }}
-                      >
+                      <Typography variant="subtitle1" sx={{ color: "text.secondary", fontSize: 10 }}>
                         {notification.passedTime}
                       </Typography>
                     </Box>
@@ -332,7 +294,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                         component="img"
                         src={
                           notification.thumbnailId
-                            ? `${"https://react-nest-blog-platform-production.up.railway.app/"}image/${notification.thumbnailId}`
+                            ? `${"https://react-nest-blog-platform-production.up.railway.app/"}image/${
+                                notification.thumbnailId
+                              }`
                             : placeHolderThumbnail
                         }
                         sx={{
