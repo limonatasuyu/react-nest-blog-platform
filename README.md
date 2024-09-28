@@ -56,5 +56,6 @@ npm run test
 - TypeScript: A typed superset of JavaScript.
 - MUI: UI Components library for react.
 - localStorage: Web API for storing data on the client side.
+- Nest.js: Node.js framework for building server-side applications.
 - MongoDB: Dcument oriented database.
 - Jest: Testing framework for JavaScript.
