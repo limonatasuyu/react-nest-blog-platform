@@ -15,9 +15,21 @@ function createCacheKey(params: {
     .join("&");
 }
 
+function getHashParam(paramName: string) {
+  const currentUrl = document.location.toString();
+  const hashFragment = currentUrl.split('#')[1];
+  if (hashFragment) {
+    const paramsString = hashFragment.split('?')[1];
+    if (paramsString) {
+      const params = new URLSearchParams(paramsString);
+      return params.get(paramName);
+    }
+  }
+  return null;
+}
+
 export default function SearchPage() {
-  const params = new URL(document.location.toString()).searchParams;
-  const keyword = params.get("keyword");
+  const keyword = getHashParam("keyword");
 
   const [page, setPage] = useState(1);
   const [activeTab, setActiveTab] = useState<"Posts" | "Users">("Posts");

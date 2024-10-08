@@ -31,9 +31,22 @@ function fileToDataUri(file: File) {
   });
 }
 
+
+function getHashParam(paramName: string) {
+  const currentUrl = document.location.toString();
+  const hashFragment = currentUrl.split('#')[1];
+  if (hashFragment) {
+    const paramsString = hashFragment.split('?')[1];
+    if (paramsString) {
+      const params = new URLSearchParams(paramsString);
+      return params.get(paramName);
+    }
+  }
+  return null;
+}
+
 export default function CreatePostPage() {
-  const params = new URL(document.location.toString()).searchParams;
-  const tagName = params.get("tag");
+  const tagName = getHashParam("tag");
 
   const { setSnackBar } = useSnackbar();
   const [tabValue, setTabValue] = useState(0);

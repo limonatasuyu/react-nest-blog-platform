@@ -5,6 +5,23 @@ import useTimer from "../hooks/useTimer";
 import useSnackbar from "../hooks/useSnackbar";
 import { useRoute } from "../context/RouteProvider";
 
+
+function getHashParam(paramName: string) {
+  const currentUrl = document.location.toString();
+  const hashFragment = currentUrl.split('#')[1];
+  console.log('hashFragment: ', hashFragment)
+  if (hashFragment) {
+    const paramsString = hashFragment.split('?')[1];
+    console.log('paramsString: ', paramsString)
+    if (paramsString) {
+      const params = new URLSearchParams(paramsString);
+      return params.get(paramName);
+    }
+  }
+  return null;
+}
+
+
 export default function ActivateUserPage() {
   const { timeLeft, formatTime, reInitalize } = useTimer(5 * 60);
   const { setSnackBar } = useSnackbar();
@@ -15,8 +32,7 @@ export default function ActivateUserPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmittingNewRequest, setIsSubmittingNewRequest] = useState(false);
 
-  const params = new URL(document.location.toString()).searchParams;
-  const userId = params.get("user_id");
+  const userId = getHashParam("user_id")
 
   if (!userId) {
     setTimeout(() => {

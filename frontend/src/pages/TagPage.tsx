@@ -8,9 +8,21 @@ import PostCard from "../components/PostCard";
 import usePosts from "../hooks/usePosts";
 import CustomLink from "../components/CustomLink";
 
+function getHashParam(paramName: string) {
+  const currentUrl = document.location.toString();
+  const hashFragment = currentUrl.split('#')[1];
+  if (hashFragment) {
+    const paramsString = hashFragment.split('?')[1];
+    if (paramsString) {
+      const params = new URLSearchParams(paramsString);
+      return params.get(paramName);
+    }
+  }
+  return null;
+}
+
 const Tagpage = memo(() => {
-  const params = new URL(document.location.toString()).searchParams;
-  const tagName = params.get("name");
+  const tagName = getHashParam("name");
 
   const [page, setPage] = useState(1);
 

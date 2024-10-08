@@ -8,10 +8,21 @@ import PostCard from "../components/PostCard";
 import usePosts from "../hooks/usePosts";
 import { useRoute } from "../context/RouteProvider";
 
-export default function UserPage({ currentUserName }: { currentUserName: string }) {
-  const params = new URL(document.location.toString()).searchParams;
-  const userName = params.get("username");
+function getHashParam(paramName: string) {
+  const currentUrl = document.location.toString();
+  const hashFragment = currentUrl.split('#')[1];
+  if (hashFragment) {
+    const paramsString = hashFragment.split('?')[1];
+    if (paramsString) {
+      const params = new URLSearchParams(paramsString);
+      return params.get(paramName);
+    }
+  }
+  return null;
+}
 
+export default function UserPage({ currentUserName }: { currentUserName: string }) {
+  const userName = getHashParam("username");
   
   const [isInfoSet, setIsInfoSet] = useState<boolean>(false);
   const [userInfo, setUserInfo] = useState<{
